@@ -655,6 +655,11 @@ class SlideshowEngine {
     this.interval = 10;
     this.countEl = document.getElementById('slideshowCount');
 
+    // Pan/bounce state — position as % (0–100), velocity as %/frame
+    this.panScale = 145;  // background-size %, how much bigger than viewport
+    this.pan = { x: 50, y: 50, vx: 0, vy: 0 };
+    this._rafId = null;
+
     document.getElementById('slideshowOpenFiles')?.addEventListener('click', () => this._openFiles());
     document.getElementById('slideshowOpenFolder')?.addEventListener('click', () => this._openFolder());
     document.getElementById('slideshowPrev')?.addEventListener('click', () => this.prev());
@@ -688,6 +693,7 @@ class SlideshowEngine {
     this.index = 0;
     this._show();
     this._startTimer();
+    this._startPan();
     this._updateCount();
   }
 
@@ -696,9 +702,59 @@ class SlideshowEngine {
     const url = this.images[this.index];
     const active = this.aActive ? this.layerA : this.layerB;
     const inactive = this.aActive ? this.layerB : this.layerA;
-    if (active) { active.style.backgroundImage = `url('${url}')`; active.style.opacity = '0.15'; }
+    if (active) {
+      active.style.backgroundImage = `url('${url}')`;
+      active.style.backgroundSize = this.panScale + '%';
+      active.style.opacity = '0.15';
+    }
     if (inactive) inactive.style.opacity = '0';
     this.aActive = !this.aActive;
+    // New random direction on each image change
+    this._randomizeVelocity();
+  }
+
+  // ── Pan / Bounce ───────────────────────────────────────
+  _randomizeVelocity() {
+    // Random angle, consistent slow speed (0.015–0.035 %/frame ≈ 1–2%/sec at 60fps)
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 0.015 + Math.random() * 0.02;
+    this.pan.vx = Math.cos(angle) * speed;
+    this.pan.vy = Math.sin(angle) * speed;
+    // Start from a random position within the safe range
+    this.pan.x = 20 + Math.random() * 60;
+    this.pan.y = 20 + Math.random() * 60;
+  }
+
+  _startPan() {
+    if (this._rafId) return; // already running
+    this._randomizeVelocity();
+    const step = () => {
+      this._panFrame();
+      this._rafId = requestAnimationFrame(step);
+    };
+    this._rafId = requestAnimationFrame(step);
+  }
+
+  _stopPan() {
+    if (this._rafId) { cancelAnimationFrame(this._rafId); this._rafId = null; }
+  }
+
+  _panFrame() {
+    // Move
+    this.pan.x += this.pan.vx;
+    this.pan.y += this.pan.vy;
+
+    // Bounce at 0% and 100%
+    if (this.pan.x <= 0)   { this.pan.x = 0;   this.pan.vx = Math.abs(this.pan.vx); }
+    if (this.pan.x >= 100) { this.pan.x = 100;  this.pan.vx = -Math.abs(this.pan.vx); }
+    if (this.pan.y <= 0)   { this.pan.y = 0;    this.pan.vy = Math.abs(this.pan.vy); }
+    if (this.pan.y >= 100) { this.pan.y = 100;   this.pan.vy = -Math.abs(this.pan.vy); }
+
+    // Apply to whichever layer is currently visible
+    const visible = this.aActive ? this.layerB : this.layerA; // flipped because _show toggles after set
+    if (visible) {
+      visible.style.backgroundPosition = `${this.pan.x}% ${this.pan.y}%`;
+    }
   }
 
   next() {
@@ -719,8 +775,13 @@ class SlideshowEngine {
     this.paused = !this.paused;
     const btn = document.getElementById('slideshowPause');
     if (btn) btn.textContent = this.paused ? 'Resume' : 'Pause';
-    if (this.paused) clearInterval(this.timer);
-    else this._startTimer();
+    if (this.paused) {
+      clearInterval(this.timer);
+      this._stopPan();
+    } else {
+      this._startTimer();
+      this._startPan();
+    }
   }
 
   _startTimer() {
@@ -1030,10 +1091,3 @@ document.addEventListener('DOMContentLoaded', () => {
     'overlayPanel', 'settingsPanel', 'slideshowPanel', 'speedreaderPanel'
   ]);
 });
-
-
-
-
-
-
-

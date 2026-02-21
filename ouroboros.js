@@ -37,9 +37,16 @@ class AudioEngine {
     this.playlist = [];
     this.index = 0;
     this.isPlaying = false;
+    this.repeatMode = 'off';      // 'off' → 'all' → 'one'
+    this.shuffleOn = false;
+    this.shuffleQueue = [];
+    this.shufflePos = -1;
+    this._seekInterval = null;
+    this._seekSpeed = 2;
     this._bindDOM();
     this._initEvents();
     this._initMediaSession();
+    this._initKeyboard();
   }
 
   _bindDOM() {
@@ -54,6 +61,11 @@ class AudioEngine {
     this.playlistEl = document.getElementById('audioPlaylist');
     this.openFilesBtn = document.getElementById('audioOpenFiles');
     this.openFolderBtn = document.getElementById('audioOpenFolder');
+    this.repeatBtn = document.getElementById('audioRepeatBtn');
+    this.shuffleBtn = document.getElementById('audioShuffleBtn');
+    this.ffBtn = document.getElementById('audioFFBtn');
+    this.rwBtn = document.getElementById('audioRWBtn');
+    this.replayBtn = document.getElementById('audioReplayBtn');
   }
 
   _initEvents() {
@@ -66,6 +78,11 @@ class AudioEngine {
     });
     this.openFilesBtn?.addEventListener('click', () => this._openFiles());
     this.openFolderBtn?.addEventListener('click', () => this._openFolder());
+    this.repeatBtn?.addEventListener('click', () => this.cycleRepeat());
+    this.shuffleBtn?.addEventListener('click', () => this.toggleShuffle());
+    this.replayBtn?.addEventListener('click', () => this.replay());
+    this._bindHoldSeek(this.ffBtn, 1);
+    this._bindHoldSeek(this.rwBtn, -1);
     this.playlistEl?.addEventListener('click', e => {
       const li = e.target.closest('li');
       if (li && li.dataset.idx !== undefined) this._selectTrack(+li.dataset.idx);
@@ -99,6 +116,7 @@ class AudioEngine {
     if (!audioFiles.length) { bus.emit('error', { msg: 'No audio files found in selection.' }); return; }
     this.playlist = audioFiles;
     this.index = 0;
+    this._rebuildShuffle();
     this._renderPlaylist();
     this._loadTrack(this.index);
     this.play();
@@ -137,7 +155,7 @@ class AudioEngine {
 
     this.audio.addEventListener('timeupdate', () => this._updateSeek());
     this.audio.addEventListener('loadedmetadata', () => this._updateMeta());
-    this.audio.addEventListener('ended', () => this.next());
+    this.audio.addEventListener('ended', () => this._onTrackEnd());
     this.audio.addEventListener('error', () => bus.emit('error', { msg: 'Audio playback error' }));
     this.audio.addEventListener('play', () => bus.emit('track:play', { audio: this.audio }));
     this.audio.addEventListener('pause', () => bus.emit('track:pause', { audio: this.audio }));
@@ -168,12 +186,148 @@ class AudioEngine {
   togglePlay() { this.isPlaying ? this.pause() : this.play(); }
 
   prev() {
-    if (this.index > 0) { this.index--; this._loadTrack(this.index); this.play(); }
+    // If >3s in, restart current track; otherwise go back
+    if (this.audio && this.audio.currentTime > 3) {
+      this.audio.currentTime = 0;
+      return;
+    }
+    if (this.shuffleOn && this.shufflePos > 0) {
+      this.shufflePos--;
+      this.index = this.shuffleQueue[this.shufflePos];
+      this._loadTrack(this.index);
+      this.play();
+    } else if (this.index > 0) {
+      this.index--;
+      this._loadTrack(this.index);
+      this.play();
+    }
   }
 
   next() {
-    if (this.index < this.playlist.length - 1) { this.index++; this._loadTrack(this.index); this.play(); }
-    else { this.pause(); bus.emit('track:end', {}); }
+    if (this.shuffleOn) {
+      this._nextShuffle();
+    } else if (this.index < this.playlist.length - 1) {
+      this.index++;
+      this._loadTrack(this.index);
+      this.play();
+    } else if (this.repeatMode === 'all') {
+      this.index = 0;
+      this._loadTrack(this.index);
+      this.play();
+    } else {
+      this.pause();
+      bus.emit('track:end', {});
+    }
+  }
+
+  // ── Track end handler (repeat-one loops here) ──────────
+  _onTrackEnd() {
+    if (this.repeatMode === 'one') {
+      this.audio.currentTime = 0;
+      this.audio.play().catch(() => {});
+      return;
+    }
+    this.next();
+  }
+
+  // ── Replay current track from start ────────────────────
+  replay() {
+    if (!this.audio) return;
+    this.audio.currentTime = 0;
+    if (!this.isPlaying) this.play();
+  }
+
+  // ── Repeat: off → all → one → off ─────────────────────
+  cycleRepeat() {
+    const modes = ['off', 'all', 'one'];
+    const labels = { off: '🔁', all: '🔁', one: '🔂' };
+    this.repeatMode = modes[(modes.indexOf(this.repeatMode) + 1) % 3];
+    if (this.repeatBtn) {
+      this.repeatBtn.textContent = labels[this.repeatMode];
+      this.repeatBtn.classList.toggle('active', this.repeatMode !== 'off');
+      this.repeatBtn.title = 'Repeat: ' + this.repeatMode;
+    }
+  }
+
+  // ── Shuffle toggle ─────────────────────────────────────
+  toggleShuffle() {
+    this.shuffleOn = !this.shuffleOn;
+    if (this.shuffleOn) this._rebuildShuffle();
+    if (this.shuffleBtn) {
+      this.shuffleBtn.classList.toggle('active', this.shuffleOn);
+      this.shuffleBtn.title = 'Shuffle: ' + (this.shuffleOn ? 'ON' : 'OFF');
+    }
+  }
+
+  // Fisher-Yates shuffle — non-repeating until exhausted
+  _rebuildShuffle() {
+    const arr = this.playlist.map((_, i) => i);
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    this.shuffleQueue = arr;
+    this.shufflePos = -1;
+  }
+
+  _nextShuffle() {
+    this.shufflePos++;
+    if (this.shufflePos >= this.shuffleQueue.length) {
+      if (this.repeatMode === 'all') {
+        this._rebuildShuffle();
+        this.shufflePos = 0;
+      } else {
+        this.pause();
+        bus.emit('track:end', {});
+        return;
+      }
+    }
+    this.index = this.shuffleQueue[this.shufflePos];
+    this._loadTrack(this.index);
+    this.play();
+  }
+
+  // ── Hold-to-seek (accelerating FF/RW) ──────────────────
+  _bindHoldSeek(btn, direction) {
+    if (!btn) return;
+    const start = () => {
+      this._seekSpeed = 2;
+      this._seekInterval = setInterval(() => {
+        if (!this.audio || !this.audio.duration) return;
+        this.audio.currentTime = Math.max(0,
+          Math.min(this.audio.duration, this.audio.currentTime + direction * this._seekSpeed));
+        this._seekSpeed = Math.min(this._seekSpeed * 1.15, 30);
+      }, 100);
+    };
+    const stop = () => {
+      clearInterval(this._seekInterval);
+      this._seekInterval = null;
+      this._seekSpeed = 2;
+    };
+    btn.addEventListener('mousedown', start);
+    btn.addEventListener('mouseup', stop);
+    btn.addEventListener('mouseleave', stop);
+    btn.addEventListener('touchstart', e => { e.preventDefault(); start(); });
+    btn.addEventListener('touchend', stop);
+  }
+
+  // ── Keyboard shortcuts ─────────────────────────────────
+  _initKeyboard() {
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.isContentEditable) return;
+      switch (e.code) {
+        case 'Space':      e.preventDefault(); this.togglePlay(); break;
+        case 'ArrowRight':  e.shiftKey ? this.next() : this._nudge(10); break;
+        case 'ArrowLeft':   e.shiftKey ? this.prev() : this._nudge(-10); break;
+        case 'KeyS':        if (!e.ctrlKey && !e.metaKey) this.toggleShuffle(); break;
+        case 'KeyR':        if (!e.ctrlKey && !e.metaKey) this.cycleRepeat(); break;
+      }
+    });
+  }
+
+  _nudge(seconds) {
+    if (!this.audio || !this.audio.duration) return;
+    this.audio.currentTime = Math.max(0, Math.min(this.audio.duration, this.audio.currentTime + seconds));
   }
 
   _seek() {
@@ -876,3 +1030,10 @@ document.addEventListener('DOMContentLoaded', () => {
     'overlayPanel', 'settingsPanel', 'slideshowPanel', 'speedreaderPanel'
   ]);
 });
+
+
+
+
+
+
+

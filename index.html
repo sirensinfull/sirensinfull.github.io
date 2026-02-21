@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Siren Sinfull — Music &amp; Words</title>
-  <meta name="description" content="Siren Sinfull — musician, author, and architect of recursive sound. Enter the Ouroboros.">
-  <meta property="og:title" content="Siren Sinfull">
+  <title>Siren Sinful — Music &amp; Words</title>
+  <meta name="description" content="Siren Sinful — musician, author, and architect of recursive sound. Enter the Ouroboros.">
+  <meta property="og:title" content="Siren Sinful">
   <meta property="og:description" content="Musician. Author. Enter the Ouroboros.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sirensinfull.com">
@@ -19,7 +19,7 @@
        ============================================================ -->
   <div id="landingOverlay" role="button" tabindex="0" aria-label="Click to enter site">
     <div class="landing-brand">
-      <h1>Siren Sinfull</h1>
+      <h1>Siren Sinful</h1>
       <div class="landing-sub">musician · author · architect of recursive sound</div>
     </div>
     <div class="landing-enter">click anywhere to enter</div>
@@ -29,7 +29,7 @@
        NAVIGATION — Persistent top bar
        ============================================================ -->
   <nav id="siteNav" role="navigation" aria-label="Site navigation">
-    <a href="/" class="nav-brand">Siren Sinfull</a>
+    <a href="/" class="nav-brand">Siren Sinful</a>
     <ul class="nav-links">
       <li><a href="/">Engine</a></li>
       <li><a href="/music.html">Music</a></li>
@@ -283,6 +283,13 @@
   <!-- ============================================================
        SCRIPTS
        ============================================================ -->
+  <div id="site-counter" style="position:fixed;bottom:8px;right:12px;z-index:50;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(200,160,100,0.15);pointer-events:none;">⟡ <span id="hit-count">—</span> visits ⟡</div>
+  <script>
+  fetch('https://sirensinfull.goatcounter.com/counter/*.json')
+    .then(r=>r.json()).then(d=>{document.getElementById('hit-count').textContent=d.count})
+    .catch(()=>{});
+  </script>
   <script src="ouroboros.js"></script>
+<script data-goatcounter="https://sirensinfull.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

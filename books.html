@@ -522,9 +522,16 @@ nav .links a:hover { color: var(--gold); }
   <footer class="page-footer">
     <div class="sigil">( &gt; 0 &lt; )</div>
     <p>© 2004–2026 Michael Scott Shaffer · Quantum Foam Productions</p>
+    <div id="site-counter" style="margin-top:12px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:var(--text-dim);opacity:0.5;">⟡ <span id="hit-count">—</span> visits ⟡</div>
   </footer>
+<script>
+fetch('https://sirensinfull.goatcounter.com/counter/*.json')
+  .then(r=>r.json()).then(d=>{document.getElementById('hit-count').textContent=d.count})
+  .catch(()=>{});
+</script>
 
 </main>
 
+<script data-goatcounter="https://sirensinfull.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

@@ -1,0 +1,873 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIREN SINFUL — Music</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════
+   CSS VARIABLES — matches ouroboros.css
+   ═══════════════════════════════════════════════ */
+:root {
+  --void: #050508;
+  --deep: #0a0a10;
+  --surface: #0e0e16;
+  --panel: #101018;
+  --border: #1a1a28;
+  --border-light: #252535;
+  --text-dim: #4a4a62;
+  --text: #8a8aa8;
+  --text-light: #b8b8d0;
+  --text-bright: #e0e0f0;
+  --gold: #c9a84c;
+  --gold-dim: rgba(201,168,76,0.15);
+  --gold-glow: rgba(201,168,76,0.3);
+  --teal: #4a9a8a;
+  --teal-dim: rgba(74,154,138,0.15);
+  --red: #a04040;
+  --font-brand: 'Cinzel', serif;
+  --font-body: 'Crimson Pro', serif;
+  --font-ui: 'JetBrains Mono', monospace;
+  --grain: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+}
+
+/* ═══════════════════════════════════════════════
+   RESET & BASE
+   ═══════════════════════════════════════════════ */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+html { scroll-behavior: smooth; }
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--font-body);
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: var(--grain);
+  background-repeat: repeat;
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.5;
+}
+
+/* ═══════════════════════════════════════════════
+   NAVIGATION — same as index.html
+   ═══════════════════════════════════════════════ */
+.nav {
+  position: fixed; top:0; left:0; right:0; z-index:100;
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 0 2rem; height: 54px;
+  background: linear-gradient(180deg, rgba(5,5,8,0.95) 0%, rgba(5,5,8,0.7) 70%, transparent 100%);
+  backdrop-filter: blur(6px);
+}
+.nav-brand {
+  font-family: var(--font-brand);
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--gold);
+  text-decoration: none;
+  text-transform: uppercase;
+  opacity: 0.8;
+  transition: opacity 0.3s;
+}
+.nav-brand:hover { opacity:1; }
+.nav-links { display:flex; gap:1.5rem; }
+.nav-links a {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  transition: color 0.3s;
+}
+.nav-links a:hover, .nav-links a.active { color: var(--gold); }
+
+/* ═══════════════════════════════════════════════
+   HERO
+   ═══════════════════════════════════════════════ */
+.hero {
+  padding: 120px 2rem 60px;
+  text-align: center;
+  position: relative;
+}
+.hero::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 10%; right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, var(--border-light), transparent);
+}
+.hero-title {
+  font-family: var(--font-brand);
+  font-size: clamp(28px, 5vw, 48px);
+  font-weight: 400;
+  letter-spacing: 8px;
+  color: var(--text-bright);
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.hero-subtitle {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 4px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+  margin-bottom: 40px;
+}
+
+/* Stats row */
+.stats-row {
+  display: flex;
+  justify-content: center;
+  gap: clamp(24px, 5vw, 60px);
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+}
+.stat {
+  text-align: center;
+}
+.stat-number {
+  font-family: var(--font-brand);
+  font-size: clamp(24px, 4vw, 36px);
+  font-weight: 600;
+  color: var(--gold);
+  line-height: 1.2;
+}
+.stat-label {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* ═══════════════════════════════════════════════
+   STREAMING LINKS
+   ═══════════════════════════════════════════════ */
+.stream-section {
+  text-align: center;
+  margin-bottom: 10px;
+}
+.stream-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 16px;
+}
+.stream-links {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.stream-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-light);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 1px;
+  text-decoration: none;
+  text-transform: uppercase;
+  transition: all 0.3s;
+}
+.stream-btn:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+  background: var(--gold-dim);
+}
+.stream-btn svg { width:16px; height:16px; fill:currentColor; flex-shrink:0; }
+
+/* ═══════════════════════════════════════════════
+   CATALOG SECTION
+   ═══════════════════════════════════════════════ */
+.catalog {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 40px 2rem 80px;
+}
+
+.catalog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.catalog-title {
+  font-family: var(--font-brand);
+  font-size: 16px;
+  letter-spacing: 4px;
+  color: var(--text-light);
+  text-transform: uppercase;
+}
+.catalog-count {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-dim);
+}
+
+/* Search */
+.search-bar {
+  width: 100%;
+  margin-bottom: 16px;
+  position: relative;
+}
+.search-bar input {
+  width: 100%;
+  padding: 12px 16px 12px 40px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text-light);
+  font-family: var(--font-ui);
+  font-size: 13px;
+  outline: none;
+  transition: border-color 0.3s;
+}
+.search-bar input::placeholder { color: var(--text-dim); }
+.search-bar input:focus { border-color: var(--gold-glow); }
+.search-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-dim);
+  font-size: 14px;
+  pointer-events: none;
+}
+
+/* Genre filters */
+.filters {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+}
+.filter-tag {
+  padding: 5px 12px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 1px;
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.25s;
+  user-select: none;
+}
+.filter-tag:hover {
+  border-color: var(--text);
+  color: var(--text);
+}
+.filter-tag.active {
+  background: var(--gold-dim);
+  border-color: var(--gold);
+  color: var(--gold);
+}
+
+/* Song list */
+.song-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.song-row {
+  display: grid;
+  grid-template-columns: 44px 1fr auto auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  background: var(--surface);
+  border: 1px solid transparent;
+  border-radius: 1px;
+  transition: all 0.2s;
+  cursor: default;
+}
+.song-row:hover {
+  background: var(--panel);
+  border-color: var(--border);
+}
+.song-num {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-dim);
+  text-align: right;
+}
+.song-info { min-width:0; }
+.song-title {
+  font-family: var(--font-body);
+  font-size: 16px;
+  font-weight: 400;
+  color: var(--text-light);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.song-title .version {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.song-style {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 500px;
+  margin-top: 2px;
+}
+.song-date {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+}
+.song-words {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  color: var(--text-dim);
+  white-space: nowrap;
+  min-width: 50px;
+  text-align: right;
+}
+
+/* Expanded style description */
+.song-row.expanded {
+  background: var(--panel);
+  border-color: var(--border-light);
+}
+.song-expanded {
+  display: none;
+  grid-column: 1 / -1;
+  padding: 12px 0 4px 60px;
+}
+.song-row.expanded .song-expanded { display:block; }
+.song-expanded p {
+  font-family: var(--font-ui);
+  font-size: 11px;
+  line-height: 1.7;
+  color: var(--text);
+  max-width: 700px;
+}
+.song-expanded .expand-label {
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--gold);
+  margin-bottom: 6px;
+}
+
+/* Load more */
+.load-more {
+  display: block;
+  margin: 32px auto;
+  padding: 12px 40px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+.load-more:hover {
+  border-color: var(--gold);
+  color: var(--gold);
+}
+.load-more:disabled {
+  opacity: 0.3;
+  cursor: default;
+}
+
+/* No results */
+.no-results {
+  text-align: center;
+  padding: 60px 20px;
+  font-family: var(--font-ui);
+  font-size: 12px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+
+/* ═══════════════════════════════════════════════
+   THEME BARS (mini genre visualization)
+   ═══════════════════════════════════════════════ */
+.themes-section {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem 60px;
+}
+.themes-title {
+  font-family: var(--font-brand);
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--text-light);
+  text-transform: uppercase;
+  margin-bottom: 20px;
+}
+.theme-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.theme-bar-label {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text-dim);
+  width: 100px;
+  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  flex-shrink: 0;
+}
+.theme-bar-track {
+  flex: 1;
+  height: 6px;
+  background: var(--surface);
+  border-radius: 1px;
+  overflow: hidden;
+}
+.theme-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, var(--gold), var(--teal));
+  border-radius: 1px;
+  transition: width 1s ease-out;
+}
+.theme-bar-count {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  color: var(--text-dim);
+  width: 36px;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════════════════════════
+   FOOTER
+   ═══════════════════════════════════════════════ */
+.footer {
+  text-align: center;
+  padding: 40px 2rem;
+  border-top: 1px solid var(--border);
+}
+.footer-text {
+  font-family: var(--font-ui);
+  font-size: 10px;
+  letter-spacing: 2px;
+  color: var(--text-dim);
+  text-transform: uppercase;
+}
+.footer-text a {
+  color: var(--gold);
+  text-decoration: none;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .song-row {
+    grid-template-columns: 36px 1fr;
+    gap: 8px;
+  }
+  .song-date, .song-words { display:none; }
+  .song-expanded { padding-left: 44px; }
+  .nav { padding: 0 1rem; }
+  .nav-links { gap: 1rem; }
+  .nav-links a { font-size: 9px; letter-spacing: 1px; }
+  .theme-bar-label { width: 70px; font-size: 9px; }
+}
+@media (max-width: 500px) {
+  .stream-links { flex-direction: column; align-items: center; }
+  .stream-btn { width: 220px; justify-content: center; }
+}
+
+/* ═══════════════════════════════════════════════
+   ANIMATIONS
+   ═══════════════════════════════════════════════ */
+@keyframes fadeUp {
+  from { opacity:0; transform:translateY(16px); }
+  to { opacity:1; transform:translateY(0); }
+}
+.hero { animation: fadeUp 0.8s ease-out; }
+.catalog { animation: fadeUp 0.8s ease-out 0.15s both; }
+.themes-section { animation: fadeUp 0.8s ease-out 0.3s both; }
+
+/* Sort controls */
+.sort-row {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.sort-label {
+  font-family: var(--font-ui);
+  font-size: 9px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-right: 6px;
+}
+.sort-btn {
+  padding: 4px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 1px;
+  color: var(--text-dim);
+  font-family: var(--font-ui);
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.sort-btn:hover { color: var(--text); border-color: var(--text); }
+.sort-btn.active { color: var(--gold); border-color: var(--gold); background: var(--gold-dim); }
+</style>
+</head>
+<body>
+
+<!-- ═══ NAVIGATION ═══ -->
+<nav class="nav">
+  <a href="index.html" class="nav-brand">Siren Sinful</a>
+  <div class="nav-links">
+    <a href="index.html">Engine</a>
+    <a href="music.html" class="active">Music</a>
+    <a href="books.html">Books</a>
+    <a href="about.html">About</a>
+  </div>
+</nav>
+
+<!-- ═══ HERO ═══ -->
+<section class="hero">
+  <h1 class="hero-title">The Catalog</h1>
+  <p class="hero-subtitle">900+ tracks released &middot; written by Michael Shaffer</p>
+
+  <div class="stats-row">
+    <div class="stat">
+      <div class="stat-number" id="statSongs">500</div>
+      <div class="stat-label">Cataloged Songs</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">176,693</div>
+      <div class="stat-label">Words Written</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">8</div>
+      <div class="stat-label">Months</div>
+    </div>
+    <div class="stat">
+      <div class="stat-number">900+</div>
+      <div class="stat-label">Released Tracks</div>
+    </div>
+  </div>
+
+  <!-- Streaming Platform Links -->
+  <div class="stream-section">
+    <div class="stream-label">Listen on</div>
+    <div class="stream-links">
+      <a href="https://open.spotify.com/artist/4kTZaATXa6KhfNUVNpl9Zj" target="_blank" class="stream-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.479.659.301 1.02zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/></svg>
+        Spotify
+      </a>
+      <a href="https://music.apple.com/us/artist/siren-sinfull/1792395071" target="_blank" class="stream-btn">
+        <svg viewBox="0 0 24 24"><path d="M23.994 6.124a9.23 9.23 0 00-.24-2.19c-.317-1.31-1.062-2.31-2.18-3.043A5.022 5.022 0 0019.7.25C18.977.097 18.24.042 17.508.005c-.145-.006-.29-.004-.436-.004H6.93c-.147 0-.293-.001-.44.004C5.76.041 5.024.097 4.3.25a5.023 5.023 0 00-1.873.64C1.31 1.62.565 2.62.248 3.93a9.23 9.23 0 00-.24 2.19C-.003 6.394 0 6.668 0 6.942v10.116c0 .274-.003.548.008.822a9.23 9.23 0 00.24 2.19c.317 1.31 1.062 2.31 2.18 3.043a5.023 5.023 0 001.873.64c.724.153 1.46.208 2.19.246.147.006.294.004.44.004h10.143c.146 0 .29.002.436-.004.73-.038 1.466-.093 2.191-.246a5.023 5.023 0 001.873-.64c1.118-.733 1.863-1.733 2.18-3.043.155-.723.212-1.455.24-2.19.009-.274.006-.548.006-.822V6.942c0-.274.003-.548-.008-.818zm-6.734 9.411c0 .647-.072 1.277-.22 1.894-.12.505-.313.96-.616 1.357-.392.517-.919.834-1.57.964-.416.083-.836.11-1.261.055-.856-.112-1.456-.557-1.798-1.34-.201-.46-.27-.946-.247-1.447.05-1.11.678-1.9 1.696-2.303.38-.15.778-.233 1.18-.292.44-.065.884-.104 1.323-.167.192-.028.378-.077.538-.182.192-.126.288-.317.29-.557.003-.342.006-.684 0-1.027-.003-.158-.064-.3-.186-.403-.12-.102-.266-.138-.42-.133-.244.008-.483.065-.695.198-.264.165-.436.406-.522.707-.03.106-.078.14-.186.136-.456-.013-.911-.025-1.367-.033-.136-.003-.142-.035-.115-.167.063-.302.167-.588.32-.856.305-.534.754-.912 1.312-1.147.596-.252 1.22-.337 1.863-.3.434.025.86.085 1.267.24.7.267 1.15.765 1.334 1.49.075.296.114.6.114.907l.001 2.37v.001zM9.68 18.14c-.18.04-.37.05-.556.065-.263.02-.526.01-.787-.034-.792-.133-1.374-.527-1.73-1.246-.22-.443-.302-.917-.305-1.407-.004-.634.16-1.213.578-1.71.358-.426.822-.686 1.37-.81.412-.093.83-.107 1.252-.065.474.048.926.16 1.335.39.007.004.018.003.038.007V8.236c0-.157.01-.165.166-.178.41-.036.822-.065 1.233-.091.078-.005.095.023.095.096v8.44c0 .296-.014.59-.05.884-.063.5-.21.967-.497 1.38-.381.55-.904.888-1.55 1.037-.27.064-.543.094-.82.107a5.49 5.49 0 01-.772-.003v.003c0-.247 0-.247 0 0v.228z"/></svg>
+        Apple Music
+      </a>
+      <a href="https://music.youtube.com/channel/UCUrY6DjCChYPBkkKIgDdVOA" target="_blank" class="stream-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.376 0 0 5.376 0 12s5.376 12 12 12 12-5.376 12-12S18.624 0 12 0zm0 19.104c-3.924 0-7.104-3.18-7.104-7.104S8.076 4.896 12 4.896s7.104 3.18 7.104 7.104-3.18 7.104-7.104 7.104zm0-13.332c-3.432 0-6.228 2.796-6.228 6.228S8.568 18.228 12 18.228s6.228-2.796 6.228-6.228S15.432 5.772 12 5.772zM9.684 15.54V8.46L16.2 12l-6.516 3.54z"/></svg>
+        YouTube Music
+      </a>
+      <a href="https://music.amazon.com/artists/B0DTZ3VG33/siren-sinfull" target="_blank" class="stream-btn">
+        <svg viewBox="0 0 24 24"><path d="M13.958 10.09c0 1.232.029 2.256-.591 3.351-.502.891-1.301 1.438-2.186 1.438-1.214 0-1.922-.924-1.922-2.292 0-2.692 2.415-3.182 4.7-3.182v.685zm3.186 7.705a.66.66 0 01-.753.077c-1.06-.878-1.247-1.286-1.829-2.121-1.748 1.784-2.986 2.317-5.249 2.317-2.682 0-4.768-1.654-4.768-4.963 0-2.585 1.401-4.344 3.395-5.204 1.729-.754 4.145-.888 5.99-1.095v-.41c0-.754.058-1.646-.385-2.297-.384-.578-1.124-.818-1.775-.818-1.205 0-2.277.618-2.54 1.897-.054.285-.261.566-.547.58l-3.065-.33c-.258-.058-.544-.266-.472-.66C6.418 1.84 9.35.5 11.986.5c1.348 0 3.108.358 4.17 1.378 1.349 1.27 1.22 2.966 1.22 4.811v4.36c0 1.312.544 1.888 1.057 2.596.179.253.219.555-.009.74-.57.476-1.585 1.362-2.143 1.858l-.003-.002z"/><path d="M21.38 18.102c-1.348 1.575-3.312 2.401-5.312 2.401-2.502 0-4.754-1.178-6.38-3.15-.131-.16-.014-.376.173-.253 1.815.946 4.06 1.512 6.378 1.512 1.565 0 3.288-.324 4.87-.996.238-.1.438.157.212.37l.058.116z"/></svg>
+        Amazon
+      </a>
+      <a href="https://www.pandora.com/collection/artists/AR:21403057" target="_blank" class="stream-btn">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm3.14 16.608c-1.675 0-3.145-.526-4.244-1.378V18.6H7.5V5.4h2.147l.58 1.14c1.04-.87 2.38-1.38 3.913-1.38C17.37 5.16 20 7.88 20 11.04c0 3.07-2.57 5.568-4.86 5.568zm-.14-9.168c-2.07 0-3.75 1.68-3.75 3.6s1.68 3.48 3.75 3.48c2.07 0 3.5-1.56 3.5-3.48 0-1.92-1.43-3.6-3.5-3.6z"/></svg>
+        Pandora
+      </a>
+    </div>
+  </div>
+
+  <!-- Legacy / Origin platforms -->
+  <div class="stream-section" style="margin-top:24px;">
+    <div class="stream-label">Origin Archives</div>
+    <div class="stream-links">
+      <a href="https://www.reverbnation.com/michaelscottshaffer" target="_blank" class="stream-btn" style="border-color:var(--border);color:var(--text-dim);">
+        <svg viewBox="0 0 24 24"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm0 2a10 10 0 110 20 10 10 0 010-20zm-2 6v8l6-4-6-4z"/></svg>
+        ReverbNation
+      </a>
+      <a href="https://soundcloud.com/scotty-camara" target="_blank" class="stream-btn" style="border-color:var(--border);color:var(--text-dim);">
+        <svg viewBox="0 0 24 24"><path d="M1.175 12.225c-.051 0-.094.046-.101.1l-.233 2.154.233 2.105c.007.058.05.098.101.098.05 0 .09-.04.099-.098l.255-2.105-.27-2.154c-.009-.06-.05-.1-.1-.1m-.899.828c-.06 0-.091.037-.104.094L0 14.479l.172 1.282c.013.06.045.094.104.094.057 0 .09-.038.104-.094l.21-1.282-.21-1.332c-.014-.057-.047-.094-.104-.094m1.8-.283c-.063 0-.108.043-.116.108l-.209 2.609.209 2.508c.008.06.053.108.116.108.056 0 .104-.048.112-.108l.239-2.508-.239-2.609c-.008-.065-.056-.108-.112-.108m.899-.36c-.07 0-.12.055-.124.12l-.189 2.97.189 2.869c.004.07.054.119.124.119.066 0 .116-.049.12-.119l.221-2.869-.221-2.97c-.004-.065-.054-.12-.12-.12m.9-.238c-.074 0-.128.058-.132.131l-.171 3.209.171 3.127c.004.07.058.13.132.13.07 0 .124-.06.131-.13l.194-3.127-.194-3.209c-.007-.073-.061-.131-.131-.131m.902-.093c-.081 0-.14.063-.147.14l-.15 3.303.15 3.24c.006.079.066.14.147.14.076 0 .136-.061.142-.14l.174-3.24-.174-3.303c-.006-.077-.066-.14-.142-.14m.9.034c-.084 0-.149.065-.153.149l-.131 3.17.131 3.18c.004.084.069.149.153.149.084 0 .149-.065.154-.149l.15-3.18-.15-3.17c-.005-.084-.07-.149-.154-.149m.9-.175c-.09 0-.159.07-.162.159l-.111 3.345.111 3.299c.003.09.072.159.162.159.088 0 .158-.069.162-.159l.13-3.299-.13-3.345c-.004-.089-.074-.159-.162-.159m.9-.132c-.094 0-.168.075-.172.168l-.091 3.477.091 3.35c.004.094.078.168.172.168.093 0 .168-.074.172-.168l.104-3.35-.104-3.477c-.004-.093-.079-.168-.172-.168m2.756-.18c-.093 0-.17.075-.175.167l-.079 3.614.079 3.41c.005.093.082.167.175.167.095 0 .172-.074.177-.167l.09-3.41-.09-3.614c-.005-.092-.082-.167-.177-.167m-1.856.036c-.099 0-.177.079-.18.177l-.07 3.557.07 3.384c.003.099.081.178.18.178.095 0 .175-.079.18-.178l.08-3.384-.08-3.557c-.005-.098-.085-.177-.18-.177m3.612-.236c-.15 0-.274.12-.279.274l-.06 3.85.06 3.48c.005.15.129.27.279.27.15 0 .271-.12.279-.27l.07-3.48-.07-3.85c-.008-.154-.129-.274-.279-.274m.9.066c-.155 0-.279.12-.284.279l-.046 3.783.046 3.42c.005.154.129.279.284.279.15 0 .275-.125.283-.279l.05-3.42-.05-3.783c-.008-.159-.133-.279-.283-.279m.9.025c-.158 0-.289.13-.294.289l-.036 3.758.036 3.36c.005.16.136.29.294.29.155 0 .284-.13.291-.29l.04-3.36-.04-3.758c-.007-.159-.136-.289-.291-.289m2.737-1.26c-.269 0-.52.059-.758.152-.164-1.855-1.729-3.309-3.634-3.309-.494 0-.97.1-1.397.279-.17.071-.214.143-.217.284v6.932c.003.149.125.271.273.284h5.733c1.173 0 2.125-.952 2.125-2.125s-.952-2.125-2.125-2.125"/></svg>
+        SoundCloud
+      </a>
+    </div>
+  </div>
+</section>
+
+<!-- ═══ GENRE THEMES ═══ -->
+<section class="themes-section" id="themesSection">
+  <div class="themes-title">Genre Landscape</div>
+  <div id="themeBars"></div>
+</section>
+
+<!-- ═══ CATALOG ═══ -->
+<section class="catalog">
+  <div class="catalog-header">
+    <div class="catalog-title">Song Catalog</div>
+    <div class="catalog-count" id="catalogCount">500 songs</div>
+  </div>
+
+  <div class="search-bar">
+    <span class="search-icon">⌕</span>
+    <input type="text" id="searchInput" placeholder="Search titles, styles, dates..." autocomplete="off">
+  </div>
+
+  <div class="filters" id="genreFilters"></div>
+
+  <div class="sort-row">
+    <span class="sort-label">Sort</span>
+    <button class="sort-btn active" data-sort="id">Number</button>
+    <button class="sort-btn" data-sort="title">Title</button>
+    <button class="sort-btn" data-sort="date">Date</button>
+    <button class="sort-btn" data-sort="words">Words</button>
+  </div>
+
+  <div class="song-list" id="songList"></div>
+
+  <button class="load-more" id="loadMore">Load More</button>
+</section>
+
+<!-- ═══ FOOTER ═══ -->
+<footer class="footer">
+  <div class="footer-text">
+    &copy; 2026 Siren Sinful &middot; <a href="index.html">Return to Engine</a>
+  </div>
+</footer>
+
+<!-- ═══ SONG DATA ═══ -->
+<script src="songs_data.js"></script>
+
+<!-- ═══ APPLICATION ═══ -->
+<script>
+(function(){
+  'use strict';
+
+  /* ─── Parse raw data ─── */
+  // SONGS_RAW is [id, title, version, date, wordcount, style]
+  const songs = (typeof SONGS_RAW !== 'undefined' ? SONGS_RAW : []).map(r => ({
+    id: r[0], title: r[1], version: r[2], date: r[3], wc: r[4], style: r[5]
+  }));
+
+  /* ─── Genre extraction ─── */
+  const GENRE_KEYS = [
+    'metal','rap','ambient','cinematic','industrial','acoustic',
+    'hip-hop','jazz','orchestral','blues','country','folk',
+    'gothic','doom','ethereal','psychedelic','operatic','sacred',
+    'dark','electronic','classical','punk','rock','pop'
+  ];
+
+  const genreCounts = {};
+  GENRE_KEYS.forEach(g => genreCounts[g] = 0);
+  songs.forEach(s => {
+    const sl = s.style.toLowerCase();
+    GENRE_KEYS.forEach(g => { if(sl.includes(g)) genreCounts[g]++; });
+  });
+
+  // Sort genres by frequency, take top 14
+  const topGenres = Object.entries(genreCounts)
+    .filter(([,c]) => c > 0)
+    .sort((a,b) => b[1] - a[1])
+    .slice(0, 14);
+
+  /* ─── Render genre filter tags ─── */
+  const filtersEl = document.getElementById('genreFilters');
+  const allTag = document.createElement('button');
+  allTag.className = 'filter-tag active';
+  allTag.textContent = 'All';
+  allTag.dataset.genre = '';
+  filtersEl.appendChild(allTag);
+
+  topGenres.forEach(([genre]) => {
+    const tag = document.createElement('button');
+    tag.className = 'filter-tag';
+    tag.textContent = genre;
+    tag.dataset.genre = genre;
+    filtersEl.appendChild(tag);
+  });
+
+  /* ─── Render genre bars ─── */
+  const barsEl = document.getElementById('themeBars');
+  const maxCount = topGenres.length ? topGenres[0][1] : 1;
+  topGenres.slice(0, 10).forEach(([genre, count]) => {
+    const row = document.createElement('div');
+    row.className = 'theme-bar-row';
+    row.innerHTML = `
+      <div class="theme-bar-label">${genre}</div>
+      <div class="theme-bar-track">
+        <div class="theme-bar-fill" style="width:0%" data-target="${(count/maxCount*100).toFixed(1)}"></div>
+      </div>
+      <div class="theme-bar-count">${count}</div>
+    `;
+    barsEl.appendChild(row);
+  });
+
+  // Animate bars on scroll
+  const observer = new IntersectionObserver(entries => {
+    entries.forEach(e => {
+      if(e.isIntersecting){
+        e.target.querySelectorAll('.theme-bar-fill').forEach(bar => {
+          bar.style.width = bar.dataset.target + '%';
+        });
+        observer.unobserve(e.target);
+      }
+    });
+  }, { threshold: 0.3 });
+  observer.observe(document.getElementById('themesSection'));
+
+  /* ─── State ─── */
+  let filtered = [...songs];
+  let displayed = 0;
+  const PAGE_SIZE = 60;
+  let activeGenre = '';
+  let searchQuery = '';
+  let sortKey = 'id';
+  let sortDir = 1;
+
+  const songListEl = document.getElementById('songList');
+  const loadMoreEl = document.getElementById('loadMore');
+  const countEl = document.getElementById('catalogCount');
+
+  /* ─── Filter + Sort ─── */
+  function applyFilters(){
+    const q = searchQuery.toLowerCase();
+    filtered = songs.filter(s => {
+      if(activeGenre && !s.style.toLowerCase().includes(activeGenre)) return false;
+      if(q && !s.title.toLowerCase().includes(q) && !s.style.toLowerCase().includes(q) && !s.date.includes(q)) return false;
+      return true;
+    });
+
+    filtered.sort((a,b) => {
+      let va, vb;
+      switch(sortKey){
+        case 'title': va = a.title.toLowerCase(); vb = b.title.toLowerCase(); return va < vb ? -sortDir : va > vb ? sortDir : 0;
+        case 'date': va = a.date; vb = b.date; return va < vb ? sortDir : va > vb ? -sortDir : 0;
+        case 'words': return (b.wc - a.wc) * sortDir;
+        default: return (a.id - b.id) * sortDir;
+      }
+    });
+
+    countEl.textContent = filtered.length + ' song' + (filtered.length !== 1 ? 's' : '');
+    displayed = 0;
+    songListEl.innerHTML = '';
+    renderPage();
+  }
+
+  /* ─── Render songs ─── */
+  function renderPage(){
+    const end = Math.min(displayed + PAGE_SIZE, filtered.length);
+    const frag = document.createDocumentFragment();
+
+    for(let i = displayed; i < end; i++){
+      const s = filtered[i];
+      const row = document.createElement('div');
+      row.className = 'song-row';
+      row.innerHTML = `
+        <div class="song-num">${s.id}</div>
+        <div class="song-info">
+          <div class="song-title">${esc(s.title)}${s.version ? '<span class="version">' + esc(s.version) + '</span>' : ''}</div>
+          <div class="song-style">${esc(s.style.substring(0, 120))}</div>
+        </div>
+        <div class="song-date">${s.date}</div>
+        <div class="song-words">${s.wc.toLocaleString()}w</div>
+        <div class="song-expanded">
+          <div class="expand-label">Style Description</div>
+          <p>${esc(s.style)}</p>
+        </div>
+      `;
+      row.addEventListener('click', () => row.classList.toggle('expanded'));
+      frag.appendChild(row);
+    }
+
+    songListEl.appendChild(frag);
+    displayed = end;
+
+    loadMoreEl.style.display = displayed >= filtered.length ? 'none' : 'block';
+    if(filtered.length === 0){
+      songListEl.innerHTML = '<div class="no-results">No songs match your search</div>';
+      loadMoreEl.style.display = 'none';
+    }
+  }
+
+  function esc(s){ const d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+
+  /* ─── Event handlers ─── */
+  loadMoreEl.addEventListener('click', renderPage);
+
+  // Search
+  let searchTimeout;
+  document.getElementById('searchInput').addEventListener('input', e => {
+    clearTimeout(searchTimeout);
+    searchTimeout = setTimeout(() => {
+      searchQuery = e.target.value.trim();
+      applyFilters();
+    }, 200);
+  });
+
+  // Genre filters
+  filtersEl.addEventListener('click', e => {
+    if(!e.target.classList.contains('filter-tag')) return;
+    filtersEl.querySelectorAll('.filter-tag').forEach(t => t.classList.remove('active'));
+    e.target.classList.add('active');
+    activeGenre = e.target.dataset.genre;
+    applyFilters();
+  });
+
+  // Sort buttons
+  document.querySelectorAll('.sort-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const key = btn.dataset.sort;
+      if(sortKey === key){ sortDir *= -1; }
+      else { sortKey = key; sortDir = 1; }
+      document.querySelectorAll('.sort-btn').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      applyFilters();
+    });
+  });
+
+  /* ─── Init ─── */
+  applyFilters();
+
+})();
+</script>
+
+</body>
+</html>

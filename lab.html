@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Lab — Siren Sinfull</title>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --void: #0a0a08;
+  --deep: #0e0e0c;
+  --surface: #141412;
+  --border: rgba(200,160,100,0.08);
+  --border-hover: rgba(200,160,100,0.2);
+  --gold: #c8a064;
+  --gold-dim: rgba(200,160,100,0.4);
+  --gold-ghost: rgba(200,160,100,0.12);
+  --gold-whisper: rgba(200,160,100,0.06);
+  --text: rgba(200,160,100,0.7);
+  --text-dim: rgba(200,160,100,0.3);
+  --text-ghost: rgba(200,160,100,0.15);
+  --mono: 'JetBrains Mono', monospace;
+  --serif: 'Crimson Pro', Georgia, serif;
+  --display: 'Cinzel', serif;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: var(--serif);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* ---- GRAIN OVERLAY ---- */
+body::before {
+  content: '';
+  position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none; z-index: 9999; opacity: 0.5;
+}
+
+/* ---- NAVIGATION ---- */
+nav {
+  display: flex; align-items: center; justify-content: center; gap: 32px;
+  padding: 20px 32px;
+  border-bottom: 1px solid var(--border);
+  font-family: var(--mono); font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+}
+nav a {
+  color: var(--text-dim); text-decoration: none; transition: color 0.3s;
+  padding: 4px 0; position: relative;
+}
+nav a:hover, nav a.active {
+  color: var(--gold);
+}
+nav a.active::after {
+  content: ''; position: absolute; bottom: -2px; left: 0; right: 0;
+  height: 1px; background: var(--gold); opacity: 0.6;
+}
+.nav-title {
+  font-family: var(--display); font-size: 14px; letter-spacing: 6px;
+  color: var(--gold-dim);
+}
+
+/* ---- HERO ---- */
+.hero {
+  text-align: center; padding: 80px 24px 60px;
+  border-bottom: 1px solid var(--border);
+}
+.hero h1 {
+  font-family: var(--display); font-size: clamp(28px, 5vw, 48px);
+  font-weight: 400; letter-spacing: 8px; color: var(--gold);
+  text-transform: uppercase; margin-bottom: 12px;
+}
+.hero .subtitle {
+  font-family: var(--mono); font-size: 11px; letter-spacing: 4px;
+  color: var(--text-ghost); text-transform: uppercase;
+}
+.hero .desc {
+  font-family: var(--serif); font-size: 17px; color: var(--text-dim);
+  max-width: 640px; margin: 24px auto 0; line-height: 1.8; font-weight: 300;
+}
+
+/* ---- CATEGORY SECTIONS ---- */
+.category {
+  max-width: 1100px; margin: 0 auto; padding: 60px 24px 0;
+}
+.category-header {
+  display: flex; align-items: center; gap: 16px; margin-bottom: 32px;
+}
+.category-line { flex: 1; height: 1px; background: var(--border); }
+.category-label {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 4px;
+  color: var(--text-ghost); text-transform: uppercase; white-space: nowrap;
+}
+
+/* ---- CARDS GRID ---- */
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background: var(--deep);
+  border: 1px solid var(--border);
+  border-radius: 3px;
+  padding: 28px 24px 24px;
+  transition: all 0.4s ease;
+  position: relative;
+  overflow: hidden;
+  text-decoration: none;
+  display: block;
+  cursor: pointer;
+}
+.card::before {
+  content: '';
+  position: absolute; top: 0; left: 0; right: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--gold-ghost), transparent);
+  opacity: 0; transition: opacity 0.4s;
+}
+.card:hover {
+  border-color: var(--border-hover);
+  background: var(--surface);
+  transform: translateY(-2px);
+}
+.card:hover::before { opacity: 1; }
+
+.card-tag {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 3px;
+  color: var(--text-ghost); text-transform: uppercase; margin-bottom: 12px;
+}
+.card-title {
+  font-family: var(--display); font-size: 18px; font-weight: 400;
+  color: var(--gold); letter-spacing: 1px; margin-bottom: 8px;
+  transition: color 0.3s;
+}
+.card:hover .card-title { color: rgba(200,160,100,0.9); }
+.card-desc {
+  font-family: var(--serif); font-size: 14px; color: var(--text-dim);
+  line-height: 1.7; font-weight: 300;
+}
+.card-meta {
+  margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border);
+  display: flex; justify-content: space-between; align-items: center;
+}
+.card-type {
+  font-family: var(--mono); font-size: 9px; letter-spacing: 2px;
+  text-transform: uppercase; padding: 3px 8px; border-radius: 2px;
+}
+.type-interactive { color: #4a9eff; background: rgba(74,158,255,0.08); border: 1px solid rgba(74,158,255,0.15); }
+.type-react { color: #61dafb; background: rgba(97,218,251,0.08); border: 1px solid rgba(97,218,251,0.15); }
+.type-document { color: #50e890; background: rgba(80,232,144,0.08); border: 1px solid rgba(80,232,144,0.15); }
+.type-data { color: #d07020; background: rgba(208,112,32,0.08); border: 1px solid rgba(208,112,32,0.15); }
+
+.card-arrow {
+  font-family: var(--mono); font-size: 14px; color: var(--text-ghost);
+  transition: all 0.3s;
+}
+.card:hover .card-arrow { color: var(--gold); transform: translateX(4px); }
+
+/* ---- FEATURED CARD ---- */
+.card.featured {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  padding: 36px 32px;
+  border-color: rgba(200,160,100,0.12);
+  background: linear-gradient(135deg, var(--deep), rgba(200,160,100,0.02));
+}
+.card.featured .card-content { display: flex; flex-direction: column; justify-content: center; }
+.card.featured .card-title { font-size: 24px; }
+.card.featured .card-visual {
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(200,160,100,0.03); border: 1px solid var(--border);
+  border-radius: 2px; min-height: 160px;
+  font-family: var(--mono); font-size: 10px; color: var(--text-ghost);
+  letter-spacing: 2px; text-transform: uppercase;
+}
+
+@media (max-width: 700px) {
+  .card.featured { grid-template-columns: 1fr; }
+  .cards { grid-template-columns: 1fr; }
+  nav { flex-wrap: wrap; gap: 16px; }
+  .hero { padding: 48px 16px 40px; }
+}
+
+/* ---- FOOTER ---- */
+.footer {
+  text-align: center; padding: 60px 24px 32px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 3px;
+  color: var(--text-ghost); text-transform: uppercase;
+}
+</style>
+</head>
+<body>
+
+<!-- NAVIGATION -->
+<nav>
+  <span class="nav-title">Siren Sinfull</span>
+  <a href="index.html">Home</a>
+  <a href="music.html">Music</a>
+  <a href="books.html">Books</a>
+  <a href="about.html">About</a>
+  <a href="lab.html" class="active">Lab</a>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <h1>The Lab</h1>
+  <div class="subtitle">Interactive Visualizers &amp; Theory Instruments</div>
+  <div class="desc">
+    Computational tools built from first-principle frameworks. Each visualizer is a living 
+    instrument — a window into the mathematics, topology, and recursive structures that 
+    underpin everything else on this site.
+  </div>
+</div>
+
+<!-- FEATURED: OPERAND OBSERVATORY -->
+<div class="category">
+  <div class="category-header">
+    <span class="category-label">Lattice Exploration</span>
+    <div class="category-line"></div>
+  </div>
+  <div class="cards">
+
+    <a href="lab/operand-observatory.html" class="card featured">
+      <div class="card-content">
+        <div class="card-tag">Flagship Instrument</div>
+        <div class="card-title">The Operand Observatory</div>
+        <div class="card-desc">
+          Full interactive exploration of the factor-topological lattice. Navigate the numberline 
+          through prime factorization, kernel transforms (Growth, Mitosis, Stable), and multi-base 
+          representation. See how every integer encodes its own position in the recursive structure. 
+          88K of pure interactive theory.
+        </div>
+        <div class="card-meta">
+          <span class="card-type type-interactive">Interactive HTML</span>
+          <span class="card-arrow">→</span>
+        </div>
+      </div>
+      <div class="card-visual">
+        ◈ Factor Topology ◈ Kernel Transforms ◈ Multi-Base ◈
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<!-- TOPOLOGY & NUMBER THEORY -->
+<div class="category">
+  <div class="category-header">
+    <span class="category-label">Topology &amp; Number Theory</span>
+    <div class="category-line"></div>
+  </div>
+  <div class="cards">
+
+    <a href="lab/fractal-lattice.html" class="card">
+      <div class="card-tag">Lattice Subsystem</div>
+      <div class="card-title">The Fractal Lattice</div>
+      <div class="card-desc">
+        Factor-topology rendered as fractal geometry. Watch the self-similar structure 
+        of prime decomposition unfold across scales — the same pattern at every level 
+        of magnification.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-interactive">Interactive HTML</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="lab/genome-lab.html" class="card">
+      <div class="card-tag">Lattice Subsystem</div>
+      <div class="card-title">The Genome Lab</div>
+      <div class="card-desc">
+        DNA extraction from integers. Every number has a unique genetic signature encoded 
+        in its prime factorization. This tool extracts, visualizes, and compares the 
+        structural genome of any operand.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-interactive">Interactive HTML</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="lab/family-of-2.html" class="card">
+      <div class="card-tag">Number Theory</div>
+      <div class="card-title">The Family of 2</div>
+      <div class="card-desc">
+        Both Sides of Zero — exploring the recursive family tree of powers of 2 
+        and the symmetry that emerges when you trace their relationships through 
+        the lattice. Interactive canvas visualization with multiple exploration modes.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-interactive">Interactive HTML</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="lab/synergonesis.html" class="card">
+      <div class="card-tag">Unified Theory</div>
+      <div class="card-title">Synergonesis</div>
+      <div class="card-desc">
+        The unified field theory visualizer. 344K of interactive simulation mapping 
+        how Growth, Mitosis, and Stable kernels produce emergent structure across 
+        every domain — from number theory to physics to biology. The everything-engine.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-interactive">Interactive HTML</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<!-- ANALYSIS & MEASUREMENT -->
+<div class="category">
+  <div class="category-header">
+    <span class="category-label">Analysis &amp; Measurement</span>
+    <div class="category-line"></div>
+  </div>
+  <div class="cards">
+
+    <a href="lab/intellect-framework.html" class="card">
+      <div class="card-tag">Cognitive Architecture</div>
+      <div class="card-title">The Substrate Index</div>
+      <div class="card-desc">
+        An alternative framework for measuring intellect — not speed or memory, but 
+        structural origination, compression ratio, cross-domain coherence, abstraction 
+        resistance, and recursive depth. Radar charts compare history's deepest thinkers 
+        across seven axes.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-react">React Component</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="lab/voice-analysis.html" class="card">
+      <div class="card-tag">Audio Analysis</div>
+      <div class="card-title">Voice Harmonic Analysis</div>
+      <div class="card-desc">
+        Frequency decomposition and harmonic mapping of vocal audio. Analyzes tonal 
+        characteristics, harmonic series relationships, and resonant structure in 
+        real-time from microphone input.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-interactive">Interactive HTML</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+    <a href="lab/transcript-visualizer.html" class="card">
+      <div class="card-tag">Mathematical Transcript</div>
+      <div class="card-title">The Transcript — Visual Appendix</div>
+      <div class="card-desc">
+        Interactive visual companion to the mathematical derivation sessions. 
+        Family-of-2 graph, tier visualizations, lemniscate mappings, rotation 
+        diagrams, and reduction pathways — the visual proof layer.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-interactive">Interactive HTML</span>
+        <span class="card-arrow">→</span>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<!-- DOCUMENTS & DATA -->
+<div class="category">
+  <div class="category-header">
+    <span class="category-label">Documents &amp; Source Data</span>
+    <div class="category-line"></div>
+  </div>
+  <div class="cards">
+
+    <a href="lab/AncientShape_Physics_1.pdf" target="_blank" class="card">
+      <div class="card-tag">Research Paper</div>
+      <div class="card-title">Topology-First Frameworks — Volume I</div>
+      <div class="card-desc">
+        AncientShape Physics. The foundational paper establishing the topology-first 
+        approach to mathematical structure — where shape precedes number, and 
+        geometry encodes operation.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-document">PDF Document</span>
+        <span class="card-arrow">↓</span>
+      </div>
+    </a>
+
+    <a href="lab/AncientShape_Physics_2.pdf" target="_blank" class="card">
+      <div class="card-tag">Research Paper</div>
+      <div class="card-title">Topology-First Frameworks — Volume II</div>
+      <div class="card-desc">
+        Continuation of the AncientShape Physics series. Extended derivations, 
+        additional proofs, and cross-domain applications of the topology-first 
+        mathematical framework.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-document">PDF Document</span>
+        <span class="card-arrow">↓</span>
+      </div>
+    </a>
+
+    <a href="lab/session-scripts.py" target="_blank" class="card">
+      <div class="card-tag">Computational Proof</div>
+      <div class="card-title">YHVH Operand Analysis — Session Scripts</div>
+      <div class="card-desc">
+        4,473 lines of Python implementing the full operand analysis system. 
+        Prime factorization, kernel transforms, multi-base encoding, recursive 
+        reduction proofs — the computational verification layer behind the theory. 
+        Download and run locally.
+      </div>
+      <div class="card-meta">
+        <span class="card-type type-data">Python Source</span>
+        <span class="card-arrow">↓</span>
+      </div>
+    </a>
+
+  </div>
+</div>
+
+<!-- FOOTER -->
+<div class="footer">
+  Siren Sinfull — The Lab — Instruments Built From First Principles
+</div>
+
+</body>
+</html>

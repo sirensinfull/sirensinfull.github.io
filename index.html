@@ -87,9 +87,16 @@
         <span id="audioDuration">0:00</span>
       </div>
       <div class="controls-row" style="justify-content:center;margin:8px 0;">
+        <button id="audioShuffleBtn" class="btn-icon" title="Shuffle: OFF" aria-label="Shuffle">🔀</button>
+        <button id="audioRWBtn" class="btn-icon" title="Hold to rewind" aria-label="Rewind">⏪</button>
         <button id="audioPrevBtn" class="btn-icon" title="Previous track" aria-label="Previous">⏮</button>
         <button id="audioPlayPauseBtn" class="btn-icon" title="Play/Pause" aria-label="Play" style="width:42px;height:42px;font-size:1.2rem;">▶</button>
         <button id="audioNextBtn" class="btn-icon" title="Next track" aria-label="Next">⏭</button>
+        <button id="audioFFBtn" class="btn-icon" title="Hold to fast-forward" aria-label="Fast forward">⏩</button>
+        <button id="audioRepeatBtn" class="btn-icon" title="Repeat: off" aria-label="Repeat">🔁</button>
+      </div>
+      <div class="controls-row" style="justify-content:center;margin:0 0 4px;">
+        <button id="audioReplayBtn" class="btn" style="font-size:0.65rem;padding:2px 10px;" title="Restart current track" aria-label="Replay">↺ Replay</button>
       </div>
       <input id="audioVolume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume">
       <div class="controls-row" style="margin-top:10px;">

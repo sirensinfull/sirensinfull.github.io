@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Analytics — Siren Sinfull</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+<style>
+/* ============================================================
+   ANALYTICS DASHBOARD — OUROBOROS AESTHETIC
+   Siren Sinfull · sirensinfull.github.io
+   ============================================================ */
+
+:root {
+  --void: #0a0a0c;
+  --deep: #111116;
+  --surface: #16161c;
+  --surface-hover: #1c1c24;
+  --border: #2a2a35;
+  --gold: #c9a84c;
+  --gold-dim: #8a7230;
+  --gold-bright: #e8cc6a;
+  --text: #a8a8b3;
+  --text-bright: #d4d4dc;
+  --text-dim: #5a5a68;
+  --green: #4a9b6a;
+  --red: #9b4a4a;
+  --blue: #4a6a9b;
+  --purple: #7a4a9b;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+  background: var(--void);
+  color: var(--text);
+  font-family: 'Crimson Pro', Georgia, serif;
+  font-size: 16px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+/* Grain overlay */
+body::before {
+  content: '';
+  position: fixed;
+  top: 0; left: 0; width: 100%; height: 100%;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+}
+
+/* Nav */
+nav {
+  position: fixed;
+  top: 0; width: 100%; z-index: 100;
+  background: rgba(10,10,12,0.92);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--border);
+  padding: 14px 0;
+}
+.nav-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 30px;
+}
+nav .brand {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  letter-spacing: 4px;
+  color: var(--gold);
+  text-decoration: none;
+}
+nav .links a {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  text-decoration: none;
+  margin-left: 28px;
+  transition: color 0.3s;
+}
+nav .links a:hover { color: var(--gold); }
+
+/* Main */
+.page {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 90px 24px 60px;
+}
+
+/* Page header */
+.page-header {
+  margin-bottom: 36px;
+}
+.page-header h1 {
+  font-family: 'Cinzel', serif;
+  font-size: clamp(24px, 3.5vw, 36px);
+  font-weight: 700;
+  color: var(--text-bright);
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+.page-header .subtitle {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+}
+
+/* Status bar */
+.status-bar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 18px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  margin-bottom: 28px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  color: var(--text-dim);
+}
+.status-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  flex-shrink: 0;
+}
+.status-dot.loaded { background: var(--green); }
+.status-dot.error { background: var(--red); }
+
+/* Drop zone */
+.drop-zone {
+  border: 2px dashed var(--border);
+  border-radius: 8px;
+  padding: 60px 30px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s;
+  margin-bottom: 32px;
+}
+.drop-zone:hover, .drop-zone.dragover {
+  border-color: var(--gold-dim);
+  background: rgba(201,168,76,0.03);
+}
+.drop-zone h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 18px;
+  color: var(--text-bright);
+  margin-bottom: 8px;
+}
+.drop-zone p {
+  font-size: 14px;
+  color: var(--text-dim);
+  margin-bottom: 14px;
+}
+.drop-zone .or-text {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin: 12px 0;
+}
+.drop-zone button {
+  background: var(--surface);
+  border: 1px solid var(--gold-dim);
+  color: var(--gold);
+  padding: 10px 24px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.drop-zone button:hover {
+  background: var(--gold);
+  color: var(--void);
+}
+.drop-zone.hidden { display: none; }
+
+/* Stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.stat-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+  text-align: center;
+}
+.stat-card .label {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  margin-bottom: 8px;
+}
+.stat-card .value {
+  font-family: 'Cinzel', serif;
+  font-size: 28px;
+  font-weight: 700;
+  color: var(--gold);
+}
+.stat-card .unit {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  margin-top: 4px;
+}
+
+/* Chart panels */
+.chart-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+@media (max-width: 800px) { .chart-row { grid-template-columns: 1fr; } }
+.chart-panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 20px;
+}
+.chart-panel.full { grid-column: 1 / -1; }
+.chart-panel h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 15px;
+  color: var(--text-bright);
+  margin-bottom: 16px;
+  letter-spacing: 1px;
+}
+.chart-panel canvas {
+  width: 100% !important;
+  max-height: 320px;
+}
+
+/* Data table */
+.data-table-wrap {
+  max-height: 400px;
+  overflow-y: auto;
+}
+.data-table-wrap::-webkit-scrollbar { width: 6px; }
+.data-table-wrap::-webkit-scrollbar-track { background: var(--deep); }
+.data-table-wrap::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+table.dt {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+table.dt th {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  color: var(--gold-dim);
+  text-align: left;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--border);
+  background: var(--deep);
+  position: sticky;
+  top: 0;
+}
+table.dt td {
+  padding: 6px 10px;
+  border-bottom: 1px solid rgba(42,42,53,0.3);
+  color: var(--text);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+}
+table.dt tr:hover td { background: rgba(201,168,76,0.03); }
+table.dt td.num { text-align: right; }
+table.dt td.earnings { color: var(--green); }
+
+/* Hidden until loaded */
+.dashboard { display: none; }
+.dashboard.visible { display: block; }
+
+/* Update instructions */
+.update-instructions {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--gold-dim);
+  border-radius: 0 6px 6px 0;
+  padding: 18px 22px;
+  margin-top: 28px;
+  font-size: 14px;
+}
+.update-instructions h3 {
+  font-family: 'Cinzel', serif;
+  font-size: 14px;
+  color: var(--gold);
+  margin-bottom: 10px;
+}
+.update-instructions code {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 12px;
+  background: var(--deep);
+  padding: 2px 6px;
+  border-radius: 3px;
+  color: var(--gold-dim);
+}
+.update-instructions ol {
+  padding-left: 20px;
+  color: var(--text);
+  line-height: 1.9;
+}
+
+/* Footer */
+.page-footer {
+  text-align: center;
+  padding: 32px 0;
+  margin-top: 40px;
+  border-top: 1px solid var(--border);
+}
+.page-footer p {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  color: var(--text-dim);
+  letter-spacing: 2px;
+}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a href="index.html" class="brand">SIREN SINFULL</a>
+    <div class="links">
+      <a href="index.html">Home</a>
+      <a href="music.html">Music</a>
+      <a href="about.html">About</a>
+      <a href="books.html">Books</a>
+    </div>
+  </div>
+</nav>
+
+<main class="page">
+
+  <header class="page-header">
+    <h1>Analytics Dashboard</h1>
+    <div class="subtitle">DistroKid Earnings · Client-Side · Auto-Parsed</div>
+  </header>
+
+  <!-- Status bar -->
+  <div class="status-bar">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">Waiting for data...</span>
+  </div>
+
+  <!-- Drop zone (shown when no auto-loaded file) -->
+  <div class="drop-zone" id="dropZone">
+    <h3>Drop Your DistroKid TSV Here</h3>
+    <p>The "Excruciating Detail" export from DistroKid Bank</p>
+    <div class="or-text">— or —</div>
+    <button onclick="document.getElementById('fileInput').click()">Choose File</button>
+    <input type="file" id="fileInput" accept=".tsv,.csv,.txt" style="display:none">
+    <p style="margin-top:16px;font-size:12px;color:var(--text-dim)">
+      All processing happens locally in your browser. Nothing is uploaded.
+    </p>
+  </div>
+
+  <!-- Dashboard (hidden until data loads) -->
+  <div class="dashboard" id="dashboard">
+
+    <!-- Top-level stats -->
+    <div class="stats-grid" id="statsGrid"></div>
+
+    <!-- Charts -->
+    <div class="chart-row">
+      <div class="chart-panel full">
+        <h3>Monthly Earnings</h3>
+        <canvas id="chartMonthly"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-panel">
+        <h3>Earnings by Store</h3>
+        <canvas id="chartStores"></canvas>
+      </div>
+      <div class="chart-panel">
+        <h3>Streams by Store</h3>
+        <canvas id="chartStoreStreams"></canvas>
+      </div>
+    </div>
+
+    <div class="chart-row">
+      <div class="chart-panel">
+        <h3>Top Countries (Earnings)</h3>
+        <canvas id="chartCountries"></canvas>
+      </div>
+      <div class="chart-panel">
+        <h3>Top Songs (Earnings)</h3>
+        <canvas id="chartSongs"></canvas>
+      </div>
+    </div>
+
+    <!-- Top Songs Table -->
+    <div class="chart-panel" style="margin-bottom:20px">
+      <h3>Top 50 Songs by Earnings</h3>
+      <div class="data-table-wrap">
+        <table class="dt" id="tableSongs">
+          <thead><tr><th>#</th><th>Title</th><th>Streams</th><th>Earnings</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Store Breakdown Table -->
+    <div class="chart-panel" style="margin-bottom:20px">
+      <h3>Store Breakdown</h3>
+      <div class="data-table-wrap">
+        <table class="dt" id="tableStores">
+          <thead><tr><th>Store</th><th>Streams</th><th>Earnings</th><th>Avg / Stream</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Detected columns info -->
+    <div class="chart-panel" style="margin-bottom:20px">
+      <h3>Detected Columns</h3>
+      <p id="detectedCols" style="font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--text-dim);word-break:break-all;"></p>
+    </div>
+
+  </div><!-- /dashboard -->
+
+  <!-- Update instructions -->
+  <div class="update-instructions">
+    <h3>How to Update Monthly</h3>
+    <ol>
+      <li>Log into <a href="https://distrokid.com/bank" target="_blank" style="color:var(--gold)">DistroKid Bank</a></li>
+      <li>Click <strong>"See Breakdown by Store"</strong> → <strong>"See Excruciating Detail"</strong></li>
+      <li>Click the <strong>Download</strong> button (saves as <code>.tsv</code>)</li>
+      <li>Rename the file to <code>distrokid_data.tsv</code></li>
+      <li>Drop it in your repo root (replace the old one)</li>
+      <li>Commit and push — dashboard updates automatically</li>
+    </ol>
+    <p style="margin-top:10px;font-size:13px;color:var(--text-dim)">
+      Or just open this page and drag-drop any DistroKid TSV directly onto it — works offline too.
+    </p>
+  </div>
+
+  <footer class="page-footer">
+    <p>© 2004–2026 Michael Scott Shaffer · Quantum Foam Productions</p>
+  </footer>
+
+</main>
+
+<script>
+/* ============================================================
+   DISTROKID TSV ANALYTICS ENGINE
+   Auto-detects columns from header row.
+   Zero dependencies (except Chart.js for visuals).
+   ============================================================ */
+
+// ── CONFIG ──────────────────────────────────────────────────
+// The page will try to auto-fetch this file from the same directory.
+// Rename your DistroKid download to this name, drop it in the repo.
+const DATA_FILE = 'distrokid_data.tsv';
+
+// ── COLUMN NAME MAPPING ─────────────────────────────────────
+// DistroKid's columns have changed over time. We map flexibly.
+// Keys = our internal names. Values = array of possible header strings.
+const COLUMN_ALIASES = {
+  reportingDate: ['reporting date', 'reporting month', 'report date', 'date added'],
+  saleMonth:     ['sale month', 'sales month', 'sale date', 'sales date', 'sale period'],
+  store:         ['store', 'store name', 'service', 'dsp', 'platform'],
+  artist:        ['artist', 'artist name'],
+  title:         ['title', 'song', 'song/album', 'song name', 'track', 'release title', 'release'],
+  isrc:          ['isrc'],
+  upc:           ['upc'],
+  quantity:      ['quantity', 'qty', 'streams', 'units', 'count', 'plays'],
+  earnings:      ['earnings (usd)', 'earnings', 'earnings (us)', 'earnings(usd)', 'amount',
+                  'net earnings', 'total earnings', 'payment', 'revenue', 'usd'],
+  country:       ['country', 'territory', 'country of sale', 'country/region', 'region'],
+  teamPct:       ['team percentage', 'team %', 'team pct', 'percentage']
+};
+
+// ── CHART.JS GLOBAL CONFIG ──────────────────────────────────
+Chart.defaults.color = '#5a5a68';
+Chart.defaults.borderColor = 'rgba(42,42,53,0.5)';
+Chart.defaults.font.family = "'JetBrains Mono', monospace";
+Chart.defaults.font.size = 10;
+
+const CHART_COLORS = [
+  '#c9a84c', '#4a9b6a', '#4a6a9b', '#9b4a4a', '#7a4a9b',
+  '#9b8a4a', '#4a9b9b', '#6a4a9b', '#9b6a4a', '#4a9b5a',
+  '#8a6a3a', '#3a6a8a', '#8a3a6a', '#6a8a3a', '#3a8a6a'
+];
+
+// ── STATE ───────────────────────────────────────────────────
+let parsedData = null;
+let columnMap = {};
+let charts = {};
+
+// ── DOM REFS ────────────────────────────────────────────────
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const dropZone = document.getElementById('dropZone');
+const dashboard = document.getElementById('dashboard');
+const fileInput = document.getElementById('fileInput');
+
+// ── INIT ────────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  setupDropZone();
+  tryAutoLoad();
+});
+
+function setupDropZone() {
+  dropZone.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    dropZone.classList.add('dragover');
+  });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('dragover'));
+  dropZone.addEventListener('drop', (e) => {
+    e.preventDefault();
+    dropZone.classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file) readFile(file);
+  });
+  fileInput.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (file) readFile(file);
+  });
+}
+
+function tryAutoLoad() {
+  setStatus('loading', `Trying to fetch ${DATA_FILE}...`);
+  fetch(DATA_FILE)
+    .then(r => {
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return r.text();
+    })
+    .then(text => {
+      setStatus('loaded', `Auto-loaded ${DATA_FILE}`);
+      processRawTSV(text);
+    })
+    .catch(() => {
+      setStatus('waiting', `No ${DATA_FILE} found — drop a DistroKid TSV below, or rename your file to ${DATA_FILE} and place it in the repo root.`);
+    });
+}
+
+function readFile(file) {
+  setStatus('loading', `Reading ${file.name}...`);
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    setStatus('loaded', `Loaded ${file.name}`);
+    processRawTSV(e.target.result);
+  };
+  reader.onerror = () => setStatus('error', 'Failed to read file');
+  reader.readAsText(file);
+}
+
+function setStatus(state, msg) {
+  statusDot.className = 'status-dot';
+  if (state === 'loaded') statusDot.classList.add('loaded');
+  else if (state === 'error') statusDot.classList.add('error');
+  statusText.textContent = msg;
+}
+
+// ── TSV PARSER ──────────────────────────────────────────────
+function processRawTSV(raw) {
+  try {
+    // Detect delimiter: tab or comma
+    const firstLine = raw.split('\n')[0];
+    const delimiter = firstLine.split('\t').length > firstLine.split(',').length ? '\t' : ',';
+
+    const lines = raw.trim().split('\n');
+    if (lines.length < 2) throw new Error('File has no data rows');
+
+    // Parse header
+    const headers = lines[0].split(delimiter).map(h => h.trim().replace(/^["']|["']$/g, ''));
+
+    // Map columns
+    columnMap = {};
+    headers.forEach((h, i) => {
+      const lower = h.toLowerCase().trim();
+      for (const [key, aliases] of Object.entries(COLUMN_ALIASES)) {
+        if (aliases.includes(lower) || aliases.some(a => lower.includes(a))) {
+          columnMap[key] = i;
+          break;
+        }
+      }
+    });
+
+    document.getElementById('detectedCols').textContent =
+      `Headers: [${headers.join(' | ')}]\n\nMapped: ${JSON.stringify(Object.fromEntries(
+        Object.entries(columnMap).map(([k,v]) => [k, headers[v]])
+      ), null, 0)}`;
+
+    // Parse rows
+    const rows = [];
+    for (let i = 1; i < lines.length; i++) {
+      const line = lines[i].trim();
+      if (!line) continue;
+      const cols = parseLine(line, delimiter);
+      rows.push(cols);
+    }
+
+    parsedData = rows;
+    setStatus('loaded', `Parsed ${rows.length.toLocaleString()} rows · ${headers.length} columns detected`);
+
+    dropZone.classList.add('hidden');
+    dashboard.classList.add('visible');
+
+    buildDashboard();
+
+  } catch (err) {
+    setStatus('error', `Parse error: ${err.message}`);
+    console.error(err);
+  }
+}
+
+function parseLine(line, delimiter) {
+  // Handle quoted fields
+  const result = [];
+  let current = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"') {
+      inQuotes = !inQuotes;
+    } else if (ch === delimiter && !inQuotes) {
+      result.push(current.trim());
+      current = '';
+    } else {
+      current += ch;
+    }
+  }
+  result.push(current.trim());
+  return result;
+}
+
+// ── HELPERS ─────────────────────────────────────────────────
+function col(row, key) {
+  const idx = columnMap[key];
+  if (idx === undefined) return null;
+  return row[idx] || null;
+}
+
+function num(row, key) {
+  const v = col(row, key);
+  if (v === null) return 0;
+  const n = parseFloat(String(v).replace(/[,$]/g, ''));
+  return isNaN(n) ? 0 : n;
+}
+
+function fmt$(n) {
+  return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+}
+
+function fmtN(n) {
+  return Math.round(n).toLocaleString();
+}
+
+// ── BUILD DASHBOARD ─────────────────────────────────────────
+function buildDashboard() {
+  if (!parsedData) return;
+
+  // Aggregations
+  let totalEarnings = 0;
+  let totalStreams = 0;
+  const byStore = {};
+  const byMonth = {};
+  const bySong = {};
+  const byCountry = {};
+  const uniqueSongs = new Set();
+  const uniqueStores = new Set();
+
+  parsedData.forEach(row => {
+    const earnings = num(row, 'earnings');
+    const quantity = num(row, 'quantity');
+    const store = col(row, 'store') || 'Unknown';
+    const title = col(row, 'title') || 'Unknown';
+    const country = col(row, 'country') || 'Unknown';
+    const month = col(row, 'reportingDate') || col(row, 'saleMonth') || 'Unknown';
+
+    totalEarnings += earnings;
+    totalStreams += quantity;
+    uniqueSongs.add(title);
+    uniqueStores.add(store);
+
+    // By store
+    if (!byStore[store]) byStore[store] = { earnings: 0, streams: 0 };
+    byStore[store].earnings += earnings;
+    byStore[store].streams += quantity;
+
+    // By month (normalize to YYYY-MM if possible)
+    const monthKey = normalizeMonth(month);
+    if (!byMonth[monthKey]) byMonth[monthKey] = { earnings: 0, streams: 0 };
+    byMonth[monthKey].earnings += earnings;
+    byMonth[monthKey].streams += quantity;
+
+    // By song
+    if (!bySong[title]) bySong[title] = { earnings: 0, streams: 0 };
+    bySong[title].earnings += earnings;
+    bySong[title].streams += quantity;
+
+    // By country
+    if (!byCountry[country]) byCountry[country] = { earnings: 0, streams: 0 };
+    byCountry[country].earnings += earnings;
+    byCountry[country].streams += quantity;
+  });
+
+  // ── Stats cards ────────────────────────────────────
+  const statsGrid = document.getElementById('statsGrid');
+  statsGrid.innerHTML = '';
+  const stats = [
+    { label: 'Total Earnings', value: fmt$(totalEarnings), unit: 'USD' },
+    { label: 'Total Streams', value: fmtN(totalStreams), unit: 'plays' },
+    { label: 'Unique Songs', value: fmtN(uniqueSongs.size), unit: 'titles' },
+    { label: 'Stores', value: uniqueStores.size, unit: 'platforms' },
+    { label: 'Data Rows', value: fmtN(parsedData.length), unit: 'transactions' },
+    { label: 'Avg / Stream', value: totalStreams > 0 ? '$' + (totalEarnings / totalStreams).toFixed(5) : 'N/A', unit: 'per play' }
+  ];
+  stats.forEach(s => {
+    const card = document.createElement('div');
+    card.className = 'stat-card';
+    card.innerHTML = `<div class="label">${s.label}</div><div class="value">${s.value}</div><div class="unit">${s.unit}</div>`;
+    statsGrid.appendChild(card);
+  });
+
+  // ── Monthly chart ──────────────────────────────────
+  const sortedMonths = Object.keys(byMonth).sort();
+  makeChart('chartMonthly', 'bar', {
+    labels: sortedMonths,
+    datasets: [{
+      label: 'Earnings ($)',
+      data: sortedMonths.map(m => byMonth[m].earnings),
+      backgroundColor: 'rgba(201,168,76,0.6)',
+      borderColor: '#c9a84c',
+      borderWidth: 1
+    }]
+  }, { plugins: { legend: { display: false } } });
+
+  // ── Store earnings chart ───────────────────────────
+  const storesSorted = Object.entries(byStore).sort((a,b) => b[1].earnings - a[1].earnings).slice(0, 12);
+  makeChart('chartStores', 'doughnut', {
+    labels: storesSorted.map(s => s[0]),
+    datasets: [{
+      data: storesSorted.map(s => s[1].earnings),
+      backgroundColor: CHART_COLORS.slice(0, storesSorted.length),
+      borderColor: 'rgba(10,10,12,0.8)',
+      borderWidth: 2
+    }]
+  }, { plugins: { legend: { position: 'right', labels: { boxWidth: 10, padding: 8 } } } });
+
+  // ── Store streams chart ────────────────────────────
+  const storesStreamSorted = Object.entries(byStore).sort((a,b) => b[1].streams - a[1].streams).slice(0, 12);
+  makeChart('chartStoreStreams', 'doughnut', {
+    labels: storesStreamSorted.map(s => s[0]),
+    datasets: [{
+      data: storesStreamSorted.map(s => s[1].streams),
+      backgroundColor: CHART_COLORS.slice(0, storesStreamSorted.length),
+      borderColor: 'rgba(10,10,12,0.8)',
+      borderWidth: 2
+    }]
+  }, { plugins: { legend: { position: 'right', labels: { boxWidth: 10, padding: 8 } } } });
+
+  // ── Country chart ──────────────────────────────────
+  const countrySorted = Object.entries(byCountry).sort((a,b) => b[1].earnings - a[1].earnings).slice(0, 10);
+  makeChart('chartCountries', 'bar', {
+    labels: countrySorted.map(c => c[0]),
+    datasets: [{
+      label: 'Earnings ($)',
+      data: countrySorted.map(c => c[1].earnings),
+      backgroundColor: 'rgba(74,106,155,0.6)',
+      borderColor: '#4a6a9b',
+      borderWidth: 1
+    }]
+  }, {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } }
+  });
+
+  // ── Top songs chart ────────────────────────────────
+  const songsSorted = Object.entries(bySong).sort((a,b) => b[1].earnings - a[1].earnings).slice(0, 10);
+  makeChart('chartSongs', 'bar', {
+    labels: songsSorted.map(s => s[0].length > 30 ? s[0].slice(0,28) + '…' : s[0]),
+    datasets: [{
+      label: 'Earnings ($)',
+      data: songsSorted.map(s => s[1].earnings),
+      backgroundColor: 'rgba(74,155,106,0.6)',
+      borderColor: '#4a9b6a',
+      borderWidth: 1
+    }]
+  }, {
+    indexAxis: 'y',
+    plugins: { legend: { display: false } }
+  });
+
+  // ── Songs table ────────────────────────────────────
+  const allSongsSorted = Object.entries(bySong).sort((a,b) => b[1].earnings - a[1].earnings).slice(0, 50);
+  const songsTbody = document.querySelector('#tableSongs tbody');
+  songsTbody.innerHTML = allSongsSorted.map((s, i) =>
+    `<tr><td class="num">${i+1}</td><td>${s[0]}</td><td class="num">${fmtN(s[1].streams)}</td><td class="num earnings">${fmt$(s[1].earnings)}</td></tr>`
+  ).join('');
+
+  // ── Stores table ───────────────────────────────────
+  const allStoresSorted = Object.entries(byStore).sort((a,b) => b[1].earnings - a[1].earnings);
+  const storesTbody = document.querySelector('#tableStores tbody');
+  storesTbody.innerHTML = allStoresSorted.map(s => {
+    const avg = s[1].streams > 0 ? '$' + (s[1].earnings / s[1].streams).toFixed(5) : 'N/A';
+    return `<tr><td>${s[0]}</td><td class="num">${fmtN(s[1].streams)}</td><td class="num earnings">${fmt$(s[1].earnings)}</td><td class="num">${avg}</td></tr>`;
+  }).join('');
+}
+
+function makeChart(id, type, data, opts = {}) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return;
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(ctx, {
+    type,
+    data,
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      ...opts,
+      scales: type === 'doughnut' ? undefined : {
+        x: { ticks: { maxRotation: 45, font: { size: 9 } }, grid: { color: 'rgba(42,42,53,0.3)' } },
+        y: { ticks: { font: { size: 9 } }, grid: { color: 'rgba(42,42,53,0.3)' } },
+        ...opts.scales
+      }
+    }
+  });
+}
+
+function normalizeMonth(raw) {
+  if (!raw) return 'Unknown';
+  // Try to extract YYYY-MM from various formats
+  const str = String(raw).trim();
+  // Already YYYY-MM
+  if (/^\d{4}-\d{2}$/.test(str)) return str;
+  // YYYY-MM-DD
+  const m1 = str.match(/^(\d{4})-(\d{2})/);
+  if (m1) return `${m1[1]}-${m1[2]}`;
+  // MM/DD/YYYY or M/D/YYYY
+  const m2 = str.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if (m2) return `${m2[3]}-${m2[1].padStart(2,'0')}`;
+  // "Month YYYY" or "Mon YYYY"
+  const months = { jan:'01',feb:'02',mar:'03',apr:'04',may:'05',jun:'06',jul:'07',aug:'08',sep:'09',oct:'10',nov:'11',dec:'12' };
+  const m3 = str.match(/([A-Za-z]+)\s*(\d{4})/);
+  if (m3) {
+    const mon = months[m3[1].toLowerCase().slice(0,3)];
+    if (mon) return `${m3[2]}-${mon}`;
+  }
+  return str;
+}
+</script>
+
+</body>
+</html>

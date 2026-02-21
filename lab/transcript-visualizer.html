@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>THE TRANSCRIPT -- Visual Appendix</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0a08;color:#c8a064;font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;padding:24px 16px}
+  .container{max-width:720px;margin:0 auto}
+  h1{text-align:center;font-size:28px;font-weight:300;letter-spacing:8px;color:rgba(200,160,100,0.7);text-transform:uppercase;margin-bottom:6px}
+  .subtitle{text-align:center;font-size:11px;letter-spacing:4px;color:rgba(200,160,100,0.25);text-transform:uppercase;margin-bottom:40px;font-family:'JetBrains Mono',monospace}
+  .tabs{display:flex;flex-wrap:wrap;gap:4px;justify-content:center;margin-bottom:32px}
+  .tab{padding:8px 14px;background:transparent;border:1px solid rgba(200,160,100,0.06);color:rgba(200,160,100,0.25);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:10px;text-transform:uppercase;letter-spacing:1px;border-radius:1px;transition:all 0.3s}
+  .tab:hover{border-color:rgba(200,160,100,0.2);color:rgba(200,160,100,0.5)}
+  .tab.active{background:rgba(200,160,100,0.08);border-color:rgba(200,160,100,0.3);color:rgba(200,160,100,0.8)}
+  .desc{color:rgba(200,160,100,0.35);font-size:12px;font-family:'JetBrains Mono',monospace;line-height:1.7;margin-bottom:20px}
+  .panel{display:none;min-height:420px}
+  .panel.active{display:block}
+  canvas{display:block;margin:0 auto}
+  .btn-row{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
+  .btn{padding:6px 16px;background:transparent;border:1px solid rgba(200,160,100,0.15);color:rgba(200,160,100,0.4);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:12px;border-radius:2px;transition:all 0.2s}
+  .btn:hover{border-color:rgba(200,160,100,0.4);color:rgba(200,160,100,0.6)}
+  .btn.active{background:rgba(200,160,100,0.2);border-color:rgba(200,160,100,0.6);color:#c8a064}
+  .note{color:rgba(200,160,100,0.3);font-family:'JetBrains Mono',monospace;font-size:10px;margin-top:8px}
+  .note.center{text-align:center}
+  .rotation-row{display:flex;align-items:center;gap:12px;margin-bottom:8px;padding:8px 12px;background:rgba(200,160,100,0.04);border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:12px;flex-wrap:wrap}
+  .reduction-pair{display:flex;gap:24px;flex-wrap:wrap}
+  .reduction-col{flex:1;min-width:220px}
+  .reduction-label{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:600;margin-bottom:8px}
+  .reduction-chain{display:flex;flex-wrap:wrap;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:14px}
+  .yhvh-box{margin-top:20px;padding:10px 14px;background:rgba(200,160,100,0.04);border-radius:2px;font-family:'JetBrains Mono',monospace;font-size:11px}
+  .tier-row{display:flex;align-items:center;gap:8px;margin-bottom:6px}
+  .tier-label{font-family:'JetBrains Mono',monospace;font-size:11px;width:30px;flex-shrink:0}
+  .tier-bar{flex:1;position:relative;height:20px}
+  .tier-meta{font-family:'JetBrains Mono',monospace;font-size:10px;width:120px;flex-shrink:0;text-align:right;color:rgba(200,160,100,0.4)}
+  .footer{margin-top:48px;padding-top:16px;border-top:1px solid rgba(200,160,100,0.06);text-align:center;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:2px;color:rgba(200,160,100,0.15)}
+  #family-info-box{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;min-height:50px;padding:8px;color:rgba(200,160,100,0.5);margin-top:8px}
+</style>
+</head>
+<body>
+<style>.lab-back{position:fixed;top:12px;left:12px;z-index:9999;color:rgba(200,160,100,0.35);text-decoration:none;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;border:1px solid rgba(200,160,100,0.08);border-radius:2px;transition:all 0.3s;background:rgba(10,10,8,0.8);backdrop-filter:blur(4px)}.lab-back:hover{color:rgba(200,160,100,0.8);border-color:rgba(200,160,100,0.25)}</style>
+<a href="../lab.html" class="lab-back">← Lab</a>
+<div class="container">
+  <h1>The Transcript</h1>
+  <div class="subtitle">visual appendix</div>
+  <div class="tabs" id="tabs"></div>
+  <div id="panels"></div>
+  <div class="footer">SYNERGONESIS -- MICHAEL SHAFFER &amp; CLAUDE</div>
+</div>
+<script>
+// === MATH ===
+function isPrime(n){if(n<2)return false;if(n<4)return true;if(n%2===0||n%3===0)return false;for(let i=5;i*i<=n;i+=6)if(n%i===0||n%(i+2)===0)return false;return true}
+function primeFactors(n){if(n<2)return{};const f={};let d=2;while(d*d<=n){while(n%d===0){f[d]=(f[d]||0)+1;n/=d}d++}if(n>1)f[n]=(f[n]||0)+1;return f}
+function fmtF(n){const f=primeFactors(n);return Object.entries(f).sort((a,b)=>a[0]-b[0]).map(([p,e])=>e>1?p+"^"+e:p).join(" x ")}
+function isPrimePower(n){if(n<2)return null;const f=primeFactors(n);const k=Object.keys(f);return k.length===1?{base:+k[0],exp:f[k[0]]}:null}
+
+// === SECTIONS ===
+const SECTIONS=[
+  {id:"family",label:"Family of 2",sub:"the closed set"},
+  {id:"hitrate",label:"24% Hit Rate",sub:"the symmetry"},
+  {id:"tiers",label:"Tier Expansion",sub:"contiguous fill"},
+  {id:"loops",label:"Infinity Loops",sub:"the lemniscates"},
+  {id:"rotation",label:"Kernel Rotation",sub:"the addressing"},
+  {id:"tuning",label:"432 vs 440",sub:"pure vs contaminated"},
+];
+let activeSection="family";
+const tabsEl=document.getElementById("tabs"),panelsEl=document.getElementById("panels");
+SECTIONS.forEach(s=>{
+  const btn=document.createElement("button");
+  btn.className="tab"+(s.id===activeSection?" active":"");
+  btn.textContent=s.label;btn.dataset.id=s.id;
+  btn.onclick=()=>{activeSection=s.id;document.querySelectorAll(".tab").forEach(t=>t.classList.toggle("active",t.dataset.id===s.id));document.querySelectorAll(".panel").forEach(p=>p.classList.toggle("active",p.id==="panel-"+s.id));renderers[s.id]()};
+  tabsEl.appendChild(btn);
+  const panel=document.createElement("div");
+  panel.className="panel"+(s.id===activeSection?" active":"");
+  panel.id="panel-"+s.id;panelsEl.appendChild(panel);
+});
+
+// === 1. FAMILY OF 2 ===
+const FAMILY=[2,3,5,7,11,13,23,47],RING=[3,5,7,11,13,23,47],FSET=new Set(FAMILY);
+function getFamilyData(){
+  const edges=[],compSrc={};
+  for(const m of FAMILY){
+    for(const result of[m+m+1,m+m-1]){
+      if(result<2)continue;
+      const factors=primeFactors(result);
+      for(const p of Object.keys(factors).map(Number))if(FSET.has(p)&&p!==m)edges.push({from:m,to:p,via:result});
+      if(!FSET.has(result)&&result>1){if(!compSrc[result])compSrc[result]=[];compSrc[result].push(m)}
+    }
+  }
+  return{edges,compSrc};
+}
+let famHov=null;
+function renderFamily(){
+  const panel=document.getElementById("panel-family");
+  panel.innerHTML=`<div class="desc">Eight primes. 2 at center -- the seed, the origin. Seven orbit on a perfect heptagon. Straight lines trace connections through factorization. Composites branch outward past the perimeter. Hover any node.</div><canvas id="fam-c" width="620" height="640" style="width:100%;max-width:620px;cursor:crosshair;"></canvas><div id="family-info-box"></div>`;
+  const canvas=document.getElementById("fam-c"),ctx=canvas.getContext("2d");
+  const W=620,H=640,CX=W/2,CY=H/2-10,R=170,OR=280;
+  const{edges,compSrc}=getFamilyData();
+  const pos={};pos[2]={x:CX,y:CY};
+  RING.forEach((p,i)=>{const a=-Math.PI/2+(2*Math.PI*i/7);pos[p]={x:CX+R*Math.cos(a),y:CY+R*Math.sin(a)}});
+  // Composite positions: branch outward
+  const compPos={},usedAng={};
+  for(const[comp,sources]of Object.entries(compSrc)){
+    const src=sources[0],sp=pos[src];
+    let dx=sp.x-CX,dy=sp.y-CY,len=Math.sqrt(dx*dx+dy*dy);
+    if(len<1){dx=0;dy=-1;len=1}
+    const k=src;if(!usedAng[k])usedAng[k]=0;
+    const off=(usedAng[k]-0.5)*0.45;usedAng[k]++;
+    const ba=Math.atan2(dy,dx),angle=ba+off;
+    const dist=src===2?OR*0.55:OR;
+    compPos[comp]={x:CX+dist*Math.cos(angle),y:CY+dist*Math.sin(angle),source:src};
+  }
+  // All nodes for hit testing
+  const allN=[];
+  FAMILY.forEach(p=>allN.push({val:p,x:pos[p].x,y:pos[p].y,type:"f",r:p===2?22:17}));
+  for(const[c,cp]of Object.entries(compPos))allN.push({val:+c,x:cp.x,y:cp.y,type:"c",r:12,source:cp.source});
+  function findN(mx,my){for(const n of allN){const dx=mx-n.x,dy=my-n.y;if(dx*dx+dy*dy<(n.type==="f"?26:18)**2)return n}return null}
+
+  function draw(){
+    ctx.clearRect(0,0,W,H);
+    const hv=famHov,hvF=hv&&hv.type==="f"?hv.val:null,hvC=hv&&hv.type==="c"?hv.val:null;
+
+    // Heptagon outline
+    ctx.beginPath();ctx.strokeStyle="rgba(200,160,100,0.04)";ctx.lineWidth=0.5;
+    RING.forEach((p,i)=>{const a=-Math.PI/2+(2*Math.PI*i/7);const x=CX+R*Math.cos(a),y=CY+R*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+    ctx.closePath();ctx.stroke();
+
+    // Composite branches
+    for(const[comp,cp]of Object.entries(compPos)){
+      const sp=pos[cp.source];
+      const isAct=!hvF||cp.source===hvF||(compSrc[comp]&&compSrc[comp].includes(hvF));
+      const isCH=hvC===+comp;
+      ctx.beginPath();ctx.moveTo(sp.x,sp.y);ctx.lineTo(cp.x,cp.y);
+      ctx.strokeStyle=isCH?"rgba(200,160,100,0.4)":isAct&&hvF?"rgba(200,160,100,0.15)":"rgba(200,160,100,0.04)";
+      ctx.lineWidth=isCH?1.2:0.5;ctx.stroke();
+      // Dashed extension from ring outward
+      if(!hvF&&!hvC){
+        ctx.setLineDash([2,4]);ctx.beginPath();ctx.moveTo(sp.x,sp.y);ctx.lineTo(cp.x,cp.y);
+        ctx.strokeStyle="rgba(200,160,100,0.03)";ctx.lineWidth=0.3;ctx.stroke();ctx.setLineDash([]);
+      }
+    }
+
+    // Family edges (straight lines)
+    const drawnEdges=new Set();
+    edges.forEach(e=>{
+      const key=Math.min(e.from,e.to)+"-"+Math.max(e.from,e.to)+"-"+e.via;
+      if(drawnEdges.has(key))return;drawnEdges.add(key);
+      const from=pos[e.from],to=pos[e.to];
+      const bright=hvF&&(e.from===hvF||e.to===hvF);
+      ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(to.x,to.y);
+      ctx.strokeStyle=bright?"rgba(200,160,100,0.45)":!hvF?"rgba(200,160,100,0.08)":"rgba(200,160,100,0.02)";
+      ctx.lineWidth=bright?1.8:0.7;ctx.stroke();
+      if(bright){
+        const mx=(from.x+to.x)/2,my=(from.y+to.y)/2;
+        const dx=to.x-from.x,dy=to.y-from.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+        ctx.fillStyle="rgba(200,160,100,0.4)";ctx.font="9px 'JetBrains Mono',monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+        ctx.fillText(e.via,mx-(dy/len)*14,my+(dx/len)*14);
+      }
+    });
+
+    // Composite nodes
+    for(const[comp,cp]of Object.entries(compPos)){
+      const isAct=!hvF||cp.source===hvF||(compSrc[comp]&&compSrc[comp].includes(hvF));
+      const isCH=hvC===+comp;
+      ctx.beginPath();ctx.arc(cp.x,cp.y,11,0,Math.PI*2);
+      ctx.fillStyle=isCH?"rgba(200,160,100,0.12)":isAct&&hvF?"rgba(200,160,100,0.05)":"rgba(200,160,100,0.01)";ctx.fill();
+      ctx.strokeStyle=isCH?"rgba(200,160,100,0.5)":isAct&&hvF?"rgba(200,160,100,0.18)":"rgba(200,160,100,0.04)";ctx.lineWidth=1;ctx.stroke();
+      const alpha=isCH?0.8:isAct&&hvF?0.4:hvF||hvC?0.06:0.15;
+      ctx.fillStyle=`rgba(200,160,100,${alpha})`;ctx.font="9px 'JetBrains Mono',monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.fillText(comp,cp.x,cp.y);
+      if(isCH){const pp=isPrimePower(+comp);if(pp){ctx.fillStyle="rgba(200,160,100,0.4)";ctx.font="8px 'JetBrains Mono',monospace";ctx.fillText(pp.base+"^"+pp.exp,cp.x,cp.y+17)}}
+    }
+
+    // Family nodes
+    FAMILY.forEach(p=>{
+      const{x,y}=pos[p];const isC=p===2,r=isC?22:17,isH=hvF===p;
+      let conn=true;
+      if(hvF&&hvF!==p)conn=edges.some(e=>(e.from===hvF&&e.to===p)||(e.to===hvF&&e.from===p));
+      if(hvC)conn=compSrc[hvC]&&compSrc[hvC].includes(p);
+      const alpha=isH?1:conn?0.8:(hvF||hvC)?0.1:0.8;
+      if(isH){ctx.beginPath();ctx.arc(x,y,r+10,0,Math.PI*2);ctx.fillStyle="rgba(200,160,100,0.04)";ctx.fill()}
+      ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);
+      ctx.fillStyle=isH?"rgba(200,160,100,0.2)":isC?"rgba(200,160,100,0.1)":`rgba(200,160,100,${0.07*alpha})`;ctx.fill();
+      ctx.strokeStyle=`rgba(200,160,100,${0.6*alpha})`;ctx.lineWidth=isC?2.5:1.5;ctx.stroke();
+      ctx.fillStyle=`rgba(200,160,100,${alpha})`;ctx.font=(isC?"bold 17px":"bold 14px")+" 'JetBrains Mono',monospace";
+      ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(p,x,y);
+    });
+  }
+  draw();
+
+  canvas.onmousemove=ev=>{
+    const rect=canvas.getBoundingClientRect();
+    const mx=(ev.clientX-rect.left)*(W/rect.width),my=(ev.clientY-rect.top)*(H/rect.height);
+    famHov=findN(mx,my);draw();
+    const info=document.getElementById("family-info-box");
+    if(!famHov){info.innerHTML="";return}
+    if(famHov.type==="f"){
+      const m=famHov.val,p=m+m+1,mi=m+m-1;
+      info.innerHTML=`<span style="color:#c8a064;font-weight:600">${m}</span><span style="color:rgba(200,160,100,0.2)"> -- </span><span style="color:rgba(200,160,100,0.5)">${m}+${m}+1 = ${p}</span><span style="color:rgba(200,160,100,0.25)"> (${fmtF(p)})</span><span style="color:rgba(200,160,100,0.12)"> | </span><span style="color:rgba(200,160,100,0.5)">${m}+${m}-1 = ${mi}</span>${mi>1?`<span style="color:rgba(200,160,100,0.25)"> (${fmtF(mi)})</span>`:""}`;
+    }else{
+      const c=famHov.val,sources=compSrc[c]||[],pp=isPrimePower(c);
+      info.innerHTML=`<span style="color:rgba(200,160,100,0.6)">${c}</span><span style="color:rgba(200,160,100,0.3)"> = ${fmtF(c)}</span>${pp?`<span style="color:rgba(200,160,100,0.5)"> -- perfect prime power</span>`:""}<br><span style="color:rgba(200,160,100,0.25)">produced by: ${sources.join(", ")}</span>`;
+    }
+  };
+  canvas.onmouseleave=()=>{famHov=null;draw();document.getElementById("family-info-box").innerHTML=""};
+}
+
+// === 2. HIT RATE ===
+function renderHitRate(){
+  const panel=document.getElementById("panel-hitrate");
+  panel.innerHTML=`<div class="desc">For every prime, apply X+X+1 and X+X-1. Count how often at least one result is prime. ~24%. The symmetry between +1 and -1 is almost perfect.</div><canvas id="hr-c" width="660" height="100" style="width:100%;max-width:660px;"></canvas><div class="note">each line = one prime. height = hit. the near-perfect symmetry between +1 and -1.</div>`;
+  const ctx=document.getElementById("hr-c").getContext("2d"),w=660,h=100;
+  const primes=[];for(let n=2;n<2000;n++)if(isPrime(n))primes.push(n);
+  let both=0,oP=0,oM=0;
+  primes.forEach((p,i)=>{const pp=isPrime(p+p+1),pm=isPrime(p+p-1);const x=(i/primes.length)*(w-40)+20,y=h-30;
+    if(pp&&pm){ctx.fillStyle="rgba(200,160,100,0.9)";ctx.fillRect(x,y-18,2.5,18);both++}
+    else if(pp){ctx.fillStyle="rgba(140,200,160,0.5)";ctx.fillRect(x,y-12,1.5,12);oP++}
+    else if(pm){ctx.fillStyle="rgba(140,180,200,0.5)";ctx.fillRect(x,y-12,1.5,12);oM++}
+    else{ctx.fillStyle="rgba(200,160,100,0.06)";ctx.fillRect(x,y-4,1,4)}
+  });
+  const tot=primes.length,al=both+oP+oM;
+  ctx.fillStyle="rgba(200,160,100,0.4)";ctx.font="10px 'JetBrains Mono',monospace";
+  ctx.fillText(`primes < 2000: ${tot}  |  at least one: ${al} (${((al/tot)*100).toFixed(1)}%)`,20,14);
+  ctx.fillStyle="rgba(140,200,160,0.6)";ctx.fillRect(w-200,6,8,8);ctx.fillStyle="rgba(200,160,100,0.4)";ctx.fillText(`X+X+1: ${oP}`,w-188,14);
+  ctx.fillStyle="rgba(140,180,200,0.6)";ctx.fillRect(w-200,18,8,8);ctx.fillStyle="rgba(200,160,100,0.4)";ctx.fillText(`X+X-1: ${oM}`,w-188,26);
+  ctx.fillStyle="rgba(200,160,100,0.9)";ctx.fillRect(w-200,30,8,8);ctx.fillStyle="rgba(200,160,100,0.4)";ctx.fillText(`both: ${both}`,w-188,38);
+}
+
+// === 3. TIERS ===
+let curK=2;
+function renderTiers(){
+  const panel=document.getElementById("panel-tiers");
+  const tiers=[],seed=3;let allV=new Set([seed]),curT=new Set([seed]);
+  for(let t=0;t<=4;t++){
+    if(t===0){tiers.push({t:0,v:[seed],mn:seed,mx:seed,cont:true,sz:1})}
+    else{const nx=new Set();for(const v of curT){nx.add(curK*v-1);nx.add(curK*v);nx.add(curK*v+1)}
+      const nv=[...nx].filter(v=>!allV.has(v)).sort((a,b)=>a-b);nv.forEach(v=>allV.add(v));curT=new Set(nv);
+      const mn=Math.min(...nv),mx=Math.max(...nv);tiers.push({t,v:nv,mn,mx,cont:nv.length===mx-mn+1,sz:nv.length})}
+  }
+  const gMn=Math.min(...allV),gMx=Math.max(...allV),range=gMx-gMn;
+  const cols=["rgba(200,160,100,","rgba(140,180,200,","rgba(180,140,200,","rgba(140,200,160,","rgba(200,140,140,"];
+  let html=`<div class="desc">Seed at 3. Apply kX-1, kX, kX+1 recursively. Binary and ternary fill contiguously. Quintary and septenary produce gaps.</div><div class="btn-row">`;
+  [{k:2,l:"K2 (binary)"},{k:3,l:"K3 (ternary)"},{k:5,l:"K5 (quintary)"},{k:7,l:"K7 (septenary)"}].forEach(o=>{
+    html+=`<button class="btn${curK===o.k?' active':''}" onclick="curK=${o.k};renderTiers()">${o.l}</button>`;});
+  html+=`</div>`;
+  tiers.forEach((t,ti)=>{const c=cols[ti%cols.length];
+    html+=`<div class="tier-row"><span class="tier-label" style="color:${c}0.9)">T${t.t}</span><div class="tier-bar">`;
+    t.v.forEach(v=>{const left=range>0?((v-gMn)/range)*100:50;const w2=Math.max(0.3,100/range);
+      html+=`<div style="position:absolute;left:${left}%;top:0;width:${w2}%;height:20px;background:${c}0.7)" title="${v}"></div>`;});
+    html+=`</div><span class="tier-meta">${t.sz} val${t.sz>1?'s':''} ${t.cont?'· solid':'· GAPS'}</span></div>`;});
+  html+=`<div class="note">Tier sizes: ${tiers.map(t=>t.sz).join(", ")}${curK===2?' = 2^n - 1 (Mersenne)':curK===3?' = 3^n':' = 3^n (not contiguous)'}</div>`;
+  panel.innerHTML=html;
+}
+
+// === 4. LEMNISCATES ===
+let loopD=3;
+function renderLoops(){
+  const panel=document.getElementById("panel-loops");
+  panel.innerHTML=`<div class="desc">Infinity symbols from the nodes. Zero is always the crossover. Each tier generates nested lemniscates. The shape of electron orbitals.</div><div class="btn-row" id="lb"></div><canvas id="lc" width="500" height="500" style="width:100%;max-width:500px;"></canvas><div class="note center">nested lemniscates crossing at zero -- each tier a shell of figure-eights</div>`;
+  const btns=document.getElementById("lb");
+  [1,2,3,4].forEach(d=>{const b=document.createElement("button");b.className="btn"+(loopD===d?" active":"");b.textContent=d+" tier"+(d>1?"s":"");b.onclick=()=>{loopD=d;renderLoops()};btns.appendChild(b)});
+  const ctx=document.getElementById("lc").getContext("2d"),w=500,h=500,cx=w/2,cy=h/2;
+  const tiers=[];let cur=[3];
+  for(let t=0;t<loopD;t++){const nx=[];for(const v of cur)nx.push(2*v-1,2*v,2*v+1);tiers.push([...new Set(nx)].sort((a,b)=>a-b));cur=tiers[tiers.length-1]}
+  const mx=tiers.length>0?Math.max(...tiers[tiers.length-1]):10,sc=Math.min(w,h)*0.38/mx;
+  ctx.strokeStyle="rgba(200,160,100,0.06)";ctx.lineWidth=0.5;ctx.beginPath();ctx.moveTo(cx,20);ctx.lineTo(cx,h-20);ctx.moveTo(20,cy);ctx.lineTo(w-20,cy);ctx.stroke();
+  ctx.beginPath();ctx.arc(cx,cy,3,0,Math.PI*2);ctx.fillStyle="rgba(200,160,100,0.8)";ctx.fill();
+  const cols=["rgba(200,160,100,","rgba(140,180,200,","rgba(180,140,200,","rgba(140,200,160,"];
+  tiers.forEach((tier,ti)=>{tier.forEach(amp=>{
+    const alpha=0.12+0.08*(1-ti/tiers.length);ctx.beginPath();ctx.strokeStyle=cols[ti%cols.length]+alpha+")";ctx.lineWidth=0.8;
+    const r=amp*sc;for(let s=0;s<=300;s++){const t2=(s/300)*Math.PI*2,dn=1+Math.sin(t2)*Math.sin(t2);
+      const px=cx+(r*Math.cos(t2))/dn,py=cy+(r*Math.sin(t2)*Math.cos(t2))/dn;s===0?ctx.moveTo(px,py):ctx.lineTo(px,py)}ctx.stroke()})});
+  ctx.fillStyle="rgba(200,160,100,0.5)";ctx.font="10px 'JetBrains Mono',monospace";ctx.textAlign="center";ctx.fillText("0",cx,cy+16);
+}
+
+// === 5. ROTATION ===
+let rotI=0;const rotT=[{x:209},{x:419},{x:839},{x:1679}];
+function renderRotation(){
+  const panel=document.getElementById("panel-rotation"),t=rotT[rotI];
+  let html=`<div class="desc">Numbers addressable by all four kernel inverses. (x+1)/k for k = 2, 3, 5, 7. Each kernel extracts its own prime. Same information, rotated.</div><div class="btn-row">`;
+  rotT.forEach((tgt,i)=>{html+=`<button class="btn${rotI===i?' active':''}" onclick="rotI=${i};renderRotation()">${tgt.x}</button>`});
+  html+=`</div><div style="font-family:'JetBrains Mono',monospace;font-size:12px"><div style="color:rgba(200,160,100,0.6);margin-bottom:12px">${t.x} + 1 = ${t.x+1} = ${fmtF(t.x+1)}</div>`;
+  [2,3,5,7].forEach(k=>{const val=(t.x+1)/k,factors=primeFactors(val);
+    let fh=Object.entries(factors).sort((a,b)=>a[0]-b[0]).map(([p,e],fi)=>{const isK=+p===k;const col=isK?"rgba(200,100,100,0.8)":"rgba(140,200,160,0.8)";const tx=e>1?p+"^"+e:p;return(fi>0?`<span style="color:rgba(200,160,100,0.2);margin:0 2px">x</span>`:"")+`<span style="color:${col};font-weight:600">${tx}</span>`}).join("");
+    html+=`<div class="rotation-row"><span style="color:rgba(200,160,100,0.5);width:30px">K${k}</span><span style="color:rgba(200,160,100,0.3)">(x+1)/${k} =</span><span style="color:#c8a064;font-weight:600">${val}</span><span style="color:rgba(200,160,100,0.3)">=</span><span>${fh}</span>${k>2?`<span style="color:rgba(200,160,100,0.25);font-size:10px;margin-left:auto">${k} extracted</span>`:""}</div>`});
+  html+=`</div><div class="note">each kernel inverse extracts its own prime -- rotated through different projections</div>`;
+  panel.innerHTML=html;
+}
+
+// === 6. 432 vs 440 ===
+function rdx(n,primes){const s=[{v:n,d:null}];let c=n;while(c>1){let f=false;for(const p of primes)if(c%p===0){c/=p;s.push({v:c,d:p});f=true;break}if(!f){s.push({v:c,d:"X"});break}}return s}
+function renderTuning(){
+  const panel=document.getElementById("panel-tuning");
+  const s4=rdx(432,[2,3]),s44=rdx(440,[2,3]);
+  function ch(steps){return steps.map((s,i)=>{let st="";
+    if(s.d==="X")st="color:rgba(200,100,100,0.9);font-weight:700;padding:2px 6px;background:rgba(200,100,100,0.08);border-radius:2px";
+    else if(s.v===1)st="color:rgba(140,200,160,0.9);font-weight:700;padding:2px 6px;background:rgba(140,200,160,0.08);border-radius:2px";
+    else st="color:rgba(200,160,100,0.7);padding:2px 6px";
+    let ar="";if(i<steps.length-1){const nx=steps[i+1];ar=nx.d==="X"?`<span style="color:rgba(200,100,100,0.5);font-size:10px"> STOPS</span>`:`<span style="color:rgba(200,160,100,0.25);font-size:10px"> /${nx.d} -> </span>`}
+    return`<span style="${st}">${s.v}</span>${ar}`}).join("")}
+  let html=`<div class="desc">432 = 2^4 x 3^3. Reduce by the special pair. Reaches unity. 440 breaks at 55. Eight hertz of contamination.</div><div class="reduction-pair">`;
+  html+=`<div class="reduction-col"><div class="reduction-label" style="color:rgba(140,200,160,0.8)">432 = 2^4 x 3^3</div><div class="reduction-chain">${ch(s4)}</div><div class="note" style="color:rgba(140,200,160,0.5)">reaches unity -- structurally pure</div></div>`;
+  html+=`<div class="reduction-col"><div class="reduction-label" style="color:rgba(200,140,140,0.8)">440 = 2^3 x 5 x 11</div><div class="reduction-chain">${ch(s44)}</div><div class="note" style="color:rgba(200,100,100,0.5)">breaks at 55 -- contaminated</div></div></div>`;
+  const dg=[4,3,2,3,4,3,2,3,4,3,2,3];
+  html+=`<div class="yhvh-box"><span style="color:rgba(200,160,100,0.5)">YHVH pattern: </span><span style="letter-spacing:4px">${dg.map(d=>`<span style="color:${d===3?'rgba(200,160,100,0.8)':'rgba(140,180,200,0.8)'}">${d}</span>`).join("")}</span><span style="color:rgba(200,160,100,0.3)">...</span><span style="color:rgba(200,160,100,0.35);margin-left:12px">three unique, one recurring -- Y H V H</span></div>`;
+  panel.innerHTML=html;
+}
+
+// === INIT ===
+const renderers={family:renderFamily,hitrate:renderHitRate,tiers:renderTiers,loops:renderLoops,rotation:renderRotation,tuning:renderTuning};
+renderFamily();
+</script>
+</body>
+</html>

@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Fractal Lattice — Operand Observatory</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+  :root{--mono:'JetBrains Mono',monospace;--serif:'Cormorant Garamond',serif}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#000;color:#ccc;font-family:var(--mono);font-size:12px;overflow:hidden;height:100vh;width:100vw}
+  #cv{display:block;width:100%;height:100%;cursor:grab}
+  #cv:active{cursor:grabbing}
+
+  .hud{position:fixed;z-index:10;pointer-events:none}
+  .hud>*{pointer-events:auto}
+
+  .top-bar{top:0;left:0;right:0;padding:14px 20px;display:flex;justify-content:space-between;align-items:center}
+  .title{font-family:var(--serif);font-size:18px;color:#fff;letter-spacing:3px;font-weight:400}
+  .title span{opacity:.4}
+
+  .ctrl-panel{top:60px;left:16px;width:260px;background:#000000cc;border:1px solid #222;border-radius:4px;padding:14px;backdrop-filter:blur(8px)}
+  .plabel{font-size:9px;text-transform:uppercase;letter-spacing:1.5px;color:#555;margin-bottom:6px}
+  .seed-row{display:flex;gap:4px;margin-bottom:10px}
+  .sinp{flex:1;background:#111;border:1px solid #222;color:#fff;font-family:var(--mono);font-size:14px;padding:6px 8px;border-radius:3px;outline:none;text-align:center}
+  .sinp:focus{border-color:#444}
+  .btn{background:#111;border:1px solid #222;color:#888;font-family:var(--mono);font-size:10px;padding:6px 10px;cursor:pointer;border-radius:3px;transition:all .2s}
+  .btn:hover{border-color:#444;color:#ccc;background:#1a1a1a}
+  .btn.active{border-color:#fff;color:#fff}
+  .srow{display:flex;gap:4px;margin-bottom:8px}.srow .btn{flex:1;text-align:center}
+
+  .slider-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+  .slider-row label{font-size:9px;text-transform:uppercase;letter-spacing:1px;color:#555;white-space:nowrap;min-width:44px}
+  .slider-row input[type=range]{flex:1;-webkit-appearance:none;background:#222;height:2px;border-radius:1px;outline:none}
+  .slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;background:#fff;border-radius:50%;cursor:pointer}
+  .sval{color:#fff;font-weight:600;min-width:20px;text-align:center;font-size:11px}
+
+  .seed-list{margin-top:8px;max-height:120px;overflow-y:auto}
+  .seed-list::-webkit-scrollbar{width:2px}.seed-list::-webkit-scrollbar-thumb{background:#333}
+  .seed-item{display:flex;align-items:center;gap:6px;padding:3px 0;font-size:10px}
+  .seed-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+  .seed-item .remove{color:#444;cursor:pointer;margin-left:auto;font-size:8px}
+  .seed-item .remove:hover{color:#fff}
+
+  .info-panel{bottom:16px;left:16px;font-size:9px;color:#333;letter-spacing:.5px;line-height:1.6}
+  .info-panel .bright{color:#666}
+
+  .node-info{top:60px;right:16px;background:#000000cc;border:1px solid #222;border-radius:4px;padding:10px 14px;backdrop-filter:blur(8px);font-size:10px;min-width:160px;display:none}
+  .node-info.vis{display:block}
+  .ni-val{font-size:18px;font-weight:600;color:#fff;margin-bottom:4px}
+  .ni-row{color:#555;line-height:1.6}
+  .ni-row .w{color:#fff} .ni-row .f{color:#6f6} .ni-row .p{color:#f66}
+
+  .mode-row{display:flex;gap:3px;margin-bottom:8px}
+  .mbtn{flex:1;padding:5px 4px;font-size:8px;letter-spacing:.5px;text-transform:uppercase;background:#080808;border:1px solid #1a1a1a;color:#444;cursor:pointer;border-radius:2px;text-align:center;font-family:var(--mono);transition:all .2s}
+  .mbtn:hover{color:#888;border-color:#333}
+  .mbtn.active{color:#fff;border-color:#555;background:#1a1a1a}
+</style>
+</head>
+<body>
+<style>.lab-back{position:fixed;top:12px;left:12px;z-index:9999;color:rgba(200,160,100,0.35);text-decoration:none;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;border:1px solid rgba(200,160,100,0.08);border-radius:2px;transition:all 0.3s;background:rgba(10,10,8,0.8);backdrop-filter:blur(4px)}.lab-back:hover{color:rgba(200,160,100,0.8);border-color:rgba(200,160,100,0.25)}</style>
+<a href="../lab.html" class="lab-back">← Lab</a>
+<canvas id="cv"></canvas>
+
+<div class="hud top-bar">
+  <div class="title">THE FRACTAL LATTICE <span>— OPERAND OBSERVATORY</span></div>
+</div>
+
+<div class="hud ctrl-panel">
+  <div class="plabel">Seed</div>
+  <div class="seed-row">
+    <input type="number" class="sinp" id="seedInp" value="2" placeholder="integer">
+    <button class="btn" onclick="addSeed()">PLANT</button>
+  </div>
+  <div class="plabel">Depth</div>
+  <div class="slider-row">
+    <label>Tiers</label>
+    <input type="range" id="depthSlider" min="1" max="7" value="4" oninput="updateDepth()">
+    <span class="sval" id="depthVal">4</span>
+  </div>
+  <div class="slider-row">
+    <label>Spread</label>
+    <input type="range" id="spreadSlider" min="10" max="100" value="50" oninput="updateSpread()">
+    <span class="sval" id="spreadVal">50</span>
+  </div>
+  <div class="slider-row">
+    <label>Scale</label>
+    <input type="range" id="scaleSlider" min="10" max="200" value="80" oninput="updateScale()">
+    <span class="sval" id="scaleVal">80</span>
+  </div>
+
+  <div class="plabel" style="margin-top:4px">Display</div>
+  <div class="mode-row">
+    <div class="mbtn active" id="mode-tree" onclick="setDisplayMode('tree')">Tree</div>
+    <div class="mbtn" id="mode-radial" onclick="setDisplayMode('radial')">Radial</div>
+    <div class="mbtn" id="mode-helix" onclick="setDisplayMode('helix')">Helix</div>
+    <div class="mbtn" id="mode-flat" onclick="setDisplayMode('flat')">Lattice</div>
+  </div>
+  <div class="srow">
+    <button class="btn" id="btnSpin" onclick="toggleSpin()">SPIN: ON</button>
+    <button class="btn" onclick="toggleLabels()">LABELS</button>
+    <button class="btn" onclick="resetCamera()">RESET</button>
+  </div>
+  <div class="srow">
+    <button class="btn" id="btnMirror" onclick="toggleMirror()">MIRROR: OFF</button>
+    <button class="btn" onclick="plantPreset('family')">FAMILY</button>
+    <button class="btn" onclick="plantPreset('yhvh')">YHVH</button>
+  </div>
+  <div class="srow">
+    <button class="btn" onclick="clearAll()">CLEAR ALL</button>
+  </div>
+
+  <div class="plabel">Seeds</div>
+  <div class="seed-list" id="seedList"></div>
+</div>
+
+<div class="hud node-info" id="nodeInfo">
+  <div class="ni-val" id="niVal"></div>
+  <div class="ni-row" id="niDetail"></div>
+</div>
+
+<div class="hud info-panel">
+  <span class="bright">drag</span> rotate · <span class="bright">scroll</span> zoom · <span class="bright">shift+drag</span> pan<br>
+  <span class="bright">click</span> node to inspect · <span class="bright">double-click</span> to expand from node<br>
+  <span class="bright">mirror</span> toggles axial divergence — positive up, negative down
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════
+// THE FRACTAL LATTICE — 3D Operand Geometry
+// ═══════════════════════════════════════════════
+
+const FAMILY=[2,3,5,7,11,13,23,47], FSET=new Set(FAMILY);
+function isPrime(n){n=Math.abs(n);if(n<2)return false;if(n<4)return true;if(n%2===0||n%3===0)return false;for(let i=5;i*i<=n;i+=6)if(n%i===0||n%(i+2)===0)return false;return true}
+function primeFactors(n){n=Math.abs(n);if(n<2)return{};const f={};let d=2;while(d*d<=n){while(n%d===0){f[d]=(f[d]||0)+1;n/=d}d++}if(n>1)f[n]=(f[n]||0)+1;return f}
+function fmtP(n){const f=primeFactors(n);if(!Object.keys(f).length)return''+n;return Object.entries(f).sort((a,b)=>a[0]-b[0]).map(([p,e])=>+e>1?p+'^'+e:p).join('×')}
+
+const OPS={mitosis:x=>2*x-1, stable:x=>2*x, growth:x=>2*x+1};
+
+// ═══ THREE.JS SETUP ═══
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x000000);
+scene.fog=new THREE.FogExp2(0x000000,0.003);
+
+const camera=new THREE.PerspectiveCamera(55,window.innerWidth/window.innerHeight,0.5,2000);
+camera.position.set(0,40,120);
+camera.lookAt(0,0,0);
+
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('cv'),antialias:true,alpha:false});
+renderer.setSize(window.innerWidth,window.innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
+// ═══ STATE ═══
+const S={
+  seeds:[], depth:4, spread:50, nodeScale:80,
+  displayMode:'tree', spinning:true, showLabels:false, mirrorAxis:false,
+  nodes:[], edges:[],
+  // Camera control
+  rotX:0.3, rotY:0, camDist:120, panX:0, panY:0,
+  isDrag:false, isShift:false, dragSX:0, dragSY:0, dragRX:0, dragRY:0, dragPX:0, dragPY:0,
+  // Raycasting
+  mouse:new THREE.Vector2(), raycaster:new THREE.Raycaster(),
+  hoveredNode:null,
+  // Groups
+  nodeGroup:new THREE.Group(),
+  edgeGroup:new THREE.Group(),
+  labelGroup:new THREE.Group(),
+};
+
+scene.add(S.nodeGroup);
+scene.add(S.edgeGroup);
+scene.add(S.labelGroup);
+
+// Subtle grid
+const gridGeo=new THREE.BufferGeometry();
+const gridVerts=[];
+for(let i=-200;i<=200;i+=10){gridVerts.push(-200,0,i,200,0,i,i,0,-200,i,0,200)}
+gridGeo.setAttribute('position',new THREE.Float32BufferAttribute(gridVerts,3));
+const gridMat=new THREE.LineBasicMaterial({color:0x111111});
+const grid=new THREE.LineSegments(gridGeo,gridMat);
+scene.add(grid);
+
+// ═══ NODE GENERATION ═══
+function generateTree(seed,depth,seedIndex,totalSeeds,direction=1,isMirror=false){
+  const nodes=[],edges=[];
+  const baseAngle=(seedIndex/Math.max(1,totalSeeds))*Math.PI*2;
+  const seedOffset=totalSeeds>1?30:0;
+  const dir=direction; // 1=up, -1=down
+
+  function recurse(value,d,parentPos,parentIdx,opType,branchAngle){
+    if(d>depth)return;
+    let pos;
+    const sp=S.spread/50;
+    const sc=S.nodeScale/80;
+
+    if(S.displayMode==='tree'){
+      const tierH=12*sc*dir;
+      const tierSpread=Math.pow(0.7,d)*20*sp;
+      const opAngle=opType==='mitosis'?-2.1:opType==='growth'?2.1:0;
+      if(d===0){
+        pos=new THREE.Vector3(Math.cos(baseAngle)*seedOffset,0,Math.sin(baseAngle)*seedOffset);
+      }else{
+        const a=branchAngle+opAngle*0.3;
+        pos=new THREE.Vector3(
+          parentPos.x+Math.cos(a)*tierSpread,
+          parentPos.y+tierH,
+          parentPos.z+Math.sin(a)*tierSpread
+        );
+      }
+    }else if(S.displayMode==='radial'){
+      const r=(d+0.5)*15*sp;
+      const opOff=opType==='mitosis'?-0.6:opType==='growth'?0.6:0;
+      const a=branchAngle+opOff/(d+1);
+      pos=new THREE.Vector3(
+        Math.cos(a)*r+Math.cos(baseAngle)*seedOffset,
+        (d-depth/2)*6*sc*dir,
+        Math.sin(a)*r+Math.sin(baseAngle)*seedOffset
+      );
+    }else if(S.displayMode==='helix'){
+      const angle=d*1.2*dir+branchAngle;
+      const r=(d+1)*8*sp;
+      const opOff=opType==='mitosis'?-4:opType==='growth'?4:0;
+      pos=new THREE.Vector3(
+        Math.cos(angle)*r+Math.cos(baseAngle)*seedOffset,
+        d*10*sc*dir+opOff*dir,
+        Math.sin(angle)*r+Math.sin(baseAngle)*seedOffset
+      );
+    }else{ // flat lattice
+      const cols=Math.pow(3,Math.min(d,3));
+      const tierSpread=cols*4*sp;
+      const opIdx=opType==='mitosis'?0:opType==='stable'?1:2;
+      if(d===0){
+        pos=new THREE.Vector3(Math.cos(baseAngle)*seedOffset,0,Math.sin(baseAngle)*seedOffset);
+      }else{
+        const localIdx=opIdx-1;
+        pos=new THREE.Vector3(
+          parentPos.x+localIdx*8*sp*Math.pow(0.6,d),
+          parentPos.y+12*sc*dir,
+          parentPos.z+localIdx*4*sp*Math.pow(0.6,d)*0.3
+        );
+      }
+    }
+
+    const iF=FSET.has(Math.abs(value)),iP=isPrime(Math.abs(value));
+    const nodeIdx=nodes.length;
+    nodes.push({value,depth:d,pos,isFam:iF,isPrime:iP,opType,seedIdx:seedIndex,seed,isMirror,direction:dir});
+
+    if(parentIdx!==null){
+      edges.push({from:parentIdx,to:nodeIdx,depth:d});
+    }
+
+    if(d<depth){
+      const childAngle=branchAngle;
+      recurse(OPS.mitosis(value),d+1,pos,nodeIdx,'mitosis',childAngle-1.0/(d+1));
+      recurse(OPS.stable(value),d+1,pos,nodeIdx,'stable',childAngle);
+      recurse(OPS.growth(value),d+1,pos,nodeIdx,'growth',childAngle+1.0/(d+1));
+    }
+  }
+
+  recurse(seed,0,null,null,'seed',baseAngle);
+  return{nodes,edges};
+}
+
+// ═══ MESH BUILDING ═══
+const nodeMeshes=[];
+const edgeMeshes=[];
+const labelSprites=[];
+
+function buildScene(){
+  // Clear
+  while(S.nodeGroup.children.length)S.nodeGroup.remove(S.nodeGroup.children[0]);
+  while(S.edgeGroup.children.length)S.edgeGroup.remove(S.edgeGroup.children[0]);
+  while(S.labelGroup.children.length)S.labelGroup.remove(S.labelGroup.children[0]);
+  // Remove old zero planes if present
+  let oldPlane;while(oldPlane=scene.getObjectByName('zeroPlane'))scene.remove(oldPlane);
+  nodeMeshes.length=0;edgeMeshes.length=0;labelSprites.length=0;
+  S.nodes=[];S.edges=[];
+
+  // Determine effective seed count for spacing (mirror seeds share position with their positive)
+  const totalSeeds=S.seeds.length;
+
+  let nodeOffset=0;
+  S.seeds.forEach((seed,si)=>{
+    // Positive tree (always)
+    const pos=generateTree(seed,S.depth,si,totalSeeds,1,false);
+    pos.edges.forEach(e=>{e.from+=nodeOffset;e.to+=nodeOffset});
+    S.nodes.push(...pos.nodes);S.edges.push(...pos.edges);
+    nodeOffset+=pos.nodes.length;
+
+    // Negative mirror tree (when toggled)
+    if(S.mirrorAxis){
+      const neg=generateTree(-seed,S.depth,si,totalSeeds,-1,true);
+      neg.edges.forEach(e=>{e.from+=nodeOffset;e.to+=nodeOffset});
+      S.nodes.push(...neg.nodes);S.edges.push(...neg.edges);
+      nodeOffset+=neg.nodes.length;
+    }
+  });
+
+  // Zero plane when mirror is active
+  if(S.mirrorAxis){
+    const planeGeo=new THREE.PlaneGeometry(300,300);
+    const planeMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.015,side:THREE.DoubleSide,depthWrite:false});
+    const plane=new THREE.Mesh(planeGeo,planeMat);
+    plane.rotation.x=-Math.PI/2;plane.position.y=0;plane.name='zeroPlane';
+    scene.add(plane);
+    // Zero ring
+    const ringGeo=new THREE.RingGeometry(38,40,64);
+    const ringMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.04,side:THREE.DoubleSide,depthWrite:false});
+    const ring=new THREE.Mesh(ringGeo,ringMat);
+    ring.rotation.x=-Math.PI/2;ring.position.y=0;ring.name='zeroPlane';
+    scene.add(ring);
+  }
+
+  // Build node spheres
+  const sphereGeo=new THREE.SphereGeometry(1,8,6);
+
+  S.nodes.forEach((n,i)=>{
+    const mirror=n.isMirror;
+    const brightness=n.depth===0?1.0:n.isFam?0.85:n.isPrime?0.7:0.4+0.1*(1-n.depth/Math.max(1,S.depth));
+    const size=n.depth===0?1.8:n.isFam?1.2:n.isPrime?1.0:0.6;
+    const b=mirror?brightness*0.6:brightness;
+    const col=new THREE.Color(b,b,b);
+    if(n.isFam&&!mirror)col.setRGB(b*0.8,b,b*0.8);
+    if(n.isFam&&mirror)col.setRGB(b*0.7,b*0.8,b);
+    if(n.depth===0&&!mirror)col.setRGB(1,1,1);
+    if(n.depth===0&&mirror)col.setRGB(0.5,0.55,0.65);
+    const mat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:Math.max(mirror?0.15:0.3,1-n.depth*(mirror?0.16:0.12))});
+    const mesh=new THREE.Mesh(sphereGeo,mat);
+    mesh.position.copy(n.pos);
+    mesh.scale.setScalar(size*(mirror?0.8:1));
+    mesh.userData={nodeIndex:i,value:n.value,depth:n.depth,isFam:n.isFam,isPrime:n.isPrime,opType:n.opType,seed:n.seed,isMirror:mirror};
+    S.nodeGroup.add(mesh);
+    nodeMeshes.push(mesh);
+
+    // Labels
+    if(S.showLabels&&n.depth<=2){
+      const sprite=makeLabel(''+n.value,mirror?b*0.7:b);
+      sprite.position.copy(n.pos);
+      sprite.position.y+=2.5*n.direction;
+      S.labelGroup.add(sprite);
+      labelSprites.push(sprite);
+    }
+  });
+
+  // Build edges
+  S.edges.forEach(e=>{
+    const fn=S.nodes[e.from],tn=S.nodes[e.to];
+    const geo=new THREE.BufferGeometry().setFromPoints([fn.pos,tn.pos]);
+    const mirror=fn.isMirror||tn.isMirror;
+    const opacity=Math.max(mirror?0.03:0.06,(mirror?0.15:0.25)-e.depth*(mirror?0.025:0.04));
+    const mat=new THREE.LineBasicMaterial({color:mirror?0x8899bb:0xffffff,transparent:true,opacity});
+    const line=new THREE.Line(geo,mat);
+    S.edgeGroup.add(line);
+    edgeMeshes.push(line);
+  });
+
+  updateSeedList();
+}
+
+function makeLabel(text,brightness){
+  const c=document.createElement('canvas');c.width=128;c.height=48;
+  const x=c.getContext('2d');
+  x.font='bold 24px "JetBrains Mono"';x.textAlign='center';x.textBaseline='middle';
+  const b=Math.floor(brightness*255);
+  x.fillStyle=`rgb(${b},${b},${b})`;x.fillText(text,64,24);
+  const tex=new THREE.CanvasTexture(c);tex.needsUpdate=true;
+  const mat=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.6,depthTest:false});
+  const sprite=new THREE.Sprite(mat);sprite.scale.set(8,3,1);
+  return sprite;
+}
+
+// ═══ CAMERA ═══
+function updateCamera(){
+  const cx=S.camDist*Math.sin(S.rotX)*Math.cos(S.rotY);
+  const cy=S.camDist*Math.sin(S.rotY)+S.panY;
+  const cz=S.camDist*Math.cos(S.rotX)*Math.cos(S.rotY);
+  camera.position.set(cx+S.panX,cy,cz);
+  camera.lookAt(S.panX,S.panY,0);
+}
+
+function resetCamera(){S.rotX=0.3;S.rotY=0.3;S.camDist=120;S.panX=0;S.panY=20;updateCamera()}
+
+// ═══ MOUSE ═══
+const cvEl=document.getElementById('cv');
+cvEl.addEventListener('mousedown',e=>{
+  S.isDrag=true;S.isShift=e.shiftKey;
+  S.dragSX=e.clientX;S.dragSY=e.clientY;
+  S.dragRX=S.rotX;S.dragRY=S.rotY;S.dragPX=S.panX;S.dragPY=S.panY;
+});
+cvEl.addEventListener('mousemove',e=>{
+  S.mouse.x=(e.clientX/window.innerWidth)*2-1;
+  S.mouse.y=-(e.clientY/window.innerHeight)*2+1;
+  if(S.isDrag){
+    const dx=e.clientX-S.dragSX,dy=e.clientY-S.dragSY;
+    if(S.isShift||e.shiftKey){
+      S.panX=S.dragPX-dx*0.3;S.panY=S.dragPY+dy*0.3;
+    }else{
+      S.rotX=S.dragRX+dx*0.005;S.rotY=Math.max(-1.4,Math.min(1.4,S.dragRY+dy*0.005));
+    }
+    updateCamera();
+  }
+  checkHover();
+});
+cvEl.addEventListener('mouseup',e=>{
+  if(Math.abs(e.clientX-S.dragSX)<3&&Math.abs(e.clientY-S.dragSY)<3)handleClick(e);
+  S.isDrag=false;
+});
+cvEl.addEventListener('dblclick',e=>{handleDblClick(e)});
+cvEl.addEventListener('wheel',e=>{e.preventDefault();S.camDist=Math.max(10,Math.min(500,S.camDist*(e.deltaY>0?1.08:0.92)));updateCamera()},{passive:false});
+window.addEventListener('resize',()=>{camera.aspect=window.innerWidth/window.innerHeight;camera.updateProjectionMatrix();renderer.setSize(window.innerWidth,window.innerHeight)});
+
+function checkHover(){
+  S.raycaster.setFromCamera(S.mouse,camera);
+  const hits=S.raycaster.intersectObjects(nodeMeshes);
+  const ni=document.getElementById('nodeInfo');
+  if(hits.length>0){
+    const d=hits[0].object.userData;
+    S.hoveredNode=d;
+    ni.classList.add('vis');
+    document.getElementById('niVal').textContent=d.value;
+    const iF=d.isFam,iP=d.isPrime;
+    let detail=`<div class="ni-row">Depth: <span class="w">${d.depth}</span> · Seed: <span class="w">${d.seed}</span></div>`;
+    detail+=`<div class="ni-row">Op: <span class="w">${d.opType}</span>${d.isMirror?' · <span style="color:#6688aa">MIRROR</span>':''}</div>`;
+    detail+=`<div class="ni-row">Factors: <span class="w">${fmtP(Math.abs(d.value))}</span></div>`;
+    if(iF)detail+=`<div class="ni-row"><span class="f">FAMILY MEMBER</span></div>`;
+    if(iP)detail+=`<div class="ni-row"><span class="p">PRIME</span></div>`;
+    // Show operand results
+    const m=OPS.mitosis(d.value),s=OPS.stable(d.value),g=OPS.growth(d.value);
+    detail+=`<div class="ni-row" style="margin-top:4px;font-size:9px">→ ${m} · ${s} · ${g}</div>`;
+    document.getElementById('niDetail').innerHTML=detail;
+    // Highlight
+    hits[0].object.scale.setScalar((hits[0].object.userData.depth===0?2.6:1.8)*(hits[0].object.userData.isMirror?0.8:1));
+    cvEl.style.cursor='pointer';
+  }else{
+    S.hoveredNode=null;ni.classList.remove('vis');cvEl.style.cursor='grab';
+    // Reset scales
+    nodeMeshes.forEach((m,i)=>{const n=S.nodes[i];if(n){const mirrorScale=n.isMirror?0.8:1;m.scale.setScalar((n.depth===0?1.8:n.isFam?1.2:n.isPrime?1.0:0.6)*mirrorScale)}});
+  }
+}
+
+function handleClick(e){
+  if(!S.hoveredNode)return;
+  // Flash the node
+}
+
+function handleDblClick(e){
+  S.raycaster.setFromCamera(S.mouse,camera);
+  const hits=S.raycaster.intersectObjects(nodeMeshes);
+  if(hits.length>0){
+    const v=hits[0].object.userData.value;
+    if(!S.seeds.includes(v)){S.seeds.push(v);buildScene()}
+  }
+}
+
+// ═══ CONTROLS ═══
+function addSeed(){
+  const v=parseInt(document.getElementById('seedInp').value);
+  if(isNaN(v))return;
+  S.seeds.push(v);buildScene();
+}
+
+function removeSeed(idx){S.seeds.splice(idx,1);buildScene()}
+
+function updateDepth(){S.depth=+document.getElementById('depthSlider').value;document.getElementById('depthVal').textContent=S.depth;buildScene()}
+function updateSpread(){S.spread=+document.getElementById('spreadSlider').value;document.getElementById('spreadVal').textContent=S.spread;buildScene()}
+function updateScale(){S.nodeScale=+document.getElementById('scaleSlider').value;document.getElementById('scaleVal').textContent=S.nodeScale;buildScene()}
+
+function setDisplayMode(m){S.displayMode=m;document.querySelectorAll('.mbtn').forEach(b=>b.classList.toggle('active',b.id==='mode-'+m));buildScene()}
+function toggleSpin(){S.spinning=!S.spinning;document.getElementById('btnSpin').textContent='SPIN: '+(S.spinning?'ON':'OFF');document.getElementById('btnSpin').classList.toggle('active',S.spinning)}
+function toggleLabels(){S.showLabels=!S.showLabels;buildScene()}
+function toggleMirror(){S.mirrorAxis=!S.mirrorAxis;document.getElementById('btnMirror').textContent='MIRROR: '+(S.mirrorAxis?'ON':'OFF');document.getElementById('btnMirror').classList.toggle('active',S.mirrorAxis);buildScene()}
+function clearAll(){S.seeds=[];buildScene()}
+
+function plantPreset(type){
+  S.seeds=[];
+  if(type==='family')S.seeds=[2,3,5,7,11,13,23,47];
+  else if(type==='yhvh')S.seeds=[10,5,6,5];
+  buildScene();
+}
+
+function updateSeedList(){
+  const el=document.getElementById('seedList');
+  el.innerHTML='';
+  S.seeds.forEach((s,i)=>{
+    const iF=FSET.has(s),iP=isPrime(s);
+    const d=document.createElement('div');d.className='seed-item';
+    d.innerHTML=`<div class="seed-dot" style="background:${iF?'#6f6':iP?'#f66':'#fff'}"></div><span style="color:#fff;font-weight:600">${s}</span><span style="color:#444;font-size:9px">${fmtP(s)}</span><span class="remove" onclick="removeSeed(${i})">✕</span>`;
+    el.appendChild(d);
+  });
+}
+
+// ═══ ANIMATE ═══
+function animate(){
+  requestAnimationFrame(animate);
+  if(S.spinning&&!S.isDrag)S.rotX+=0.002;
+  updateCamera();
+  renderer.render(scene,camera);
+}
+
+// ═══ INIT ═══
+S.seeds=[2];
+resetCamera();
+buildScene();
+animate();
+</script>
+</body>
+</html>

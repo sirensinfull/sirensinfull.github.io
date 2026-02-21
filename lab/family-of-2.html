@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Family of 2 -- Both Sides of Zero</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:#0a0a08;color:#c8a064;font-family:'Cormorant Garamond',Georgia,serif;min-height:100vh;display:flex;flex-direction:column;align-items:center;padding:16px 10px}
+  h1{text-align:center;font-size:22px;font-weight:300;letter-spacing:6px;color:rgba(200,160,100,0.6);text-transform:uppercase;margin-bottom:4px}
+  .sub{text-align:center;font-size:10px;letter-spacing:3px;color:rgba(200,160,100,0.2);text-transform:uppercase;font-family:'JetBrains Mono',monospace;margin-bottom:14px}
+  .modes{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+  .mode{padding:6px 12px;background:transparent;border:1px solid rgba(200,160,100,0.08);color:rgba(200,160,100,0.25);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:9px;text-transform:uppercase;letter-spacing:1px;border-radius:1px;transition:all 0.3s}
+  .mode:hover{border-color:rgba(200,160,100,0.25);color:rgba(200,160,100,0.5)}
+  .mode.active{background:rgba(200,160,100,0.08);border-color:rgba(200,160,100,0.35);color:rgba(200,160,100,0.8)}
+  canvas{display:block;cursor:crosshair}
+  #info{font-family:'JetBrains Mono',monospace;font-size:11px;text-align:center;min-height:60px;padding:8px 16px;color:rgba(200,160,100,0.5);max-width:720px;line-height:1.6}
+  .path-nav{display:flex;gap:4px;justify-content:center;margin-top:6px;min-height:28px}
+  .pnav{padding:3px 10px;background:transparent;border:1px solid rgba(200,160,100,0.1);color:rgba(200,160,100,0.3);cursor:pointer;font-family:'JetBrains Mono',monospace;font-size:9px;border-radius:1px}
+  .pnav:hover{border-color:rgba(200,160,100,0.3);color:rgba(200,160,100,0.6)}
+  .pnav.active{background:rgba(200,160,100,0.1);border-color:rgba(200,160,100,0.4);color:rgba(200,160,100,0.8)}
+  #mode-desc{font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(200,160,100,0.2);text-align:center;margin-bottom:10px;min-height:14px}
+  .footer{margin-top:16px;font-family:'JetBrains Mono',monospace;font-size:8px;letter-spacing:2px;color:rgba(200,160,100,0.1)}
+</style>
+</head>
+<body>
+<style>.lab-back{position:fixed;top:12px;left:12px;z-index:9999;color:rgba(200,160,100,0.35);text-decoration:none;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;border:1px solid rgba(200,160,100,0.08);border-radius:2px;transition:all 0.3s;background:rgba(10,10,8,0.8);backdrop-filter:blur(4px)}.lab-back:hover{color:rgba(200,160,100,0.8);border-color:rgba(200,160,100,0.25)}</style>
+<a href="../lab.html" class="lab-back">← Lab</a>
+
+<h1>The Family of 2</h1>
+<div class="sub">both sides of zero</div>
+<div class="modes" id="modes"></div>
+<div id="mode-desc"></div>
+<canvas id="c"></canvas>
+<div id="info"></div>
+<div class="path-nav" id="path-nav"></div>
+<div class="footer">SYNERGONESIS</div>
+
+<script>
+// =============================================
+// MATH
+// =============================================
+function isPrime(n){n=Math.abs(n);if(n<2)return false;if(n<4)return true;if(n%2===0||n%3===0)return false;for(let i=5;i*i<=n;i+=6)if(n%i===0||n%(i+2)===0)return false;return true}
+function primeFactors(n){n=Math.abs(n);if(n<2)return{};const f={};let d=2;while(d*d<=n){while(n%d===0){f[d]=(f[d]||0)+1;n/=d}d++}if(n>1)f[n]=(f[n]||0)+1;return f}
+function fmtF(n){const f=primeFactors(n);return Object.entries(f).sort((a,b)=>a[0]-b[0]).map(([p,e])=>e>1?p+"^"+e:p).join(" \u00d7 ")}
+function isPrimePower(n){n=Math.abs(n);if(n<2)return null;const f=primeFactors(n);const k=Object.keys(f);return k.length===1?{base:+k[0],exp:f[k[0]]}:null}
+
+// =============================================
+// FAMILY & DIRECTED ADJACENCY
+// =============================================
+const FAMILY=[2,3,5,7,11,13,23,47];
+const FSET=new Set(FAMILY);
+const RING=[3,5,7,11,13,23,47];
+
+// Directed adjacency: m → set of family primes reachable via X+X+1 or X+X-1 factorization
+const ADJ={};
+const OPS={}; // store the operation results
+FAMILY.forEach(m=>{
+  ADJ[m]=new Set();
+  OPS[m]={plus:m+m+1, minus:m+m-1, plusF:primeFactors(m+m+1), minusF:primeFactors(m+m-1)};
+  for(const result of[m+m+1,m+m-1]){
+    if(Math.abs(result)<2)continue;
+    for(const p of Object.keys(primeFactors(result)).map(Number)){
+      if(FSET.has(p)&&p!==m)ADJ[m].add(p);
+    }
+  }
+});
+
+// Composites (non-family results from operations)
+const COMPS={};
+FAMILY.forEach(m=>{
+  [m+m+1,m+m-1].forEach(r=>{
+    if(r>1&&!FSET.has(r)){if(!COMPS[r])COMPS[r]=[];COMPS[r].push(m)}
+  });
+});
+
+// =============================================
+// PATH DISCOVERY
+// =============================================
+
+// Find all directed cycles up to length 8
+function findCycles(){
+  const cycles=[];
+  function dfs(start,path,visited){
+    const cur=path[path.length-1];
+    for(const next of ADJ[cur]){
+      if(next===start&&path.length>=3){
+        cycles.push([...path,start]);
+      }else if(!visited.has(next)&&path.length<8){
+        visited.add(next);
+        path.push(next);
+        dfs(start,path,visited);
+        path.pop();
+        visited.delete(next);
+      }
+    }
+  }
+  for(const m of RING){// exclude 2 from cycle starts (nothing points to 2)
+    dfs(m,[m],new Set([m]));
+  }
+  // Deduplicate: normalize by smallest element first
+  const seen=new Set();
+  const unique=[];
+  cycles.forEach(c=>{
+    const loop=c.slice(0,-1);
+    // Find all rotations, pick lexicographically smallest
+    let best=loop.join(",");
+    for(let i=1;i<loop.length;i++){
+      const rot=[...loop.slice(i),...loop.slice(0,i)].join(",");
+      if(rot<best)best=rot;
+    }
+    if(!seen.has(best)){seen.add(best);unique.push(c)}
+  });
+  // Sort by length then by first element
+  unique.sort((a,b)=>a.length-b.length||(a[0]-b[0]));
+  return unique;
+}
+
+// Find spirals: paths from any ring member through 2 to 0
+function findSpirals(){
+  const spirals=[];
+  // From each ring member, find paths to 2 (since 2 is only reachable as a target via... 
+  // actually nothing in directed ADJ points TO 2. So we use undirected for spirals.
+  // Build undirected adjacency
+  const UADJ={};
+  FAMILY.forEach(m=>{UADJ[m]=new Set()});
+  FAMILY.forEach(m=>{for(const t of ADJ[m]){UADJ[m].add(t);UADJ[t].add(m)}});
+  
+  // BFS from each ring member to 2, then extend to 0
+  for(const start of RING){
+    const queue=[[start]];
+    const visited=new Set([start]);
+    while(queue.length){
+      const path=queue.shift();
+      const cur=path[path.length-1];
+      if(cur===2&&path.length>=3){
+        spirals.push([...path,0]);
+        continue;// don't extend past 2
+      }
+      if(path.length>=8)continue;
+      for(const next of UADJ[cur]){
+        if(!visited.has(next)){
+          visited.add(next);
+          queue.push([...path,next]);
+        }
+      }
+    }
+  }
+  return spirals;
+}
+
+// Composite reduction chains: composite → factor down to family → path to 2 → 0
+function findReductions(){
+  const chains=[];
+  for(const[comp,sources]of Object.entries(COMPS)){
+    const c=+comp;
+    // Factor the composite, find family primes in its factorization
+    const factors=Object.keys(primeFactors(c)).map(Number).filter(p=>FSET.has(p));
+    factors.forEach(fp=>{
+      // Simple chain: composite → family prime → 2 → 0
+      if(fp===2){
+        chains.push({comp:c,chain:[c,2,0],source:sources[0]});
+      }else{
+        chains.push({comp:c,chain:[c,fp,2,0],source:sources[0]});
+      }
+    });
+  }
+  return chains;
+}
+
+const allCycles=findCycles();
+const allSpirals=findSpirals();
+const allReductions=findReductions();
+
+// Categorize cycles
+const shortCycles=allCycles.filter(c=>c.length<=4); // 2-3 node loops (orbits)
+const longCycles=allCycles.filter(c=>c.length>4);     // 4+ node circuits
+
+// =============================================
+// CANVAS & LAYOUT
+// =============================================
+const canvas=document.getElementById("c");
+const ctx=canvas.getContext("2d");
+const W=720,H=920;
+const CX=W/2,CY=H/2;
+const HEPT_R=155,SEED_D=60,HEPT_OFF=225,COMP_R=258,ZR=14;
+
+function resize(){
+  const maxW=Math.min(window.innerWidth-16,W);
+  const sc=maxW/W;
+  canvas.width=W;canvas.height=H;
+  canvas.style.width=maxW+"px";canvas.style.height=(H*sc)+"px";
+}
+resize();window.addEventListener("resize",()=>{resize();draw()});
+
+// Positions
+const pos={};
+pos[0]={x:CX,y:CY};
+pos[2]={x:CX,y:CY-SEED_D};
+RING.forEach((p,i)=>{const a=-Math.PI/2+(2*Math.PI*i/7);pos[p]={x:CX+HEPT_R*Math.cos(a),y:CY-HEPT_OFF+HEPT_R*Math.sin(a)}});
+pos[-2]={x:CX,y:CY+SEED_D};
+RING.forEach((p,i)=>{const a=Math.PI/2-(2*Math.PI*i/7);pos[-p]={x:CX+HEPT_R*Math.cos(a),y:CY+HEPT_OFF+HEPT_R*Math.sin(a)}});
+
+// Composite positions
+function placeComps(sign){
+  const hcy=CY-(sign*HEPT_OFF);const used={};
+  FAMILY.forEach(m=>{
+    [m+m+1,m+m-1].forEach(r=>{
+      const sr=r*sign;// sign-adjusted result
+      if(FSET.has(Math.abs(r))||r<2)return;
+      const src=m*sign;const sp=pos[src];if(!sp)return;
+      let dx=sp.x-CX,dy=sp.y-hcy,len=Math.sqrt(dx*dx+dy*dy);
+      if(len<1){dx=0;dy=-sign;len=1}
+      const k=src;if(!used[k])used[k]=0;
+      const off=(used[k]-0.5)*0.42;used[k]++;
+      const ba=Math.atan2(dy,dx),angle=ba+off;
+      pos[sr]={x:CX+COMP_R*Math.cos(angle),y:hcy+COMP_R*Math.sin(angle),branch:true,source:src};
+    });
+  });
+}
+placeComps(1);placeComps(-1);
+
+// All edges for base drawing
+const allEdges=[];
+FAMILY.forEach(m=>{
+  for(const result of[m+m+1,m+m-1]){
+    const factors=primeFactors(result);
+    for(const p of Object.keys(factors).map(Number)){
+      if(FSET.has(p)&&p!==m)allEdges.push({from:m,to:p,via:result});
+    }
+  }
+});
+// Mirror for negatives
+const negEdges=allEdges.map(e=>({from:-e.from,to:-e.to,via:-(e.via)}));
+const bothEdges=[...allEdges,...negEdges];
+
+// Hit testing
+const allNodes=[];
+allNodes.push({val:0,x:pos[0].x,y:pos[0].y,type:"zero",r:ZR});
+[...FAMILY,...FAMILY.map(p=>-p)].forEach(p=>{if(pos[p])allNodes.push({val:p,x:pos[p].x,y:pos[p].y,type:"fam",r:Math.abs(p)===2?18:14})});
+for(const k of Object.keys(pos)){const v=+k;if(!FSET.has(Math.abs(v))&&v!==0&&pos[v].branch)allNodes.push({val:v,x:pos[v].x,y:pos[v].y,type:"comp",r:11})}
+function findNode(mx,my){for(const n of allNodes){const dx=mx-n.x,dy=my-n.y;if(dx*dx+dy*dy<(n.r+8)**2)return n}return null}
+
+// =============================================
+// MODES
+// =============================================
+const MODES=[
+  {id:"explore",label:"Explore",desc:"hover nodes to trace connections"},
+  {id:"orbits",label:"Orbits",desc:"short loops -- paths that revisit nodes"},
+  {id:"circuits",label:"Circuits",desc:"longer cycles through the family"},
+  {id:"spirals",label:"Spirals",desc:"paths that pass through 2 and terminate at 0"},
+  {id:"reduction",label:"Reduction",desc:"composites factor down through family to zero"},
+];
+let curMode="explore",curPathIdx=0,hovered=null;
+
+const modesEl=document.getElementById("modes");
+MODES.forEach(m=>{
+  const btn=document.createElement("button");
+  btn.className="mode"+(m.id===curMode?" active":"");
+  btn.textContent=m.label;btn.dataset.id=m.id;
+  btn.onclick=()=>{curMode=m.id;curPathIdx=0;
+    document.querySelectorAll(".mode").forEach(b=>b.classList.toggle("active",b.dataset.id===m.id));
+    document.getElementById("mode-desc").textContent=m.desc;
+    updatePathNav();draw()};
+  modesEl.appendChild(btn);
+});
+document.getElementById("mode-desc").textContent=MODES[0].desc;
+
+function getActivePaths(){
+  if(curMode==="orbits")return shortCycles;
+  if(curMode==="circuits")return longCycles;
+  if(curMode==="spirals")return allSpirals;
+  if(curMode==="reduction")return allReductions;
+  return[];
+}
+
+function updatePathNav(){
+  const nav=document.getElementById("path-nav");
+  nav.innerHTML="";
+  const paths=getActivePaths();
+  if(paths.length===0)return;
+  const maxShow=Math.min(paths.length,12);
+  for(let i=0;i<maxShow;i++){
+    const btn=document.createElement("button");
+    btn.className="pnav"+(i===curPathIdx?" active":"");
+    btn.textContent=i+1;
+    btn.onclick=()=>{curPathIdx=i;updatePathNav();draw()};
+    nav.appendChild(btn);
+  }
+}
+updatePathNav();
+
+// =============================================
+// DRAWING
+// =============================================
+function drawArrow(x1,y1,x2,y2,color,width){
+  const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
+  if(len<1)return;
+  const ux=dx/len,uy=dy/len;
+  // Shorten to not overlap nodes
+  const sx=x1+ux*20,sy=y1+uy*20;
+  const ex=x2-ux*20,ey=y2-uy*20;
+  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(ex,ey);
+  ctx.strokeStyle=color;ctx.lineWidth=width;ctx.stroke();
+  // Arrowhead
+  const aLen=8,aAng=0.4;
+  ctx.beginPath();
+  ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-aLen*Math.cos(Math.atan2(dy,dx)-aAng),ey-aLen*Math.sin(Math.atan2(dy,dx)-aAng));
+  ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-aLen*Math.cos(Math.atan2(dy,dx)+aAng),ey-aLen*Math.sin(Math.atan2(dy,dx)+aAng));
+  ctx.stroke();
+}
+
+function drawPath(path,color,width,dashed,sign){
+  // path is array of family member values; sign=1 for positive, -1 for negative
+  for(let i=0;i<path.length-1;i++){
+    const from=path[i]*sign,to=path[i+1]*sign;
+    const pf=pos[from],pt=pos[to];
+    if(!pf||!pt)continue;
+    if(dashed){ctx.setLineDash([4,6])}
+    drawArrow(pf.x,pf.y,pt.x,pt.y,color,width);
+    if(dashed){ctx.setLineDash([])}
+  }
+}
+
+function draw(){
+  ctx.clearRect(0,0,W,H);
+
+  // --- Faint axis ---
+  ctx.setLineDash([2,6]);ctx.strokeStyle="rgba(200,160,100,0.025)";ctx.lineWidth=0.5;
+  ctx.beginPath();ctx.moveTo(CX,30);ctx.lineTo(CX,H-30);ctx.stroke();ctx.setLineDash([]);
+
+  // --- Heptagon outlines ---
+  [1,-1].forEach(sign=>{
+    const hcy=CY-(sign*HEPT_OFF);
+    ctx.beginPath();ctx.strokeStyle="rgba(200,160,100,0.025)";ctx.lineWidth=0.5;
+    RING.forEach((p,i)=>{const a=(sign===1?-Math.PI/2:Math.PI/2)+(sign===1?1:-1)*(2*Math.PI*i/7);
+      const x=CX+HEPT_R*Math.cos(a),y=hcy+HEPT_R*Math.sin(a);i===0?ctx.moveTo(x,y):ctx.lineTo(x,y)});
+    ctx.closePath();ctx.stroke();
+  });
+
+  // --- 2/-2 to 0 lines ---
+  [2,-2].forEach(p=>{const pp=pos[p];
+    ctx.beginPath();ctx.moveTo(pp.x,pp.y);ctx.lineTo(pos[0].x,pos[0].y);
+    ctx.strokeStyle="rgba(200,160,100,0.06)";ctx.lineWidth=0.6;ctx.stroke()});
+
+  // === MODE-SPECIFIC DRAWING ===
+  const paths=getActivePaths();
+  const activePath=paths[curPathIdx]||null;
+  const isPathMode=curMode!=="explore"&&activePath;
+
+  // In path modes, dim the base graph
+  const baseDim=isPathMode?0.015:1;
+
+  // --- Composite branches (base) ---
+  for(const[comp,sources]of Object.entries(COMPS)){
+    [1,-1].forEach(sign=>{
+      const cv=+comp*sign;const cp=pos[cv];if(!cp||!cp.branch)return;
+      const sp=pos[sources[0]*sign];if(!sp)return;
+      const isFamHov=hovered&&hovered.type==="fam"&&sources.includes(Math.abs(hovered.val))&&Math.sign(hovered.val||1)===sign;
+      ctx.beginPath();ctx.moveTo(sp.x,sp.y);ctx.lineTo(cp.x,cp.y);
+      ctx.strokeStyle=isFamHov?`rgba(200,160,100,0.12)`:`rgba(200,160,100,${0.03*baseDim})`;
+      ctx.lineWidth=isFamHov?0.8:0.4;ctx.stroke();
+    });
+  }
+
+  // --- Base family edges ---
+  const drawnE=new Set();
+  bothEdges.forEach(e=>{
+    const key=[e.from,e.to,e.via].sort().join(",");
+    if(drawnE.has(key))return;drawnE.add(key);
+    const from=pos[e.from],to=pos[e.to];if(!from||!to)return;
+    const isBright=curMode==="explore"&&hovered&&hovered.type==="fam"&&(e.from===hovered.val||e.to===hovered.val);
+    ctx.beginPath();ctx.moveTo(from.x,from.y);ctx.lineTo(to.x,to.y);
+    ctx.strokeStyle=isBright?"rgba(200,160,100,0.35)":`rgba(200,160,100,${isPathMode?0.012:0.055})`;
+    ctx.lineWidth=isBright?1.5:0.5;ctx.stroke();
+    if(isBright){
+      const mx2=(from.x+to.x)/2,my2=(from.y+to.y)/2;
+      const dx=to.x-from.x,dy=to.y-from.y,len=Math.sqrt(dx*dx+dy*dy)||1;
+      ctx.fillStyle="rgba(200,160,100,0.3)";ctx.font="8px 'JetBrains Mono',monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.fillText(e.via,mx2-(dy/len)*12,my2+(dx/len)*12);
+    }
+  });
+
+  // --- Draw active path overlay ---
+  if(isPathMode){
+    if(curMode==="reduction"){
+      const rd=activePath;
+      // Positive side
+      const chain=rd.chain;// [composite, familyPrime, 2, 0] or [composite, 2, 0]
+      const compV=chain[0];
+      [1,-1].forEach(sign=>{
+        const col=sign>0?"rgba(200,160,100,":"rgba(140,180,200,";
+        for(let i=0;i<chain.length-1;i++){
+          const from=chain[i]*(i===0?sign:sign);// composites are positive-only indexed
+          const to=chain[i+1]*sign;
+          // Special: composite might not have negative position, use source
+          const fp=i===0?pos[compV*sign]:pos[from];
+          const tp=pos[to];
+          if(!fp||!tp)continue;
+          drawArrow(fp.x,fp.y,tp.x,tp.y,col+"0.6)",2);
+        }
+      });
+    }else{
+      const pathArr=curMode==="spirals"?activePath:activePath;// cycles are already arrays
+      [1,-1].forEach(sign=>{
+        const col=sign>0?"rgba(220,170,80,0.7)":"rgba(140,180,220,0.6)";
+        drawPath(pathArr,col,2,false,sign);
+      });
+    }
+  }
+
+  // --- Composite nodes ---
+  for(const[comp,sources]of Object.entries(COMPS)){
+    [1,-1].forEach(sign=>{
+      const cv=+comp*sign;const cp=pos[cv];if(!cp||!cp.branch)return;
+      const isAct=curMode==="explore"&&hovered&&hovered.type==="fam"&&sources.includes(Math.abs(hovered.val))&&Math.sign(hovered.val||1)===sign;
+      const isCH=hovered&&hovered.type==="comp"&&hovered.val===cv;
+      const isRed=curMode==="reduction"&&activePath&&Math.abs(activePath.comp)===Math.abs(cv);
+      const alpha=isCH?0.7:isAct?0.35:isRed?0.6:isPathMode?0.03:0.1;
+      ctx.beginPath();ctx.arc(cp.x,cp.y,10,0,Math.PI*2);
+      ctx.fillStyle=`rgba(200,160,100,${alpha*0.15})`;ctx.fill();
+      ctx.strokeStyle=`rgba(200,160,100,${alpha*0.5})`;ctx.lineWidth=isRed?1.5:0.7;ctx.stroke();
+      ctx.fillStyle=`rgba(200,160,100,${alpha})`;ctx.font="8px 'JetBrains Mono',monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+      ctx.fillText(cv,cp.x,cp.y);
+      if((isCH||isRed)&&isPrimePower(Math.abs(cv))){const pp=isPrimePower(Math.abs(cv));
+        ctx.fillStyle="rgba(200,160,100,0.3)";ctx.font="7px 'JetBrains Mono',monospace";ctx.fillText(pp.base+"^"+pp.exp,cp.x,cp.y+15)}
+    });
+  }
+
+  // --- Family nodes ---
+  [...FAMILY,...FAMILY.map(p=>-p)].forEach(p=>{
+    const np=pos[p];if(!np)return;
+    const isTwo=Math.abs(p)===2,r=isTwo?18:14;
+    const isH=hovered&&hovered.val===p;
+    const isPos=p>0;
+    const baseCol=isPos?"200,160,100":"140,180,200";
+
+    // Is this node on the active path?
+    let onPath=false;
+    if(isPathMode&&activePath){
+      const pathArr=curMode==="reduction"?activePath.chain:(activePath);
+      const ap=Math.abs(p);
+      onPath=pathArr.includes(ap)||(ap===2&&pathArr.includes(2))||(ap===0);
+    }
+
+    let conn=true;
+    if(curMode==="explore"){
+      if(hovered&&hovered.type==="fam"&&hovered.val!==p)conn=bothEdges.some(e=>(e.from===hovered.val&&e.to===p)||(e.to===hovered.val&&e.from===p));
+      if(hovered&&hovered.type==="zero")conn=Math.abs(p)===2;
+    }
+
+    const alpha=isH?1:onPath?0.9:conn&&curMode==="explore"?0.8:isPathMode?0.08:0.75;
+
+    if(isH){ctx.beginPath();ctx.arc(np.x,np.y,r+10,0,Math.PI*2);ctx.fillStyle="rgba(200,160,100,0.03)";ctx.fill()}
+    ctx.beginPath();ctx.arc(np.x,np.y,r,0,Math.PI*2);
+    ctx.fillStyle=onPath?`rgba(${baseCol},0.18)`:isH?`rgba(${baseCol},0.2)`:`rgba(${baseCol},${0.06*alpha})`;ctx.fill();
+    ctx.strokeStyle=onPath?`rgba(${baseCol},0.7)`:`rgba(${baseCol},${0.55*alpha})`;ctx.lineWidth=isTwo?2.5:onPath?2:1.5;ctx.stroke();
+    ctx.fillStyle=`rgba(${baseCol},${alpha})`;
+    ctx.font=(isTwo?"bold 15px":"bold 12px")+" 'JetBrains Mono',monospace";
+    ctx.textAlign="center";ctx.textBaseline="middle";ctx.fillText(p,np.x,np.y);
+  });
+
+  // --- Zero node ---
+  const zHov=hovered&&hovered.type==="zero";
+  const zOnPath=isPathMode&&(curMode==="spirals"||curMode==="reduction");
+  if(zHov||zOnPath){
+    const grad=ctx.createRadialGradient(pos[0].x,pos[0].y,0,pos[0].x,pos[0].y,45);
+    grad.addColorStop(0,"rgba(200,160,100,0.06)");grad.addColorStop(1,"rgba(200,160,100,0)");
+    ctx.beginPath();ctx.arc(pos[0].x,pos[0].y,45,0,Math.PI*2);ctx.fillStyle=grad;ctx.fill();
+  }
+  ctx.beginPath();ctx.arc(pos[0].x,pos[0].y,ZR,0,Math.PI*2);
+  const zAlpha=zHov?1:zOnPath?0.9:isPathMode?0.15:0.5;
+  ctx.fillStyle=`rgba(200,160,100,${zAlpha*0.15})`;ctx.fill();
+  ctx.strokeStyle=`rgba(200,160,100,${zAlpha*0.8})`;ctx.lineWidth=2;ctx.stroke();
+  ctx.fillStyle=`rgba(200,160,100,${zAlpha})`;
+  ctx.font="bold 16px 'JetBrains Mono',monospace";ctx.textAlign="center";ctx.textBaseline="middle";
+  ctx.fillText("0",pos[0].x,pos[0].y);
+
+  // --- Side labels ---
+  ctx.fillStyle="rgba(200,160,100,0.06)";ctx.font="11px 'JetBrains Mono',monospace";ctx.textAlign="center";
+  ctx.fillText("+",CX,45);
+  ctx.fillStyle="rgba(140,180,200,0.06)";ctx.fillText("\u2212",CX,H-35);
+
+  if(!hovered&&!isPathMode){
+    ctx.fillStyle="rgba(200,160,100,0.06)";ctx.font="italic 10px 'Cormorant Garamond',serif";ctx.textAlign="center";
+    ctx.fillText("singularity",CX,CY+28);
+  }
+
+  // --- Update info for path modes ---
+  const info=document.getElementById("info");
+  if(isPathMode&&!hovered){
+    if(curMode==="reduction"){
+      const rd=activePath;
+      info.innerHTML=`<span style="color:rgba(200,160,100,0.5)">${rd.chain.join(" \u2192 ")}</span><br>`+
+        `<span style="color:rgba(200,160,100,0.25)">${rd.comp} = ${fmtF(rd.comp)} \u2192 factors to family \u2192 2 \u2192 0</span>`;
+    }else{
+      const pathArr=activePath;
+      const label=pathArr[pathArr.length-1]===pathArr[0]?"cycle":"path";
+      info.innerHTML=`<span style="color:rgba(200,160,100,0.5)">${pathArr.join(" \u2192 ")}</span><br>`+
+        `<span style="color:rgba(200,160,100,0.25)">${label}, length ${pathArr.length-1}` +
+        (curMode==="spirals"?" \u2014 terminates at singularity, mirrors through negative side":"") +
+        (curMode==="circuits"&&pathArr.length-1>=7?" \u2014 visits all ring members":"") + `</span>`;
+    }
+  }
+}
+
+// =============================================
+// INTERACTION
+// =============================================
+canvas.onmousemove=ev=>{
+  const rect=canvas.getBoundingClientRect();
+  const mx=(ev.clientX-rect.left)*(W/rect.width),my=(ev.clientY-rect.top)*(H/rect.height);
+  hovered=findNode(mx,my);draw();
+  const info=document.getElementById("info");
+  if(!hovered){if(curMode==="explore")info.innerHTML="";else draw();return}
+
+  if(hovered.type==="zero"){
+    info.innerHTML=`<span style="color:#c8a064;font-weight:600">0</span><span style="color:rgba(200,160,100,0.3)"> \u2014 the singularity</span><br>`+
+      `<span style="color:rgba(200,160,100,0.4)">0+0+1 = 1 \u00b7 0+0 = 0 \u00b7 0+0\u22121 = \u22121</span><br>`+
+      `<span style="color:rgba(200,160,100,0.25)">every kernel, every dimension: {\u22121, 0, +1}. all paths converge here.</span>`;
+  }else if(hovered.type==="fam"){
+    const m=hovered.val,am=Math.abs(m),sign=m>0?1:-1;
+    const p=m+m+1,mi=m+m-1;
+    const col=m>0?"200,160,100":"140,180,200";
+    info.innerHTML=`<span style="color:rgba(${col},0.9);font-weight:600">${m}</span><span style="color:rgba(200,160,100,0.2)"> \u2014 </span>`+
+      `<span style="color:rgba(${col},0.6)">${m}+${m}+1 = ${p}</span><span style="color:rgba(200,160,100,0.25)"> (${fmtF(Math.abs(p))})</span>`+
+      `<span style="color:rgba(200,160,100,0.1)"> | </span>`+
+      `<span style="color:rgba(${col},0.6)">${m}+${m}\u22121 = ${mi}</span><span style="color:rgba(200,160,100,0.25)"> (${fmtF(Math.abs(mi))})</span>`;
+    // Show adjacency
+    if(FSET.has(am)){
+      const targets=[...ADJ[am]].sort((a,b)=>a-b).map(t=>t*sign);
+      info.innerHTML+=`<br><span style="color:rgba(200,160,100,0.2)">connects to: ${targets.join(", ")}</span>`;
+    }
+  }else if(hovered.type==="comp"){
+    const c=hovered.val,ac=Math.abs(c);
+    const sources=COMPS[ac]?COMPS[ac].map(s=>s*Math.sign(c)):[];
+    info.innerHTML=`<span style="color:rgba(200,160,100,0.6)">${c}</span><span style="color:rgba(200,160,100,0.3)"> = ${fmtF(ac)}</span>`+
+      `<br><span style="color:rgba(200,160,100,0.2)">produced by: ${sources.join(", ")} \u2192 factors to family \u2192 0</span>`;
+  }
+};
+canvas.onmouseleave=()=>{hovered=null;draw();if(curMode==="explore")document.getElementById("info").innerHTML=""};
+
+// Initial draw
+draw();
+</script>
+</body>
+</html>

@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Genome Lab — Operand Observatory</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+  :root {
+    --void:#04060c; --deep:#0a0e18; --surface:#101828; --border:#1a2440;
+    --muted:#4a5a8a; --text:#b8c8e8; --bright:#e0eaff;
+    --mitosis:#4a9eff; --stable:#50e890; --growth:#ffaa40;
+    --family:#50e890; --prime:#ff6088; --locked:#ff4040; --open:#40ff90;
+    --dna-a:#ff6088; --dna-b:#4ae8ff; --overlap:#ffd700;
+    --mono: 'JetBrains Mono', monospace; --serif: 'Cormorant Garamond', serif;
+  }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--void);color:var(--text);font-family:var(--mono);font-size:12px;overflow:hidden;height:100vh}
+  .app{display:grid;grid-template-columns:340px 1fr;grid-template-rows:48px 1fr;height:100vh}
+  .header{grid-column:1/-1;background:var(--deep);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 18px}
+  .header h1{font-family:var(--serif);font-size:18px;font-weight:400;color:var(--bright);letter-spacing:2px}
+  .header h1 span{color:var(--dna-a)}
+  .sidebar{background:var(--deep);border-right:1px solid var(--border);padding:12px;overflow-y:auto}
+  .sidebar::-webkit-scrollbar{width:3px} .sidebar::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  .main{position:relative;overflow:hidden;background:var(--void)}
+
+  .ptitle{font-family:var(--serif);font-size:13px;color:var(--bright);margin-bottom:6px;letter-spacing:1px;display:flex;align-items:center;gap:6px}
+  .ptitle .dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+  .info{font-size:10px;color:var(--muted);line-height:1.6;margin-bottom:8px}
+  .info .hl{color:var(--bright);font-weight:600} .info .hf{color:var(--family);font-weight:600} .info .hp{color:var(--prime);font-weight:600} .info .ho{color:var(--overlap);font-weight:600}
+
+  .org-row{display:flex;gap:4px;margin-bottom:8px;align-items:center}
+  .org-label{font-size:10px;font-weight:600;min-width:14px;text-align:center}
+  select{background:var(--surface);border:1px solid var(--border);color:var(--bright);font-family:var(--mono);font-size:11px;padding:5px 6px;border-radius:3px;outline:none;flex:1;min-width:0}
+  select:focus{border-color:var(--growth)}
+  .seed-inp{width:52px;background:var(--surface);border:1px solid var(--border);color:var(--bright);font-family:var(--mono);font-size:13px;padding:5px;border-radius:3px;outline:none;text-align:center}
+  .seed-inp:focus{border-color:var(--growth)}
+  .btn{background:var(--surface);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:10px;padding:6px 10px;cursor:pointer;border-radius:3px;transition:all .2s;white-space:nowrap}
+  .btn:hover{border-color:var(--muted);background:var(--border)}
+  .btn.active{border-color:var(--growth);color:var(--growth)}
+
+  .sub-tabs{display:flex;gap:3px;margin-bottom:8px;flex-wrap:wrap}
+  .stab{padding:4px 7px;font-size:9px;letter-spacing:.5px;text-transform:uppercase;background:transparent;border:1px solid var(--border);color:var(--muted);cursor:pointer;border-radius:2px;transition:all .2s;font-family:var(--mono)}
+  .stab:hover{color:var(--text);border-color:var(--muted)}
+  .stab.active{color:var(--growth);border-color:var(--growth);background:#ffaa4010}
+  .sub-panel{display:none} .sub-panel.vis{display:block}
+
+  .kern-table{width:100%;border-collapse:collapse;font-size:10px}
+  .kern-table th{font-size:8px;text-transform:uppercase;letter-spacing:.8px;padding:4px 2px;border-bottom:1px solid var(--border);color:var(--muted);position:sticky;top:0;background:var(--deep);z-index:1}
+  .kern-table td{text-align:center;padding:3px 2px;border-bottom:1px solid #080c18;font-weight:500}
+  .kern-table tr:hover td{background:#ffffff04}
+  .kern-table .kn{color:var(--muted);font-size:9px}
+  .kern-table .mv{color:var(--mitosis)} .kern-table .sv{color:var(--stable)} .kern-table .gv{color:var(--growth)}
+  .kern-table .fam{color:var(--family);font-weight:700} .kern-table .pri{color:var(--prime);font-weight:600}
+  .kern-table .ovlp{background:#ffd70015;color:var(--overlap);font-weight:700}
+  .kern-wrap{max-height:calc(100vh - 400px);overflow-y:auto}
+  .kern-wrap::-webkit-scrollbar{width:3px} .kern-wrap::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+
+  .sig-bar{display:flex;align-items:center;gap:4px;padding:2px 0}
+  .sig-label{font-size:9px;min-width:20px;text-align:right;color:var(--muted)}
+  .sig-track{flex:1;height:10px;background:var(--surface);border-radius:2px;overflow:hidden}
+  .sig-fill{height:100%;border-radius:2px;transition:width .3s}
+  .sig-pct{font-size:8px;min-width:30px;color:var(--muted)}
+
+  .topo-box{padding:10px;border-radius:4px;text-align:center;margin:8px 0}
+  .topo-box.open{background:#40ff9010;border:1px solid #40ff9030}
+  .topo-box.locked{background:#ff404010;border:1px solid #ff404030}
+  .topo-box.partial{background:#ffaa4010;border:1px solid #ffaa4030}
+  .topo-big{font-size:22px;font-weight:700;font-family:var(--serif)}
+  .topo-sub{font-size:9px;color:var(--muted);margin-top:2px;letter-spacing:.5px}
+
+  .compare-row{display:flex;gap:6px;align-items:center;padding:3px 0;border-bottom:1px solid #080c18;font-size:10px}
+  .compare-row .ck{min-width:24px;text-align:center;font-weight:600}
+  .compare-row .cv{min-width:40px;text-align:center}
+
+  .body-plan{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;margin:8px 0}
+  .bp-cell{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:8px;text-align:center}
+  .bp-num{font-size:20px;font-weight:700;color:var(--bright)}
+  .bp-label{font-size:8px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px}
+  .bp-factor{font-size:9px;color:var(--family);margin-top:1px}
+
+  canvas{display:block;width:100%;height:100%}
+  .canvas-info{position:absolute;bottom:8px;right:12px;font-size:9px;color:var(--muted);pointer-events:none;text-align:right;line-height:1.4}
+  .canvas-crosshair{position:absolute;top:8px;left:12px;font-size:10px;color:var(--text);pointer-events:none;font-weight:500}
+  .zoom-ctrls{position:absolute;top:8px;right:12px;display:flex;flex-direction:column;gap:2px}
+  .zbtn{width:26px;height:26px;background:var(--surface);border:1px solid var(--border);color:var(--text);font-size:13px;display:flex;align-items:center;justify-content:center;cursor:pointer;border-radius:3px;font-family:var(--mono)}
+  .zbtn:hover{background:var(--border)}
+  .mode-ind{position:absolute;bottom:8px;left:12px;display:flex;gap:6px;align-items:center;pointer-events:none}
+  .mode-dot{width:5px;height:5px;border-radius:50%;animation:pulse 1.5s ease infinite}
+  @keyframes pulse{0%,100%{opacity:.4;transform:scale(1)}50%{opacity:1;transform:scale(1.3)}}
+  .mode-label{font-size:9px;letter-spacing:1px;text-transform:uppercase}
+
+  .util-row{display:flex;gap:4px;margin-bottom:8px} .util-row .btn{flex:1;text-align:center;font-size:9px}
+</style>
+</head>
+<body>
+<style>.lab-back{position:fixed;top:12px;left:12px;z-index:9999;color:rgba(200,160,100,0.35);text-decoration:none;font-family:"JetBrains Mono",monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;padding:6px 12px;border:1px solid rgba(200,160,100,0.08);border-radius:2px;transition:all 0.3s;background:rgba(10,10,8,0.8);backdrop-filter:blur(4px)}.lab-back:hover{color:rgba(200,160,100,0.8);border-color:rgba(200,160,100,0.25)}</style>
+<a href="../lab.html" class="lab-back">← Lab</a>
+<div class="app">
+  <header class="header">
+    <h1>THE <span>GENOME</span> LAB</h1>
+    <div style="font-size:9px;color:var(--muted);letter-spacing:1px">OPERAND OBSERVATORY</div>
+  </header>
+
+  <aside class="sidebar">
+    <!-- ORGANISM A -->
+    <div class="ptitle"><span class="dot" style="background:var(--dna-a)"></span> Organism A</div>
+    <div class="org-row">
+      <span class="org-label" style="color:var(--dna-a)">A</span>
+      <select id="selA" onchange="selectOrg('A')">
+        <option value="23" selected>Human (n=23)</option>
+        <option value="4">Fruit fly (n=4)</option>
+        <option value="7">Garden pea (n=7)</option>
+        <option value="10">Corn / maize (n=10)</option>
+        <option value="16">Honey bee (n=16)</option>
+        <option value="19">Cat (n=19)</option>
+        <option value="20">Mouse (n=20)</option>
+        <option value="22">Rabbit (n=22)</option>
+        <option value="24">Gorilla (n=24)</option>
+        <option value="30">Octopus (n=30)</option>
+        <option value="32">Horse (n=32)</option>
+        <option value="39">Dog (n=39)</option>
+        <option value="47">Goldfish (n=47)</option>
+        <option value="52">Carp (n=52)</option>
+        <option value="0">Custom...</option>
+      </select>
+      <input type="number" class="seed-inp" id="seedA" value="23" style="border-color:var(--dna-a)">
+    </div>
+
+    <!-- ORGANISM B -->
+    <div class="ptitle"><span class="dot" style="background:var(--dna-b)"></span> Organism B</div>
+    <div class="org-row">
+      <span class="org-label" style="color:var(--dna-b)">B</span>
+      <select id="selB" onchange="selectOrg('B')">
+        <option value="16">Honey bee (n=16)</option>
+        <option value="4">Fruit fly (n=4)</option>
+        <option value="7">Garden pea (n=7)</option>
+        <option value="10">Corn / maize (n=10)</option>
+        <option value="19">Cat (n=19)</option>
+        <option value="20">Mouse (n=20)</option>
+        <option value="22">Rabbit (n=22)</option>
+        <option value="23">Human (n=23)</option>
+        <option value="24">Gorilla (n=24)</option>
+        <option value="30" selected>Octopus (n=30)</option>
+        <option value="32">Horse (n=32)</option>
+        <option value="39">Dog (n=39)</option>
+        <option value="47">Goldfish (n=47)</option>
+        <option value="52">Carp (n=52)</option>
+        <option value="0">Custom...</option>
+      </select>
+      <input type="number" class="seed-inp" id="seedB" value="30" style="border-color:var(--dna-b)">
+    </div>
+
+    <div class="util-row">
+      <button class="btn" onclick="runAnalysis()" style="flex:2;color:var(--growth);border-color:var(--growth)">ANALYZE</button>
+      <button class="btn" onclick="plotBoth()">PLOT</button>
+      <button class="btn" onclick="clearCanvas()">CLEAR</button>
+    </div>
+
+    <div class="sub-tabs">
+      <div class="stab active" onclick="setTab('kernel')">Kernel Expansion</div>
+      <div class="stab" onclick="setTab('signature')">Factor Signature</div>
+      <div class="stab" onclick="setTab('topology')">Topology</div>
+      <div class="stab" onclick="setTab('overlap')">Overlap</div>
+      <div class="stab" onclick="setTab('body')">Body Plan</div>
+    </div>
+
+    <!-- KERNEL EXPANSION -->
+    <div class="sub-panel vis" id="tab-kernel">
+      <div class="info">Full operand domain: <span class="hl">K1</span> through <span class="hl">K<sub>s</sub></span>. Each level <span class="hl">n</span>: triple <span class="hl">(ns−1, ns, ns+1)</span>. The genome is not the count — it is the <span class="hf">entire expansion</span>.</div>
+      <div class="kern-wrap" id="kernWrap"></div>
+    </div>
+
+    <!-- FACTOR SIGNATURE -->
+    <div class="sub-panel" id="tab-signature">
+      <div class="info">Prime factor frequency across all kernel levels. Which <span class="hf">family primes</span> appear, how often, and where they <span class="hp">breach</span>.</div>
+      <div id="sigContent"></div>
+    </div>
+
+    <!-- TOPOLOGY -->
+    <div class="sub-panel" id="tab-topology">
+      <div class="info">Locked vs Open: can the organism's operand domain reach <span class="hf">new primes</span> from both ±1 directions? Or is it stuck on the <span class="hp">stable chain</span>?</div>
+      <div id="topoContent"></div>
+    </div>
+
+    <!-- OVERLAP -->
+    <div class="sub-panel" id="tab-overlap">
+      <div class="info">Shared domain data: kernel levels where A and B produce <span class="ho">identical values</span>. Not shared lineage — shared <span class="hl">structural extrapolation</span> from the same base prime lattice.</div>
+      <div id="overlapContent"></div>
+    </div>
+
+    <!-- BODY PLAN -->
+    <div class="sub-panel" id="tab-body">
+      <div class="info">Factor decomposition as anatomical expression. The body plan is the <span class="hf">prime signature</span> rendered in tissue.</div>
+      <div id="bodyContent"></div>
+    </div>
+  </aside>
+
+  <div class="main" id="mainWrap">
+    <canvas id="cv"></canvas>
+    <div class="zoom-ctrls">
+      <button class="zbtn" onclick="zoomIn()">+</button>
+      <button class="zbtn" onclick="zoomOut()">−</button>
+      <button class="zbtn" onclick="fitView()" style="font-size:9px">⟲</button>
+    </div>
+    <div class="canvas-crosshair" id="crosshair"></div>
+    <div class="canvas-info" id="cvInfo">scroll to zoom · drag to pan</div>
+  </div>
+</div>
+
+<script>
+// ═══════════════════════════════════════
+// THE GENOME LAB ENGINE
+// ═══════════════════════════════════════
+
+const FAMILY=[2,3,5,7,11,13,23,47], FSET=new Set(FAMILY);
+function isPrime(n){n=Math.abs(n);if(n<2)return false;if(n<4)return true;if(n%2===0||n%3===0)return false;for(let i=5;i*i<=n;i+=6)if(n%i===0||n%(i+2)===0)return false;return true}
+function primeFactors(n){n=Math.abs(n);if(n<2)return{};const f={};let d=2;while(d*d<=n){while(n%d===0){f[d]=(f[d]||0)+1;n/=d}d++}if(n>1)f[n]=(f[n]||0)+1;return f}
+function fmt(n){const f=primeFactors(n);if(!Object.keys(f).length)return''+n;return Object.entries(f).sort((a,b)=>a[0]-b[0]).map(([p,e])=>+e>1?p+'<sup>'+e+'</sup>':p).join('×')}
+function fmtPlain(n){const f=primeFactors(n);if(!Object.keys(f).length)return''+n;return Object.entries(f).sort((a,b)=>a[0]-b[0]).map(([p,e])=>+e>1?p+'^'+e:p).join('×')}
+function isFamily(n){return FSET.has(Math.abs(n))}
+function familyFactorsOf(n){return Object.keys(primeFactors(n)).map(Number).filter(p=>FSET.has(p))}
+function allFamilyFactors(n){const f=primeFactors(n);return Object.keys(f).length>0&&Object.keys(f).map(Number).every(p=>FSET.has(p))}
+
+// ── Full kernel expansion: K1 through Ks ──
+function kernelExpand(seed){
+  const levels=[];
+  for(let k=1;k<=seed;k++){
+    const m=k*seed-1, s=k*seed, g=k*seed+1;
+    const mf=primeFactors(m), sf=primeFactors(s), gf=primeFactors(g);
+    levels.push({
+      k, m, s, g,
+      mPrime:isPrime(m), gPrime:isPrime(g),
+      mFamily:isFamily(m), sFamily:isFamily(s), gFamily:isFamily(g),
+      mFamFactors:familyFactorsOf(m), sFamFactors:familyFactorsOf(s), gFamFactors:familyFactorsOf(g),
+      mAllFam:allFamilyFactors(m), sAllFam:allFamilyFactors(s), gAllFam:allFamilyFactors(g),
+      allValues:[m,s,g]
+    });
+  }
+  return levels;
+}
+
+// ── Factor signature across all levels ──
+function factorSignature(levels){
+  const sig={};
+  FAMILY.forEach(p=>sig[p]={count:0,levels:[]});
+  const nonFam={};
+  levels.forEach(lv=>{
+    lv.allValues.forEach(v=>{
+      const f=primeFactors(v);
+      Object.keys(f).map(Number).forEach(p=>{
+        if(FSET.has(p)){sig[p].count++;sig[p].levels.push(lv.k)}
+        else{if(!nonFam[p])nonFam[p]={count:0,levels:[]};nonFam[p].count++;nonFam[p].levels.push(lv.k)}
+      });
+    });
+  });
+  return{family:sig,nonFamily:nonFam,totalValues:levels.length*3};
+}
+
+// ── Topology analysis ──
+function topology(seed){
+  const m=2*seed-1, g=2*seed+1;
+  const mPrime=isPrime(m), gPrime=isPrime(g);
+  const factors=primeFactors(seed);
+  const pureBinary=Object.keys(factors).length===1&&factors[2]!==undefined;
+  const allFam=allFamilyFactors(seed);
+  const onSpine=isFamily(seed);
+  let status='mixed';
+  if(mPrime&&gPrime)status='open';
+  else if(!mPrime&&!gPrime)status='locked';
+  else status='partial';
+  return{m,g,mPrime,gPrime,pureBinary,allFam,onSpine,status,seed};
+}
+
+// ── Overlap detection ──
+function findOverlaps(levelsA,levelsB,seedA,seedB){
+  const setA=new Map(), setB=new Map();
+  levelsA.forEach(lv=>lv.allValues.forEach(v=>setA.set(v,lv.k)));
+  levelsB.forEach(lv=>lv.allValues.forEach(v=>setB.set(v,lv.k)));
+  const overlaps=[];
+  for(const[v,kA]of setA)if(setB.has(v))overlaps.push({value:v,kA,kB:setB.get(v),factors:fmtPlain(v),isFam:isFamily(v),isPri:isPrime(v)});
+  overlaps.sort((a,b)=>a.value-b.value);
+  // also find factor overlaps - same prime appearing in both signatures
+  const sigA=factorSignature(levelsA), sigB=factorSignature(levelsB);
+  const sharedFactors=[];
+  FAMILY.forEach(p=>{if(sigA.family[p].count>0&&sigB.family[p].count>0)sharedFactors.push(p)});
+  return{exact:overlaps,sharedFactors};
+}
+
+// ═══ STATE ═══
+const S={
+  seedA:23, seedB:30,
+  levelsA:[], levelsB:[],
+  viewCX:100, viewCY:0, viewScale:4,
+  dragging:false, dsx:0, dsy:0, dscx:0, dscy:0,
+  points:[], connections:[],
+  cw:0, ch:0, mx:0, my:0
+};
+
+const cv=document.getElementById('cv'), cx=cv.getContext('2d');
+
+function resize(){const w=document.getElementById('mainWrap');const dpr=devicePixelRatio||1;S.cw=w.clientWidth;S.ch=w.clientHeight;cv.width=S.cw*dpr;cv.height=S.ch*dpr;cv.style.width=S.cw+'px';cv.style.height=S.ch+'px';cx.setTransform(dpr,0,0,dpr,0,0);draw()}
+window.addEventListener('resize',resize);
+
+function vtx(v){return S.cw/2+(v-S.viewCX)*S.viewScale}
+function vty(k){return S.ch/2-S.viewCY-k*Math.min(20,Math.max(6,S.viewScale*0.4))}
+function xtv(px){return(px-S.cw/2)/S.viewScale+S.viewCX}
+
+function draw(){
+  cx.clearRect(0,0,S.cw,S.ch);
+  drawGrid();
+  // Draw connections
+  for(const c of S.connections){
+    const x1=vtx(c.from),y1=vty(c.fromK),x2=vtx(c.to),y2=vty(c.toK);
+    const col=c.color||'#ffffff';
+    cx.strokeStyle=col+'18';cx.lineWidth=4;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
+    cx.strokeStyle=col+'60';cx.lineWidth=1;cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
+  }
+  // Draw points
+  const seen=new Set();
+  for(const pt of S.points){
+    const key=pt.value+'|'+pt.k+'|'+pt.org;if(seen.has(key))continue;seen.add(key);
+    const x=vtx(pt.value),y=vty(pt.k);
+    if(x<-20||x>S.cw+20||y<-20||y>S.ch+20)continue;
+    const col=pt.color||'#ffffff';const r=pt.isOverlap?5:pt.isFam?4:3;
+    if(pt.isOverlap){cx.beginPath();cx.arc(x,y,r+4,0,Math.PI*2);cx.fillStyle='#ffd70015';cx.fill()}
+    cx.beginPath();cx.arc(x,y,r,0,Math.PI*2);cx.fillStyle=col;cx.fill();
+    if(pt.isFam){cx.beginPath();cx.arc(x,y,r+2,0,Math.PI*2);cx.strokeStyle='#50e89060';cx.lineWidth=1;cx.stroke()}
+    if(S.viewScale>2){cx.font=`${pt.isOverlap?'600':'500'} ${Math.min(10,S.viewScale*1.2)}px "JetBrains Mono"`;cx.fillStyle=col+'bb';cx.textAlign='center';cx.fillText(pt.value,x,y-r-4)}
+  }
+  updateCvInfo();
+}
+
+function drawGrid(){
+  const L=xtv(0),R=xtv(S.cw),range=R-L;
+  let step=1;const steps=[1,2,5,10,20,50,100,200,500,1000,2000,5000];
+  for(const s of steps)if(range/s<40){step=s;break}
+  const baseY=S.ch/2-S.viewCY;
+  cx.strokeStyle='#ffffff10';cx.lineWidth=1;cx.beginPath();cx.moveTo(0,baseY);cx.lineTo(S.cw,baseY);cx.stroke();
+  const start=Math.floor(L/step)*step;cx.font='9px "JetBrains Mono"';cx.textAlign='center';
+  for(let v=start;v<=R+step;v+=step){
+    const x=vtx(v);if(x<-10||x>S.cw+10)continue;
+    cx.strokeStyle='#ffffff06';cx.lineWidth=1;cx.beginPath();cx.moveTo(x,0);cx.lineTo(x,S.ch);cx.stroke();
+    cx.strokeStyle='#ffffff12';cx.beginPath();cx.moveTo(x,baseY-4);cx.lineTo(x,baseY+4);cx.stroke();
+    cx.fillStyle='#ffffff20';cx.fillText(v,x,baseY+14);
+  }
+  // zero line
+  const zx=vtx(0);if(zx>-5&&zx<S.cw+5){cx.strokeStyle='#ffffff10';cx.lineWidth=1;cx.setLineDash([3,3]);cx.beginPath();cx.moveTo(zx,0);cx.lineTo(zx,S.ch);cx.stroke();cx.setLineDash([])}
+}
+
+function updateCvInfo(){const L=Math.round(xtv(0)),R=Math.round(xtv(S.cw));document.getElementById('cvInfo').innerHTML=`[${L}…${R}] · ${S.points.length} pts · ${S.viewScale.toFixed(1)} px/u`}
+
+cv.addEventListener('mousedown',e=>{S.dragging=true;S.dsx=e.clientX;S.dsy=e.clientY;S.dscx=S.viewCX;S.dscy=S.viewCY;cv.style.cursor='grabbing'});
+cv.addEventListener('mousemove',e=>{const r=cv.getBoundingClientRect();S.mx=e.clientX-r.left;S.my=e.clientY-r.top;if(S.dragging){S.viewCX=S.dscx-(e.clientX-S.dsx)/S.viewScale;S.viewCY=S.dscy+(e.clientY-S.dsy);draw()}document.getElementById('crosshair').textContent=Math.round(xtv(S.mx))});
+cv.addEventListener('mouseup',()=>{S.dragging=false;cv.style.cursor='crosshair'});
+cv.addEventListener('mouseleave',()=>{S.dragging=false;cv.style.cursor='crosshair'});
+cv.style.cursor='crosshair';
+cv.addEventListener('wheel',e=>{e.preventDefault();const mv=xtv(S.mx);const f=e.deltaY>0?0.88:1.14;const ns=Math.max(0.05,Math.min(100,S.viewScale*f));S.viewCX=mv-(S.mx-S.cw/2)/ns;S.viewScale=ns;draw()},{passive:false});
+
+function zoomIn(){S.viewScale=Math.min(100,S.viewScale*1.4);draw()}
+function zoomOut(){S.viewScale=Math.max(0.05,S.viewScale/1.4);draw()}
+function fitView(){if(!S.points.length){S.viewCX=100;S.viewScale=4;S.viewCY=0;draw();return}const vs=S.points.map(p=>p.value);const mn=Math.min(...vs),mx=Math.max(...vs),r=mx-mn||10;S.viewCX=(mn+mx)/2;S.viewScale=Math.max(0.05,Math.min(100,(S.cw-80)/r));S.viewCY=0;draw()}
+function clearCanvas(){S.points=[];S.connections=[];draw()}
+
+// ═══ UI ═══
+function selectOrg(which){const sel=document.getElementById('sel'+which);const v=+sel.value;if(v>0)document.getElementById('seed'+which).value=v}
+function setTab(t){document.querySelectorAll('.stab').forEach(el=>el.classList.toggle('active',el.textContent.toLowerCase().replace(/\s/g,'').includes(t)));document.querySelectorAll('.sub-panel').forEach(el=>el.classList.remove('vis'));document.getElementById('tab-'+t).classList.add('vis')}
+
+// ═══ ANALYSIS ENGINE ═══
+function runAnalysis(){
+  S.seedA=+document.getElementById('seedA').value||23;
+  S.seedB=+document.getElementById('seedB').value||30;
+  S.levelsA=kernelExpand(S.seedA);
+  S.levelsB=kernelExpand(S.seedB);
+  renderKernel();
+  renderSignature();
+  renderTopology();
+  renderOverlap();
+  renderBody();
+}
+
+function renderKernel(){
+  const la=S.levelsA, lb=S.levelsB;
+  // Build overlap set
+  const oSet=new Set();
+  const ovl=findOverlaps(la,lb,S.seedA,S.seedB);
+  ovl.exact.forEach(o=>oSet.add(o.value));
+
+  let h=`<table class="kern-table"><tr><th>K</th><th colspan="3" style="color:var(--dna-a)">A (n=${S.seedA})</th><th>K</th><th colspan="3" style="color:var(--dna-b)">B (n=${S.seedB})</th></tr>`;
+  h+=`<tr><th></th><th style="color:var(--mitosis);font-weight:400">−1</th><th style="color:var(--stable);font-weight:400">0</th><th style="color:var(--growth);font-weight:400">+1</th><th></th><th style="color:var(--mitosis);font-weight:400">−1</th><th style="color:var(--stable);font-weight:400">0</th><th style="color:var(--growth);font-weight:400">+1</th></tr>`;
+
+  const maxK=Math.max(la.length,lb.length);
+  for(let i=0;i<maxK;i++){
+    h+='<tr>';
+    if(i<la.length){
+      const l=la[i];
+      h+=`<td class="kn">${l.k}</td>`;
+      [['m','mv'],['s','sv'],['g','gv']].forEach(([key,cls])=>{
+        const v=l[key],iF=isFamily(v),iP=isPrime(v),isO=oSet.has(v);
+        const c=isO?'ovlp':iF?'fam':iP?'pri':cls;
+        h+=`<td class="${c}" title="${fmtPlain(v)}">${v}</td>`;
+      });
+    }else h+='<td></td><td></td><td></td><td></td>';
+    if(i<lb.length){
+      const l=lb[i];
+      h+=`<td class="kn">${l.k}</td>`;
+      [['m','mv'],['s','sv'],['g','gv']].forEach(([key,cls])=>{
+        const v=l[key],iF=isFamily(v),iP=isPrime(v),isO=oSet.has(v);
+        const c=isO?'ovlp':iF?'fam':iP?'pri':cls;
+        h+=`<td class="${c}" title="${fmtPlain(v)}">${v}</td>`;
+      });
+    }else h+='<td></td><td></td><td></td><td></td>';
+    h+='</tr>';
+  }
+  h+='</table>';
+  document.getElementById('kernWrap').innerHTML=h;
+}
+
+function renderSignature(){
+  const sigA=factorSignature(S.levelsA), sigB=factorSignature(S.levelsB);
+  let h='';
+
+  [['A',sigA,S.seedA,'var(--dna-a)'],['B',sigB,S.seedB,'var(--dna-b)']].forEach(([label,sig,seed,col])=>{
+    h+=`<div style="margin-bottom:12px"><div style="font-size:11px;font-weight:600;color:${col};margin-bottom:4px">${label} (n=${seed}) — Family Factor Density</div>`;
+    const total=sig.totalValues;
+    FAMILY.forEach(p=>{
+      const c=sig.family[p].count;const pct=c/total*100;
+      h+=`<div class="sig-bar"><span class="sig-label">${p}</span><div class="sig-track"><div class="sig-fill" style="width:${Math.min(100,pct)}%;background:var(--family)"></div></div><span class="sig-pct">${pct.toFixed(1)}%</span></div>`;
+    });
+    // Non-family (breach primes)
+    const nfk=Object.keys(sig.nonFamily).map(Number).sort((a,b)=>a-b);
+    if(nfk.length){
+      h+=`<div style="font-size:9px;color:var(--prime);margin-top:4px">Breach primes: `;
+      nfk.slice(0,12).forEach(p=>{const c=sig.nonFamily[p].count;h+=`<span title="${c} hits">${p}</span> `});
+      if(nfk.length>12)h+=`…(${nfk.length} total)`;
+      h+=`</div>`;
+    }
+    h+=`</div>`;
+  });
+  document.getElementById('sigContent').innerHTML=h;
+}
+
+function renderTopology(){
+  const tA=topology(S.seedA), tB=topology(S.seedB);
+  let h='';
+  [['A',tA,'var(--dna-a)'],['B',tB,'var(--dna-b)']].forEach(([label,t,col])=>{
+    const cls=t.status==='open'?'open':t.status==='locked'?'locked':'partial';
+    const statusColor=t.status==='open'?'var(--open)':t.status==='locked'?'var(--locked)':'var(--growth)';
+    h+=`<div class="topo-box ${cls}"><div class="topo-big" style="color:${statusColor}">${t.status.toUpperCase()}</div><div class="topo-sub">${label}: n=${t.seed} = ${fmt(t.seed)}</div></div>`;
+    h+=`<div style="font-size:10px;margin-bottom:12px;padding:0 4px">`;
+    h+=`<div style="display:flex;gap:8px;margin:4px 0"><span style="color:var(--mitosis)">2n−1 = ${t.m}</span> ${t.mPrime?'<span style="color:var(--prime)">PRIME ✦</span>':'<span style="color:var(--muted)">'+fmtPlain(t.m)+'</span>'}</div>`;
+    h+=`<div style="display:flex;gap:8px;margin:4px 0"><span style="color:var(--growth)">2n+1 = ${t.g}</span> ${t.gPrime?'<span style="color:var(--prime)">PRIME ✦</span>':'<span style="color:var(--muted)">'+fmtPlain(t.g)+'</span>'}</div>`;
+    if(t.pureBinary)h+=`<div style="color:var(--locked);margin:4px 0">Pure binary (2<sup>k</sup>) — stable chain only</div>`;
+    if(t.onSpine)h+=`<div style="color:var(--family);margin:4px 0">ON THE FAMILY SPINE — generative</div>`;
+    if(t.allFam&&!t.onSpine)h+=`<div style="color:var(--family);margin:4px 0">All family factors</div>`;
+    // stable chain check
+    if(t.pureBinary){
+      const exp=Math.round(Math.log2(t.seed));
+      h+=`<div style="color:var(--muted);margin:4px 0;font-size:9px">Stable chain: 1→2→4→8→16→32→64… stuck at 2<sup>${exp}</sup></div>`;
+    }
+    h+=`</div>`;
+  });
+  document.getElementById('topoContent').innerHTML=h;
+}
+
+function renderOverlap(){
+  const ovl=findOverlaps(S.levelsA,S.levelsB,S.seedA,S.seedB);
+  let h='';
+  h+=`<div style="font-size:11px;font-weight:600;color:var(--overlap);margin-bottom:6px">${ovl.exact.length} exact value overlaps</div>`;
+  if(ovl.exact.length===0){
+    h+=`<div class="info">No exact value matches across kernel domains. These organisms extrapolate non-overlapping regions of the prime lattice at these seed values.</div>`;
+  }else{
+    h+=`<div style="max-height:200px;overflow-y:auto">`;
+    ovl.exact.forEach(o=>{
+      h+=`<div class="compare-row"><span class="ck" style="color:var(--dna-a)">K${o.kA}</span><span class="cv" style="color:${o.isFam?'var(--family)':o.isPri?'var(--prime)':'var(--overlap)'};font-weight:600">${o.value}</span><span class="ck" style="color:var(--dna-b)">K${o.kB}</span><span style="color:var(--muted);font-size:9px">${o.factors}</span></div>`;
+    });
+    h+=`</div>`;
+  }
+  h+=`<div style="margin-top:10px;font-size:10px;color:var(--muted)">Shared family factors in signatures:</div>`;
+  h+=`<div style="display:flex;gap:4px;margin-top:4px;flex-wrap:wrap">`;
+  ovl.sharedFactors.forEach(p=>{h+=`<span style="padding:3px 8px;border-radius:3px;background:#50e89012;border:1px solid #50e89030;color:var(--family);font-weight:600;font-size:12px">${p}</span>`});
+  h+=`</div>`;
+  // Domain ranges
+  h+=`<div style="margin-top:10px;font-size:10px">`;
+  h+=`<div style="color:var(--dna-a)">A domain: [${S.seedA-1}…${S.seedA*S.seedA+1}] — ${S.seedA*3} values</div>`;
+  h+=`<div style="color:var(--dna-b)">B domain: [${S.seedB-1}…${S.seedB*S.seedB+1}] — ${S.seedB*3} values</div>`;
+  const overlapRange=Math.max(0,Math.min(S.seedA*S.seedA+1,S.seedB*S.seedB+1)-Math.max(S.seedA-1,S.seedB-1));
+  h+=`<div style="color:var(--muted)">Overlapping range: ~${overlapRange} integers</div>`;
+  h+=`</div>`;
+  document.getElementById('overlapContent').innerHTML=h;
+}
+
+function renderBody(){
+  let h='';
+  // Body plan data for known organisms
+  const bodyPlans={
+    30:{name:'Octopus',parts:[{n:8,label:'Arms',factor:'2<sup>3</sup>'},{n:3,label:'Hearts',factor:'3'},{n:9,label:'Brains',factor:'3<sup>2</sup>'},{n:2,label:'Eyes',factor:'2'}],product:216,productNote:'2<sup>3</sup>×3<sup>3</sup> = A3 (216 Hz)',blood:'Copper-based (Cu=29, PRIME, n−1)',extra:'Body plan product = 216 = A note. One octave below concert A (432).'},
+    23:{name:'Human',parts:[{n:23,label:'Chromosome pairs',factor:'PRIME'},{n:2,label:'Helix strands',factor:'2'},{n:4,label:'Base types',factor:'2<sup>2</sup>'},{n:10,label:'bp/turn',factor:'2×5'}],product:1840,productNote:'2<sup>4</sup>×5×23',blood:'Iron-based (Fe=26, YHVH sum)',extra:'Meiosis pathway: 46→92→46→23. Expand→Cross→Reduce→Cross = YHVH.'},
+    16:{name:'Honey bee',parts:[{n:6,label:'Legs',factor:'2×3'},{n:2,label:'Wings (pairs)',factor:'2'},{n:5,label:'Eyes',factor:'5'},{n:3,label:'Body segments',factor:'3'}],product:180,productNote:'2<sup>2</sup>×3<sup>2</sup>×5',blood:'Open circulatory (hemolymph)',extra:'Males haploid (n=16). No meiosis for drones. Stuck on stable chain: 1→2→4→8→16→32.'},
+    4:{name:'Fruit fly',parts:[{n:6,label:'Legs',factor:'2×3'},{n:2,label:'Wings',factor:'2'},{n:2,label:'Balancers',factor:'2'},{n:3,label:'Body segments',factor:'3'}],product:72,productNote:'2<sup>3</sup>×3<sup>2</sup>',blood:'Open circulatory',extra:'n=4=2<sup>2</sup> but flanked by twin primes (3,5). BOTH directions open. Maximum versatility from minimal seed.'},
+  };
+
+  [S.seedA,S.seedB].forEach((seed,idx)=>{
+    const col=idx===0?'var(--dna-a)':'var(--dna-b)';
+    const label=idx===0?'A':'B';
+    const bp=bodyPlans[seed];
+    h+=`<div style="margin-bottom:14px"><div style="font-size:11px;font-weight:600;color:${col};margin-bottom:6px">${label}: n=${seed} = ${fmt(seed)}</div>`;
+    if(bp){
+      h+=`<div style="font-size:10px;margin-bottom:4px;color:var(--bright)">${bp.name}</div>`;
+      h+=`<div class="body-plan">`;
+      bp.parts.forEach(p=>{h+=`<div class="bp-cell"><div class="bp-num">${p.n}</div><div class="bp-label">${p.label}</div><div class="bp-factor">${p.factor}</div></div>`});
+      h+=`</div>`;
+      h+=`<div style="font-size:10px;margin:4px 0"><span style="color:var(--muted)">Product:</span> <span style="color:var(--family);font-weight:600">${bp.product}</span> = ${bp.productNote}</div>`;
+      if(bp.blood)h+=`<div style="font-size:9px;color:var(--muted)">Blood: ${bp.blood}</div>`;
+      if(bp.extra)h+=`<div style="font-size:9px;color:var(--muted);margin-top:4px;line-height:1.5">${bp.extra}</div>`;
+    }else{
+      // Generic analysis for any seed
+      const t=topology(seed);
+      h+=`<div style="font-size:10px;line-height:1.6">`;
+      h+=`Factorization: ${fmt(seed)}<br>`;
+      h+=`Diploid: 2n = ${seed*2} = ${fmt(seed*2)}<br>`;
+      h+=`Topology: <span style="color:${t.status==='open'?'var(--open)':t.status==='locked'?'var(--locked)':'var(--growth)'}"><b>${t.status.toUpperCase()}</b></span><br>`;
+      h+=`Flanking: ${t.m} (${t.mPrime?'PRIME':'composite'}) | ${t.g} (${t.gPrime?'PRIME':'composite'})<br>`;
+      if(t.onSpine)h+=`<span style="color:var(--family)">ON THE FAMILY SPINE</span><br>`;
+      h+=`</div>`;
+    }
+    h+=`</div>`;
+  });
+  document.getElementById('bodyContent').innerHTML=h;
+}
+
+// ═══ PLOT ═══
+function plotBoth(){
+  clearCanvas();
+  const ovl=findOverlaps(S.levelsA,S.levelsB,S.seedA,S.seedB);
+  const oSet=new Set(ovl.exact.map(o=>o.value));
+
+  // Plot A
+  S.levelsA.forEach(lv=>{
+    ['m','s','g'].forEach(key=>{
+      const v=lv[key];const col=key==='m'?'#ff6088':key==='s'?'#ff6088aa':'#ff608866';
+      S.points.push({value:v,k:lv.k,org:'A',color:oSet.has(v)?'#ffd700':col,isFam:isFamily(v),isOverlap:oSet.has(v)});
+    });
+    S.connections.push({from:lv.m,to:lv.g,fromK:lv.k,toK:lv.k,color:'#ff6088'});
+    if(lv.k>1){const prev=S.levelsA[lv.k-2];S.connections.push({from:prev.s,to:lv.s,fromK:prev.k,toK:lv.k,color:'#ff608840'})}
+  });
+
+  // Plot B
+  S.levelsB.forEach(lv=>{
+    ['m','s','g'].forEach(key=>{
+      const v=lv[key];const col=key==='m'?'#4ae8ff':key==='s'?'#4ae8ffaa':'#4ae8ff66';
+      S.points.push({value:v,k:lv.k,org:'B',color:oSet.has(v)?'#ffd700':col,isFam:isFamily(v),isOverlap:oSet.has(v)});
+    });
+    S.connections.push({from:lv.m,to:lv.g,fromK:lv.k,toK:lv.k,color:'#4ae8ff'});
+    if(lv.k>1){const prev=S.levelsB[lv.k-2];S.connections.push({from:prev.s,to:lv.s,fromK:prev.k,toK:lv.k,color:'#4ae8ff40'})}
+  });
+
+  fitView();
+}
+
+// ═══ INIT ═══
+window.addEventListener('load',()=>{resize();runAnalysis()});
+</script>
+</body>
+</html>

@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Siren Sinful — Music &amp; Words</title>
+  <meta name="description" content="Siren Sinful — musician, author, and architect of recursive sound. Enter the Ouroboros.">
+  <meta property="og:title" content="Siren Sinful">
+  <meta property="og:description" content="Musician. Author. Enter the Ouroboros.">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://sirensinfull.com">
+  <link rel="stylesheet" href="ouroboros.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
+</head>
+<body>
+
+  <!-- ============================================================
+       LANDING OVERLAY — The Entrance
+       ============================================================ -->
+  <div id="landingOverlay" role="button" tabindex="0" aria-label="Click to enter site">
+    <div class="landing-brand">
+      <h1>Siren Sinful</h1>
+      <div class="landing-sub">musician · author · architect of recursive sound</div>
+    </div>
+    <div class="landing-enter">click anywhere to enter</div>
+  </div>
+
+  <!-- ============================================================
+       NAVIGATION — Persistent top bar
+       ============================================================ -->
+  <nav id="siteNav" role="navigation" aria-label="Site navigation">
+    <a href="/" class="nav-brand">Siren Sinful</a>
+    <ul class="nav-links">
+      <li><a href="/">Engine</a></li>
+      <li><a href="/music.html">Music</a></li>
+      <li><a href="/books.html">Books</a></li>
+      <li><a href="/about.html">About</a></li>
+    </ul>
+  </nav>
+
+  <!-- ============================================================
+       BACKGROUND LAYERS
+       ============================================================ -->
+  <div id="slideshowBg" aria-hidden="true">
+    <div id="bgLayerA" class="bg-layer"></div>
+    <div id="bgLayerB" class="bg-layer"></div>
+  </div>
+  <canvas id="rgbOverlayCanvas" width="1" height="1" aria-hidden="true"></canvas>
+
+  <!-- ============================================================
+       WINDOW SIDEBAR — Panel restore buttons
+       ============================================================ -->
+  <div id="windowSidebar" role="toolbar" aria-label="Show hidden panels"></div>
+
+  <!-- ============================================================
+       PANELS
+       ============================================================ -->
+
+  <!-- PLAYLIST -->
+  <div id="playlistPanel" class="panel" style="left:20px;top:52px;width:260px;height:320px;">
+    <div class="panel-header">
+      Playlist
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content">
+      <ul id="audioPlaylist" role="listbox" aria-label="Audio playlist" tabindex="0"></ul>
+    </div>
+  </div>
+
+  <!-- CONTROLS -->
+  <div id="controlsPanel" class="panel" style="left:20px;top:390px;width:260px;">
+    <div class="panel-header">
+      Controls
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content">
+      <div class="track-info" id="audioTrackName">No track loaded</div>
+      <input id="audioSeek" type="range" min="0" max="100" value="0" step="0.1" aria-label="Seek">
+      <div class="track-time">
+        <span id="audioCurrentTime">0:00</span>
+        <span id="audioDuration">0:00</span>
+      </div>
+      <div class="controls-row" style="justify-content:center;margin:8px 0;">
+        <button id="audioPrevBtn" class="btn-icon" title="Previous track" aria-label="Previous">⏮</button>
+        <button id="audioPlayPauseBtn" class="btn-icon" title="Play/Pause" aria-label="Play" style="width:42px;height:42px;font-size:1.2rem;">▶</button>
+        <button id="audioNextBtn" class="btn-icon" title="Next track" aria-label="Next">⏭</button>
+      </div>
+      <input id="audioVolume" type="range" min="0" max="1" step="0.01" value="1" aria-label="Volume">
+      <div class="controls-row" style="margin-top:10px;">
+        <button id="audioOpenFiles" class="btn" style="flex:1;">Open Files</button>
+        <button id="audioOpenFolder" class="btn" style="flex:1;">Open Folder</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISUALIZER -->
+  <div id="visualizerPanel" class="panel" style="left:300px;top:52px;width:560px;height:320px;">
+    <div class="panel-header">
+      Visualizer
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content">
+      <canvas id="audioVisualizerCanvas" aria-label="Audio visualizer display"></canvas>
+      <div class="visualizer-controls">
+        <select id="visualizerMode" aria-label="Visualizer mode">
+          <option value="waveform">Waveform</option>
+          <option value="spectrum">Spectrum</option>
+          <option value="bars">Bars</option>
+          <option value="dots">Dots</option>
+        </select>
+        <button id="visualizerToggle" class="btn" aria-label="Toggle visualizer">On</button>
+        <button id="visualizerFullscreenBtn" class="btn" aria-label="Fullscreen visualizer">⛶</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- RGB OVERLAY -->
+  <div id="overlayPanel" class="panel hidden" style="left:880px;top:52px;width:280px;">
+    <div class="panel-header">
+      Overlay
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content">
+      <div class="rgb-control-group">
+        <label>Red</label>
+        <input id="rgbRed" type="range" min="0" max="255" value="40">
+        <label>Alpha</label>
+        <input id="rgbRedAlpha" type="range" min="0" max="1" step="0.01" value="0.3">
+      </div>
+      <div style="margin-bottom:6px;"><input type="checkbox" id="hideRed"> <label for="hideRed" style="font-size:0.65rem;color:var(--text-muted);">Hide Red</label></div>
+
+      <div class="rgb-control-group">
+        <label>Green</label>
+        <input id="rgbGreen" type="range" min="0" max="255" value="20">
+        <label>Alpha</label>
+        <input id="rgbGreenAlpha" type="range" min="0" max="1" step="0.01" value="0.2">
+      </div>
+      <div style="margin-bottom:6px;"><input type="checkbox" id="hideGreen"> <label for="hideGreen" style="font-size:0.65rem;color:var(--text-muted);">Hide Green</label></div>
+
+      <div class="rgb-control-group">
+        <label>Blue</label>
+        <input id="rgbBlue" type="range" min="0" max="255" value="80">
+        <label>Alpha</label>
+        <input id="rgbBlueAlpha" type="range" min="0" max="1" step="0.01" value="0.4">
+      </div>
+      <div style="margin-bottom:6px;"><input type="checkbox" id="hideBlue"> <label for="hideBlue" style="font-size:0.65rem;color:var(--text-muted);">Hide Blue</label></div>
+
+      <div class="rgb-control-group">
+        <label>Hue</label>
+        <input id="hueSlider" type="range" min="0" max="360" value="0" style="grid-column:2/5;">
+      </div>
+
+      <button id="randomizeRGB" class="btn" style="width:100%;margin-top:8px;">Animate</button>
+      <span id="rgbOverlayStatus"></span>
+    </div>
+  </div>
+
+  <!-- SETTINGS -->
+  <div id="settingsPanel" class="panel hidden" style="left:880px;top:400px;width:260px;">
+    <div class="panel-header">
+      Settings
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content">
+      <div class="setting-row">
+        <label>Theme</label>
+        <select id="themeSelect" aria-label="Theme">
+          <option value="dark" selected>Dark</option>
+          <option value="light">Light</option>
+          <option value="contrast">High Contrast</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <label>Palette</label>
+        <select id="paletteSelect" aria-label="Color palette">
+          <option value="gold" selected>Gold</option>
+          <option value="cyan">Cyan</option>
+          <option value="rose">Rose</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- SLIDESHOW -->
+  <div id="slideshowPanel" class="panel hidden" style="left:300px;top:390px;width:280px;">
+    <div class="panel-header">
+      Slideshow
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content">
+      <div class="slideshow-controls">
+        <button id="slideshowOpenFiles" class="btn">Images</button>
+        <button id="slideshowOpenFolder" class="btn">Folder</button>
+        <button id="slideshowPrev" class="btn">◀</button>
+        <button id="slideshowNext" class="btn">▶</button>
+        <button id="slideshowPause" class="btn">Pause</button>
+      </div>
+      <div class="slideshow-interval" style="margin-top:8px;">
+        <label>Interval</label>
+        <input id="slideshowInterval" type="number" min="1" max="300" value="10">
+        <span>sec</span>
+      </div>
+      <div id="slideshowCount" class="slideshow-count"></div>
+    </div>
+  </div>
+
+  <!-- SPEEDREADER -->
+  <div id="speedreaderPanel" class="panel hidden" style="left:600px;top:390px;width:340px;">
+    <div class="panel-header">
+      Speedreader
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content">
+      <textarea id="speedreaderInput" rows="4" placeholder="Paste text here..." aria-label="Text input for speed reading"></textarea>
+      <div class="speedreader-toolbar">
+        <input id="srWpmInput" type="number" min="100" max="2000" value="400" title="Words per minute" aria-label="WPM">
+        <select id="srPhaseDropdown" aria-label="Phase lock frequency">
+          <option value="">WPM Mode</option>
+          <option value="60">60 Hz</option>
+          <option value="120">120 Hz</option>
+          <option value="144">144 Hz</option>
+          <option value="240">240 Hz</option>
+        </select>
+        <button id="startRSVP" class="btn">Start</button>
+        <button id="closeRSVP" class="btn">Stop</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================
+       RSVP OVERLAY — Full screen reading mode
+       ============================================================ -->
+  <div id="rsvpOverlay" tabindex="-1" role="dialog" aria-label="Speed reading overlay">
+    <div id="rsvpWordbox"></div>
+    <div id="rsvpControls">
+      <button id="rsvpPauseBtn" class="btn">Pause</button>
+      <button id="rsvpRewindBtn" class="btn">⏪ 10</button>
+      <input id="rsvpWpmInput" type="number" min="100" max="2000" value="400" aria-label="WPM">
+      <select id="rsvpPhaseDropdown" aria-label="Phase lock">
+        <option value="">WPM</option>
+        <option value="60">60Hz</option>
+        <option value="120">120Hz</option>
+        <option value="144">144Hz</option>
+        <option value="240">240Hz</option>
+      </select>
+      <button id="rsvpCloseBtn" class="btn">Close</button>
+      <span id="rsvpHzBadge" class="rsvp-badge">—</span>
+      <span id="rsvpPhaseBadge" class="rsvp-badge">WPM</span>
+      <span id="rsvpStasisBadge" class="rsvp-badge"></span>
+    </div>
+    <div id="rsvpProgress" class="rsvp-progress"></div>
+  </div>
+
+  <!-- ============================================================
+       SCRIPTS
+       ============================================================ -->
+  <script src="ouroboros.js"></script>
+</body>
+</html>

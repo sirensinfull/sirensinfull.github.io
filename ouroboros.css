@@ -1,0 +1,822 @@
+/* ============================================================
+   OUROBOROS — Immersive Media Engine
+   sirensinfull.com | sirensinfull.github.io
+   ============================================================ */
+
+/* --- FONTS --- */
+@import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&family=Crimson+Pro:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+
+/* --- VARIABLES --- */
+:root {
+  --bg-void: #07090e;
+  --bg-deep: #0c0f18;
+  --bg-panel: #121727;
+  --bg-panel-header: #0a0e1a;
+  --bg-input: #1a2038;
+  --accent-gold: #c9a84c;
+  --accent-gold-dim: #8a7234;
+  --accent-gold-glow: #c9a84c44;
+  --accent-cyan: #4ecdc4;
+  --accent-cyan-dim: #2a7a74;
+  --accent-rose: #c44a6c;
+  --text-primary: #e8e0d4;
+  --text-secondary: #9a9590;
+  --text-muted: #5a5652;
+  --border-subtle: #1e2540;
+  --border-active: #c9a84c55;
+  --radius-panel: 12px;
+  --radius-btn: 6px;
+  --shadow-panel: 0 8px 40px rgba(0,0,0,0.6), 0 0 1px rgba(201,168,76,0.1);
+  --shadow-glow: 0 0 20px rgba(201,168,76,0.15);
+  --font-brand: 'Cinzel', serif;
+  --font-body: 'Crimson Pro', serif;
+  --font-mono: 'JetBrains Mono', 'Consolas', 'Menlo', monospace;
+  --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* --- RESET --- */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 15px; }
+body {
+  background: var(--bg-void);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  overflow: hidden;
+  width: 100vw;
+  height: 100vh;
+  position: relative;
+}
+
+/* --- GRAIN OVERLAY (texture) --- */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.5;
+}
+
+/* --- BACKGROUND LAYERS --- */
+#slideshowBg {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.bg-layer {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  transition: opacity 2s ease;
+  opacity: 0;
+}
+
+#rgbOverlayCanvas {
+  position: fixed !important;
+  inset: 0;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 1 !important;
+  pointer-events: none;
+  opacity: 0.35;
+  background: transparent !important;
+  image-rendering: pixelated;
+}
+
+/* ============================================================
+   LANDING OVERLAY — The Entrance
+   ============================================================ */
+#landingOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  background: var(--bg-void);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 1.2s ease, visibility 1.2s ease;
+}
+#landingOverlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.landing-brand {
+  text-align: center;
+  animation: landingFadeIn 2s ease forwards;
+}
+.landing-brand h1 {
+  font-family: var(--font-brand);
+  font-weight: 700;
+  font-size: clamp(2.4rem, 6vw, 5rem);
+  letter-spacing: 0.25em;
+  color: var(--accent-gold);
+  text-shadow: 0 0 60px rgba(201,168,76,0.25), 0 0 120px rgba(201,168,76,0.08);
+  margin-bottom: 0.3em;
+  text-transform: uppercase;
+}
+.landing-brand .landing-sub {
+  font-family: var(--font-body);
+  font-weight: 300;
+  font-style: italic;
+  font-size: clamp(0.9rem, 2vw, 1.3rem);
+  color: var(--text-secondary);
+  letter-spacing: 0.15em;
+  margin-bottom: 2.5em;
+}
+.landing-enter {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  animation: landingPulse 3s ease-in-out infinite;
+}
+
+@keyframes landingFadeIn {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+@keyframes landingPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 1; }
+}
+
+/* ============================================================
+   NAVIGATION
+   ============================================================ */
+#siteNav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 20px;
+  background: linear-gradient(180deg, rgba(7,9,14,0.95) 0%, rgba(7,9,14,0) 100%);
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.6s ease;
+}
+#siteNav.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.nav-brand {
+  font-family: var(--font-brand);
+  font-weight: 600;
+  font-size: 0.85rem;
+  letter-spacing: 0.2em;
+  color: var(--accent-gold);
+  text-transform: uppercase;
+  text-decoration: none;
+  transition: text-shadow var(--transition-smooth);
+}
+.nav-brand:hover {
+  text-shadow: 0 0 20px var(--accent-gold-glow);
+}
+.nav-links {
+  display: flex;
+  gap: 1.8em;
+  list-style: none;
+}
+.nav-links a {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  text-decoration: none;
+  transition: color var(--transition-smooth);
+  position: relative;
+}
+.nav-links a:hover {
+  color: var(--accent-gold);
+}
+.nav-links a::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 0;
+  height: 1px;
+  background: var(--accent-gold);
+  transition: width var(--transition-smooth);
+}
+.nav-links a:hover::after { width: 100%; }
+
+/* ============================================================
+   WINDOW SIDEBAR (Panel Restore)
+   ============================================================ */
+#windowSidebar {
+  position: fixed;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 1800;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 6px;
+  background: rgba(18,23,39,0.85);
+  border-radius: 8px 0 0 8px;
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--border-subtle);
+  border-right: none;
+}
+#windowSidebar:empty { display: none; }
+#windowSidebar button {
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 4px 0 0 4px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 6px 12px 6px 10px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all var(--transition-smooth);
+  letter-spacing: 0.05em;
+}
+#windowSidebar button:hover {
+  background: var(--accent-gold);
+  color: var(--bg-void);
+  border-color: var(--accent-gold);
+}
+
+/* ============================================================
+   PANELS — The Window System
+   ============================================================ */
+.panel {
+  position: absolute;
+  min-width: 220px;
+  min-height: 120px;
+  background: var(--bg-panel);
+  color: var(--text-primary);
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-panel);
+  z-index: 1011;
+  user-select: none;
+  display: block;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: panelReveal 0.5s ease forwards;
+  overflow: hidden;
+}
+@keyframes panelReveal {
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.panel.hidden { display: none !important; }
+.panel.locked { border-color: var(--accent-gold-dim); }
+.panel.dragging { box-shadow: var(--shadow-glow), var(--shadow-panel); z-index: 1050 !important; }
+
+.panel-header {
+  cursor: move;
+  background: var(--bg-panel-header);
+  color: var(--text-secondary);
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  border-radius: var(--radius-panel) var(--radius-panel) 0 0;
+  padding: 8px 12px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  border-bottom: 1px solid var(--border-subtle);
+}
+.panel.locked .panel-header { cursor: default; }
+
+.panel-header-controls {
+  display: flex;
+  gap: 4px;
+}
+.panel-header-controls button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  cursor: pointer;
+  padding: 2px 4px;
+  border-radius: 3px;
+  transition: all var(--transition-smooth);
+  line-height: 1;
+}
+.panel-header-controls button:hover {
+  color: var(--accent-gold);
+  background: rgba(201,168,76,0.1);
+}
+
+.panel-content {
+  padding: 12px 14px;
+  max-height: 70vh;
+  overflow: auto;
+  font-size: 0.8rem;
+}
+.panel-content::-webkit-scrollbar { width: 4px; }
+.panel-content::-webkit-scrollbar-track { background: transparent; }
+.panel-content::-webkit-scrollbar-thumb { background: var(--border-subtle); border-radius: 2px; }
+
+.panel-resize-handle {
+  position: absolute;
+  right: 0; bottom: 0;
+  width: 14px; height: 14px;
+  cursor: nwse-resize;
+  z-index: 2;
+  opacity: 0;
+  transition: opacity var(--transition-smooth);
+}
+.panel:hover .panel-resize-handle { opacity: 1; }
+.panel-resize-handle::after {
+  content: '';
+  position: absolute;
+  right: 3px; bottom: 3px;
+  width: 8px; height: 8px;
+  border-right: 2px solid var(--text-muted);
+  border-bottom: 2px solid var(--text-muted);
+  border-radius: 0 0 3px 0;
+}
+
+/* ============================================================
+   CONTROLS PANEL
+   ============================================================ */
+.controls-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.controls-row:last-child { margin-bottom: 0; }
+
+.btn {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  padding: 6px 14px;
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+  white-space: nowrap;
+  letter-spacing: 0.03em;
+}
+.btn:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+  box-shadow: 0 0 12px var(--accent-gold-glow);
+}
+.btn:active { transform: scale(0.97); }
+.btn.active {
+  background: var(--accent-gold);
+  color: var(--bg-void);
+  border-color: var(--accent-gold);
+}
+
+.btn-icon {
+  background: var(--bg-input);
+  color: var(--text-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  font-size: 1rem;
+  width: 34px;
+  height: 34px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all var(--transition-smooth);
+  padding: 0;
+}
+.btn-icon:hover {
+  border-color: var(--accent-gold);
+  color: var(--accent-gold);
+}
+
+/* Range Sliders */
+input[type="range"] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  background: var(--bg-input);
+  border-radius: 2px;
+  outline: none;
+  border: none;
+}
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 0 8px var(--accent-gold-glow);
+  transition: transform 0.15s ease;
+}
+input[type="range"]::-webkit-slider-thumb:hover {
+  transform: scale(1.3);
+}
+input[type="range"]::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  background: var(--accent-gold);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+/* Track info */
+.track-info {
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--text-secondary);
+  font-style: italic;
+  padding: 4px 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.track-time {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  display: flex;
+  justify-content: space-between;
+  margin-top: 2px;
+}
+
+/* ============================================================
+   PLAYLIST PANEL
+   ============================================================ */
+#audioPlaylist {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+#audioPlaylist li {
+  padding: 6px 10px;
+  cursor: pointer;
+  border-radius: 4px;
+  margin: 1px 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+  transition: all var(--transition-smooth);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+#audioPlaylist li:hover {
+  background: rgba(201,168,76,0.08);
+  color: var(--text-primary);
+}
+#audioPlaylist li.selected {
+  background: rgba(201,168,76,0.12);
+  color: var(--accent-gold);
+  font-weight: 500;
+  border-left: 2px solid var(--accent-gold);
+  padding-left: 8px;
+}
+#audioPlaylist:empty::after {
+  content: 'No tracks loaded';
+  display: block;
+  color: var(--text-muted);
+  font-style: italic;
+  font-family: var(--font-body);
+  font-size: 0.8rem;
+  padding: 12px 4px;
+  text-align: center;
+}
+
+/* ============================================================
+   VISUALIZER PANEL
+   ============================================================ */
+#visualizerPanel .panel-content {
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative;
+}
+#audioVisualizerCanvas {
+  flex: 1 1 auto;
+  width: 100% !important;
+  min-height: 140px;
+  background: var(--bg-void);
+  display: block;
+}
+.visualizer-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  background: var(--bg-panel-header);
+  border-top: 1px solid var(--border-subtle);
+}
+.visualizer-controls select {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 5px 8px;
+  cursor: pointer;
+}
+.visualizer-controls select:focus {
+  border-color: var(--accent-gold);
+  outline: none;
+}
+
+/* Fullscreen Visualizer */
+#visualizerPanel.fullscreen {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 2500 !important;
+  border-radius: 0 !important;
+  border: none !important;
+}
+#visualizerPanel.fullscreen .panel-header { border-radius: 0; }
+#visualizerPanel.fullscreen .panel-content { max-height: 100vh; }
+#visualizerPanel.fullscreen #audioVisualizerCanvas {
+  min-height: calc(100vh - 80px);
+}
+
+/* ============================================================
+   OVERLAY (RGB) PANEL
+   ============================================================ */
+.rgb-control-group {
+  display: grid;
+  grid-template-columns: 50px 1fr 50px auto;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+.rgb-control-group label {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  letter-spacing: 0.05em;
+}
+.rgb-control-group input[type="range"] {
+  min-width: 60px;
+}
+.rgb-control-group input[type="checkbox"] {
+  accent-color: var(--accent-gold);
+  cursor: pointer;
+}
+#rgbOverlayStatus {
+  font-size: 0.65rem;
+  color: var(--accent-cyan);
+  font-style: italic;
+  display: block;
+  margin-top: 6px;
+}
+
+/* ============================================================
+   SETTINGS PANEL
+   ============================================================ */
+#settingsPanel .panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.setting-row label {
+  font-size: 0.72rem;
+  color: var(--text-secondary);
+}
+.setting-row select {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 5px 8px;
+}
+
+/* ============================================================
+   SLIDESHOW PANEL
+   ============================================================ */
+.slideshow-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+.slideshow-interval {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+}
+.slideshow-interval input[type="number"] {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 4px 6px;
+  width: 52px;
+  text-align: center;
+}
+.slideshow-count {
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: 6px;
+}
+
+/* ============================================================
+   SPEEDREADER PANEL
+   ============================================================ */
+#speedreaderPanel .panel-content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+#speedreaderInput {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  padding: 8px 10px;
+  resize: vertical;
+  min-height: 60px;
+  line-height: 1.5;
+}
+#speedreaderInput::placeholder {
+  color: var(--text-muted);
+  font-style: italic;
+}
+#speedreaderInput:focus {
+  border-color: var(--accent-gold);
+  outline: none;
+}
+
+.speedreader-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+.speedreader-toolbar input[type="number"],
+.speedreader-toolbar select {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  padding: 5px 8px;
+}
+.speedreader-toolbar input[type="number"] { width: 65px; }
+
+/* ============================================================
+   RSVP OVERLAY — Full Screen Reading Mode
+   ============================================================ */
+#rsvpOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(7,9,14,0.94);
+  display: none;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 3000;
+  backdrop-filter: blur(4px);
+}
+#rsvpOverlay.active {
+  display: flex;
+}
+
+#rsvpWordbox {
+  font-family: var(--font-mono);
+  font-size: clamp(2.5rem, 5vw, 4.5rem);
+  font-weight: 300;
+  letter-spacing: 0.04em;
+  color: var(--text-primary);
+  background: rgba(12,15,24,0.8);
+  padding: 0.4em 1.2em;
+  border-radius: 12px;
+  border: 1px solid var(--border-subtle);
+  margin-bottom: 1.5em;
+  min-width: 3em;
+  text-align: center;
+  box-shadow: 0 0 40px rgba(0,0,0,0.5);
+}
+#rsvpWordbox .orp {
+  color: var(--accent-gold);
+  text-shadow: 0 0 12px var(--accent-gold-glow);
+}
+
+#rsvpControls {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-panel);
+  padding: 12px 18px;
+  border-radius: 10px;
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-panel);
+}
+#rsvpControls input[type="number"],
+#rsvpControls select {
+  background: var(--bg-input);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-btn);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  padding: 5px 8px;
+}
+#rsvpControls input[type="number"] { width: 65px; }
+
+.rsvp-badge {
+  display: inline-block;
+  background: var(--bg-input);
+  color: var(--accent-gold-dim);
+  border-radius: 10px;
+  padding: 2px 10px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.05em;
+}
+.rsvp-badge.active {
+  color: var(--accent-cyan);
+  background: rgba(78,205,196,0.1);
+}
+.rsvp-progress {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--text-muted);
+  margin-top: 12px;
+}
+
+/* ============================================================
+   FOCUS & ACCESSIBILITY
+   ============================================================ */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent-gold);
+  outline-offset: 2px;
+}
+:focus:not(:focus-visible) { outline: none; }
+
+/* ============================================================
+   RESPONSIVE
+   ============================================================ */
+@media (max-width: 900px) {
+  html { font-size: 13px; }
+  .panel { min-width: 180px; }
+  #siteNav { padding: 8px 12px; }
+  .nav-links { gap: 1em; }
+}
+@media (max-width: 600px) {
+  html { font-size: 12px; }
+  .panel { min-width: 160px; min-height: 100px; }
+  .nav-links { display: none; }
+  #windowSidebar { top: auto; bottom: 8px; transform: none; right: 4px; }
+}
+
+/* ============================================================
+   ANIMATIONS — Panel entrance stagger
+   ============================================================ */
+.panel:nth-child(1) { animation-delay: 0.05s; }
+.panel:nth-child(2) { animation-delay: 0.12s; }
+.panel:nth-child(3) { animation-delay: 0.19s; }
+.panel:nth-child(4) { animation-delay: 0.26s; }
+.panel:nth-child(5) { animation-delay: 0.33s; }
+.panel:nth-child(6) { animation-delay: 0.40s; }
+.panel:nth-child(7) { animation-delay: 0.47s; }
+
+/* Hidden file inputs */
+input[type="file"][hidden] { display: none; }

@@ -3,9 +3,9 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Siren Sinfull — Music &amp; Words</title>
-  <meta name="description" content="Siren Sinfull — musician, author, and architect of recursive sound. Enter the Ouroboros.">
-  <meta property="og:title" content="Siren Sinfull">
+  <title>Siren Sinful — Music &amp; Words</title>
+  <meta name="description" content="Siren Sinful — musician, author, and architect of recursive sound. Enter the Ouroboros.">
+  <meta property="og:title" content="Siren Sinful">
   <meta property="og:description" content="Musician. Author. Enter the Ouroboros.">
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sirensinfull.com">
@@ -19,7 +19,7 @@
        ============================================================ -->
   <div id="landingOverlay" role="button" tabindex="0" aria-label="Click to enter site">
     <div class="landing-brand">
-      <h1>Siren Sinfull</h1>
+      <h1>Siren Sinful</h1>
       <div class="landing-sub">musician · author · architect of recursive sound</div>
     </div>
     <div class="landing-enter">click anywhere to enter</div>
@@ -29,7 +29,7 @@
        NAVIGATION — Persistent top bar
        ============================================================ -->
   <nav id="siteNav" role="navigation" aria-label="Site navigation">
-    <a href="/" class="nav-brand">Siren Sinfull</a>
+    <a href="/" class="nav-brand">Siren Sinful</a>
     <ul class="nav-links">
       <li><a href="/">Engine</a></li>
       <li><a href="/music.html">Music</a></li>
@@ -255,6 +255,56 @@
       </div>
     </div>
   </div>
+
+  <!-- BROWSER -->
+  <div id="browserPanel" class="panel hidden" style="left:300px;top:52px;width:700px;height:500px;">
+    <div class="panel-header">
+      Browser
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content" style="display:flex;flex-direction:column;height:100%;padding:0;">
+      <div id="browserToolbar" style="display:flex;gap:4px;padding:6px 8px;background:rgba(0,0,0,0.3);border-bottom:1px solid var(--border-subtle,rgba(200,160,100,0.08));flex-shrink:0;align-items:center;">
+        <button id="browserBack" class="btn-icon" title="Back" style="width:28px;height:28px;font-size:0.7rem;" aria-label="Back">◀</button>
+        <button id="browserFwd" class="btn-icon" title="Forward" style="width:28px;height:28px;font-size:0.7rem;" aria-label="Forward">▶</button>
+        <button id="browserRefresh" class="btn-icon" title="Refresh" style="width:28px;height:28px;font-size:0.7rem;" aria-label="Refresh">↻</button>
+        <input id="browserUrl" type="text" value="https://sirensinfull.github.io/lab.html" placeholder="Enter URL..." aria-label="URL" style="flex:1;background:rgba(0,0,0,0.4);border:1px solid rgba(200,160,100,0.1);color:rgba(200,160,100,0.7);font-family:'JetBrains Mono',monospace;font-size:11px;padding:4px 10px;border-radius:2px;outline:none;">
+        <button id="browserGo" class="btn" style="padding:4px 12px;font-size:0.65rem;" aria-label="Go">Go</button>
+        <button id="browserHome" class="btn-icon" title="Home" style="width:28px;height:28px;font-size:0.7rem;" aria-label="Home">⌂</button>
+      </div>
+      <iframe id="browserFrame"
+        src="about:blank"
+        sandbox="allow-scripts allow-same-origin allow-forms allow-popups allow-popups-to-escape-sandbox allow-top-navigation-by-user-activation"
+        style="flex:1;width:100%;border:none;background:#0a0a0c;"
+        title="Embedded browser">
+      </iframe>
+      <div id="browserStatus" style="padding:2px 8px;font-family:'JetBrains Mono',monospace;font-size:9px;color:rgba(200,160,100,0.2);background:rgba(0,0,0,0.3);border-top:1px solid rgba(200,160,100,0.05);flex-shrink:0;">Ready</div>
+    </div>
+  </div>
+  <script>
+  (function(){
+    const frame = document.getElementById('browserFrame');
+    const urlBar = document.getElementById('browserUrl');
+    const status = document.getElementById('browserStatus');
+    function navigate(url) {
+      if (!url) return;
+      if (!/^https?:\/\//i.test(url) && !/^about:/i.test(url)) url = 'https://' + url;
+      urlBar.value = url;
+      status.textContent = 'Loading...';
+      frame.src = url;
+    }
+    frame.addEventListener('load', function() { status.textContent = 'Loaded'; });
+    frame.addEventListener('error', function() { status.textContent = 'Error loading page'; });
+    document.getElementById('browserGo').addEventListener('click', function() { navigate(urlBar.value); });
+    urlBar.addEventListener('keydown', function(e) { if (e.key === 'Enter') navigate(urlBar.value); });
+    document.getElementById('browserBack').addEventListener('click', function() { try { frame.contentWindow.history.back(); } catch(e){} });
+    document.getElementById('browserFwd').addEventListener('click', function() { try { frame.contentWindow.history.forward(); } catch(e){} });
+    document.getElementById('browserRefresh').addEventListener('click', function() { frame.src = frame.src; });
+    document.getElementById('browserHome').addEventListener('click', function() { navigate('https://sirensinfull.github.io/lab.html'); });
+  })();
+  </script>
 
   <!-- ============================================================
        RSVP OVERLAY — Full screen reading mode

@@ -413,6 +413,7 @@ class RenderEngine {
     if (this.srcNode) { try { this.srcNode.disconnect(); } catch(e) {} this.srcNode = null; }
     if (this.audioCtx) { try { this.audioCtx.close(); } catch(e) {} this.audioCtx = null; }
     this.analyser = null;
+    window.ouroborosAnalyser = null;
   }
 
   _initResize() {
@@ -461,6 +462,7 @@ class RenderEngine {
       this.analyser.fftSize = 2048;
       this.srcNode.connect(this.analyser);
       this.analyser.connect(this.audioCtx.destination);
+      window.ouroborosAnalyser = this.analyser;
     }
     if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
     if (!this.rafId) this.rafId = requestAnimationFrame(() => this.render());
@@ -1088,6 +1090,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.speedReader = new SpeedReader();
   window.windowManager = new WindowManager([
     'playlistPanel', 'controlsPanel', 'visualizerPanel',
-    'overlayPanel', 'settingsPanel', 'slideshowPanel', 'speedreaderPanel'
+    'overlayPanel', 'settingsPanel', 'slideshowPanel', 'speedreaderPanel',
+    'browserPanel',
+    'pvParticles2dPanel', 'pvField3dPanel',
+    'pvBlackhole1Panel', 'pvBlackhole2Panel', 'pvBlackholeHPanel', 'pvBlackholeFPanel'
   ]);
 });

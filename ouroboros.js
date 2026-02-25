@@ -1091,6 +1091,8 @@ document.addEventListener('DOMContentLoaded', () => {
   window.windowManager = new WindowManager([
     'playlistPanel', 'controlsPanel', 'visualizerPanel',
     'overlayPanel', 'settingsPanel', 'slideshowPanel', 'speedreaderPanel',
-    'pvParticles2dPanel', 'pvBlackholeFinalPanel', 'pvOptionsPanel'
+    'browserPanel',
+    'pvParticles2dPanel', 'pvField3dPanel',
+    'pvBlackhole1Panel', 'pvBlackhole2Panel', 'pvBlackholeHPanel', 'pvBlackholeFPanel'
   ]);
 });

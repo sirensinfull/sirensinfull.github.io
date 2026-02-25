@@ -256,10 +256,8 @@
     </div>
   </div>
 
-  <!-- ============================================================
-       PARTICLE VISUALIZER — 2D Lattice Cymatics
-       ============================================================ -->
-  <div id="pvParticles2dPanel" class="panel pv-panel hidden" style="left:300px;top:52px;width:560px;height:420px;">
+  <!-- PARTICLE VISUALIZERS -->
+  <div id="pvParticles2dPanel" class="panel hidden" style="left:300px;top:52px;width:520px;height:360px;">
     <div class="panel-header">
       Particles 2D
       <span class="panel-header-controls">
@@ -267,43 +265,54 @@
         <button class="panel-hide" title="Close panel">✕</button>
       </span>
     </div>
-    <div class="panel-content">
-      <div class="pv-hud"><span id="pv2dHud"></span><span id="pv2dBands"></span></div>
-      <canvas id="pv2dCanvas" class="pv-canvas" aria-label="2D particle visualizer"></canvas>
-      <div class="pv-controls" id="pv2dControls">
-        <div class="pv-row">
-          <label>mode</label>
-          <select id="pv2dMode" onchange="PV.p2d.setMode(+this.value)">
-            <option value="0">Radial</option>
-            <option value="1">Scatter</option>
-            <option value="2">Lattice</option>
-            <option value="3">Spiral</option>
-          </select>
-          <label>count</label>
-          <select id="pv2dCount" onchange="PV.p2d.setCount(+this.value)">
-            <option value="1000">1k</option>
-            <option value="2000">2k</option>
-            <option value="4000" selected>4k</option>
-            <option value="8000">8k</option>
-          </select>
-          <button class="pv-btn" onclick="PV.p2d.fullscreen()">⛶</button>
-        </div>
-        <div class="pv-row">
-          <label>react</label>
-          <input type="range" id="pv2dReact" min="0" max="100" value="60">
-          <label>sym</label>
-          <input type="range" id="pv2dSym" min="1" max="12" value="6">
-          <label>decay</label>
-          <input type="range" id="pv2dDecay" min="80" max="99" value="94">
-        </div>
-      </div>
-    </div>
+    <div class="panel-content"></div>
   </div>
 
-  <!-- ============================================================
-       PARTICLE VISUALIZER — Black Hole Final
-       ============================================================ -->
-  <div id="pvBlackholeFinalPanel" class="panel pv-panel hidden" style="left:340px;top:72px;width:620px;height:500px;">
+  <div id="pvField3dPanel" class="panel hidden" style="left:340px;top:72px;width:520px;height:380px;">
+    <div class="panel-header">
+      Field 3D
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content"></div>
+  </div>
+
+  <div id="pvBlackhole1Panel" class="panel hidden" style="left:380px;top:92px;width:540px;height:420px;">
+    <div class="panel-header">
+      Black Hole
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content"></div>
+  </div>
+
+  <div id="pvBlackhole2Panel" class="panel hidden" style="left:420px;top:112px;width:540px;height:420px;">
+    <div class="panel-header">
+      EH Bounce
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content"></div>
+  </div>
+
+  <div id="pvBlackholeHPanel" class="panel hidden" style="left:460px;top:132px;width:560px;height:460px;">
+    <div class="panel-header">
+      7 Houses
+      <span class="panel-header-controls">
+        <button class="panel-lock" title="Lock position">🔒</button>
+        <button class="panel-hide" title="Close panel">✕</button>
+      </span>
+    </div>
+    <div class="panel-content"></div>
+  </div>
+
+  <div id="pvBlackholeFPanel" class="panel hidden" style="left:500px;top:152px;width:560px;height:480px;">
     <div class="panel-header">
       Black Hole ★
       <span class="panel-header-controls">
@@ -311,78 +320,7 @@
         <button class="panel-hide" title="Close panel">✕</button>
       </span>
     </div>
-    <div class="panel-content">
-      <div class="pv-birth-flash" id="pvBhFlash"></div>
-      <div class="pv-hud"><span id="pvBhHud"></span><span id="pvBhAge"></span></div>
-      <canvas id="pvBhCanvas" class="pv-canvas" aria-label="Black hole visualizer"></canvas>
-      <div class="pv-controls" id="pvBhControls">
-        <div class="pv-row">
-          <label>tier</label>
-          <div class="pv-tiers" id="pvBhTiers">
-            <button class="pv-btn" onclick="PV.bh.setTier(0)">100</button>
-            <button class="pv-btn active" onclick="PV.bh.setTier(1)">1k</button>
-            <button class="pv-btn" onclick="PV.bh.setTier(2)">5k</button>
-            <button class="pv-btn" onclick="PV.bh.setTier(3)">20k</button>
-            <button class="pv-btn" onclick="PV.bh.setTier(4)">50k</button>
-          </div>
-          <button class="pv-btn" onclick="PV.bh.fullscreen()">⛶</button>
-        </div>
-        <div class="pv-row">
-          <label>grav</label><input type="range" id="pvBhGrav" min="0" max="100" value="55">
-          <label>size</label><input type="range" id="pvBhSize" min="5" max="100" value="45">
-          <label>react</label><input type="range" id="pvBhReact" min="0" max="100" value="60">
-        </div>
-        <div class="pv-row">
-          <label>birth</label><input type="range" id="pvBhBirth" min="0" max="100" value="70">
-          <label>dissip</label><input type="range" id="pvBhDissip" min="0" max="100" value="30">
-          <label>radius</label><input type="range" id="pvBhRadius" min="10" max="100" value="50">
-        </div>
-        <div class="pv-row">
-          <label>twist</label><input type="range" id="pvBhTwist" min="0" max="100" value="40">
-          <label>spin</label><input type="range" id="pvBhSpin" min="-100" max="100" value="60">
-          <label>emit</label><input type="range" id="pvBhEmit" min="0" max="100" value="50">
-        </div>
-        <div class="pv-sep"></div>
-        <div class="pv-houses" id="pvBhHouses"></div>
-        <div class="pv-sep"></div>
-        <div class="pv-row">
-          <button class="pv-btn" onclick="PV.bh.rngAll()">🎲 RNG</button>
-          <button class="pv-btn" id="pvBhScreensaver" onclick="PV.bh.toggleScreensaver()">⚅ Screensaver</button>
-          <label>cycle</label>
-          <input type="range" id="pvBhCycle" min="10" max="120" value="30">
-          <span class="pv-val" id="pvBhCycleVal">30s</span>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       PARTICLE VISUALIZER — Options Panel
-       ============================================================ -->
-  <div id="pvOptionsPanel" class="panel hidden" style="left:880px;top:52px;width:200px;">
-    <div class="panel-header">
-      PV Options
-      <span class="panel-header-controls">
-        <button class="panel-lock" title="Lock position">🔒</button>
-        <button class="panel-hide" title="Close panel">✕</button>
-      </span>
-    </div>
-    <div class="panel-content">
-      <div class="pv-opt-section">
-        <div class="pv-opt-title">Visualizers</div>
-        <div style="font-size:0.6rem;color:var(--text-muted);line-height:1.8;">
-          <div>◈ <a href="#" onclick="PV.show('pvParticles2dPanel');return false" style="color:var(--text-secondary);">Particles 2D</a></div>
-          <div>★ <a href="#" onclick="PV.show('pvBlackholeFinalPanel');return false" style="color:var(--text-secondary);">Black Hole</a></div>
-        </div>
-      </div>
-      <div class="pv-opt-section">
-        <div class="pv-opt-title">Audio Source</div>
-        <div style="font-size:0.55rem;color:var(--text-muted);">
-          Reads from MP3 player.<br>
-          <span id="pvAudioStatus" style="color:var(--accent-gold-dim);">waiting for audio…</span>
-        </div>
-      </div>
-    </div>
+    <div class="panel-content"></div>
   </div>
 
   <!-- BROWSER -->

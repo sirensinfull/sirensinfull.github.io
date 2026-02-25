@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LATTICE CYMATICS — 3D Field</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600&display=swap');
+  :root { --m:'JetBrains Mono',monospace; --bg:#020204; --p:#08080e; --b:#181828; --mu:#3a3a55; --t:#7780a0; --br:#b0b8d8; --g:#ffaa40; --s:#50e890; --mt:#4a9eff; --pr:#ff6088; }
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--t);font-family:var(--m);overflow:hidden;height:100vh}
+  canvas{display:block;position:fixed;top:0;left:0}
+
+  .hud{position:fixed;z-index:10;pointer-events:none}
+  .hud>*{pointer-events:auto}
+
+  .top{top:10px;left:0;right:0;display:flex;justify-content:center;gap:20px;align-items:center}
+  .title{font-size:8px;letter-spacing:3px;text-transform:uppercase;color:#333}
+  .metric{font-size:7px;color:#222;letter-spacing:.5px}
+
+  .bar{position:fixed;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(transparent,#000c 30%,#000e);padding:10px 16px 14px;display:flex;align-items:center;gap:8px}
+  .drop-zone{flex-shrink:0;width:36px;height:36px;border:1px dashed var(--b);border-radius:3px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;overflow:hidden;transition:all .2s}
+  .drop-zone:hover{border-color:var(--g)} .drop-zone.active{border-color:var(--g);border-style:solid}
+  .drop-zone svg{width:16px;height:16px;fill:var(--mu)} .drop-zone.active svg{fill:var(--g)}
+  .drop-zone input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+  .tbtn{width:28px;height:28px;border:1px solid var(--b);border-radius:3px;background:var(--p);color:var(--mu);font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-family:var(--m);transition:all .2s}
+  .tbtn:hover{color:var(--br);border-color:var(--mu)} .tbtn.active{color:var(--g);border-color:var(--g)}
+
+  .track-info{flex:1;min-width:0}
+  .track-name{font-size:8px;color:var(--br);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .track-time{font-size:7px;color:var(--mu)}
+
+  .progress-bar{flex:2;height:2px;background:var(--b);border-radius:1px;cursor:pointer;position:relative;min-width:60px}
+  .progress-fill{height:100%;background:var(--g);border-radius:1px;width:0%}
+
+  .ctrl-group{display:flex;gap:4px;align-items:center;flex-shrink:0}
+  .ctrl-col{display:flex;flex-direction:column;align-items:center;gap:1px}
+  .ctrl-col label{font-size:6px;text-transform:uppercase;letter-spacing:.8px;color:var(--mu)}
+  input[type=range]{width:50px;-webkit-appearance:none;background:var(--b);height:2px;border-radius:1px;outline:none}
+  input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:8px;height:8px;background:var(--br);border-radius:50%;cursor:pointer}
+
+  .mic-btn{width:28px;height:28px;border:1px solid var(--b);border-radius:50%;background:var(--p);cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .2s;flex-shrink:0}
+  .mic-btn:hover{border-color:var(--pr)} .mic-btn.active{border-color:var(--pr);background:#ff608815}
+  .mic-btn svg{width:12px;height:12px;fill:var(--mu)} .mic-btn.active svg{fill:var(--pr)}
+
+  .mode-btns{position:fixed;top:10px;right:12px;display:flex;gap:3px;z-index:10}
+  .vb{padding:3px 6px;font-size:6px;letter-spacing:.5px;text-transform:uppercase;background:none;border:1px solid #151520;color:#2a2a3a;cursor:pointer;font-family:var(--m);border-radius:2px;transition:all .2s}
+  .vb:hover{color:var(--t);border-color:var(--b)} .vb.active{color:var(--g);border-color:var(--g)}
+
+  .help{position:fixed;bottom:60px;right:12px;font-size:7px;color:#1a1a2a;text-align:right;z-index:10;line-height:1.6}
+  .help b{color:#2a2a3a}
+</style>
+</head>
+<body>
+
+<div class="hud top">
+  <span class="title">LATTICE CYMATICS — 3D FIELD</span>
+  <span class="metric" id="metric"></span>
+</div>
+
+<div class="mode-btns">
+  <button class="vb active" onclick="setMode(0)">cymatic</button>
+  <button class="vb" onclick="setMode(1)">collapse</button>
+  <button class="vb" onclick="setMode(2)">lattice</button>
+  <button class="vb" onclick="setMode(3)">helix</button>
+</div>
+
+<div class="help">
+  <b>drag</b> rotate · <b>shift+drag</b> pan · <b>scroll</b> zoom<br>
+  <b>zoom</b> = 4th axis (scale tier changes)
+</div>
+
+<div class="bar">
+  <div class="drop-zone" id="dropZone">
+    <svg viewBox="0 0 24 24"><path d="M9 16h6v-6h4l-7-7-7 7h4v6zm-4 2h14v2H5v-2z"/></svg>
+    <input type="file" accept="audio/*" onchange="loadFile(this.files[0])">
+  </div>
+  <button class="tbtn" id="playBtn" onclick="togglePlay()">&#9654;</button>
+  <div class="track-info">
+    <div class="track-name" id="trackName">drop audio or use mic</div>
+    <div class="track-time" id="trackTime">—</div>
+  </div>
+  <div class="progress-bar" id="progressBar" onclick="seek(event)">
+    <div class="progress-fill" id="progressFill"></div>
+  </div>
+  <div class="ctrl-group">
+    <div class="ctrl-col"><label>count</label><input type="range" id="pCount" min="1000" max="20000" value="6000"></div>
+    <div class="ctrl-col"><label>react</label><input type="range" id="reactivity" min="1" max="100" value="50"></div>
+    <div class="ctrl-col"><label>sym</label><input type="range" id="symmetry" min="1" max="24" value="7"></div>
+    <div class="ctrl-col"><label>gravity</label><input type="range" id="gravity" min="0" max="100" value="30"></div>
+    <div class="ctrl-col"><label>trail</label><input type="range" id="trail" min="0" max="100" value="60"></div>
+  </div>
+  <div class="mic-btn" id="micBtn" onclick="toggleMic()">
+    <svg viewBox="0 0 24 24"><path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3zm-1-9c0-.55.45-1 1-1s1 .45 1 1v6c0 .55-.45 1-1 1s-1-.45-1-1V5zm6 6c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/></svg>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══ AUDIO ═══
+let actx, analyser, source, audioEl, micStream;
+let freqData, timeData;
+let isPlaying = false, isMic = false;
+
+function initAudio() {
+  if (actx) return;
+  actx = new (window.AudioContext || window.webkitAudioContext)();
+  analyser = actx.createAnalyser();
+  analyser.fftSize = 2048;
+  analyser.smoothingTimeConstant = 0.82;
+  analyser.connect(actx.destination);
+  freqData = new Uint8Array(analyser.frequencyBinCount);
+  timeData = new Uint8Array(analyser.fftSize);
+}
+
+function loadFile(file) {
+  if (!file) return;
+  initAudio();
+  if (source) source.disconnect();
+  if (audioEl) audioEl.pause();
+  audioEl = new Audio();
+  audioEl.src = URL.createObjectURL(file);
+  audioEl.crossOrigin = "anonymous";
+  audioEl.addEventListener('canplay', () => {
+    source = actx.createMediaElementSource(audioEl);
+    source.connect(analyser);
+    document.getElementById('trackName').textContent = file.name;
+    document.getElementById('dropZone').classList.add('active');
+    togglePlay();
+  }, { once: true });
+  audioEl.addEventListener('timeupdate', updateProgress);
+  audioEl.addEventListener('ended', () => { isPlaying = false; document.getElementById('playBtn').innerHTML = '&#9654;'; });
+}
+
+function togglePlay() {
+  if (!audioEl) return;
+  initAudio();
+  if (actx.state === 'suspended') actx.resume();
+  if (isPlaying) { audioEl.pause(); isPlaying = false; document.getElementById('playBtn').innerHTML = '&#9654;'; }
+  else { audioEl.play(); isPlaying = true; document.getElementById('playBtn').innerHTML = '&#9646;&#9646;'; document.getElementById('playBtn').classList.add('active'); }
+}
+
+function toggleMic() {
+  initAudio();
+  if (isMic) {
+    if (micStream) { micStream.getTracks().forEach(t => t.stop()); micStream = null; }
+    if (source) { source.disconnect(); source = null; }
+    isMic = false;
+    document.getElementById('micBtn').classList.remove('active');
+    document.getElementById('trackName').textContent = 'mic off';
+    return;
+  }
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    micStream = stream;
+    if (source) source.disconnect();
+    source = actx.createMediaStreamSource(stream);
+    // Connect to analyser only, not destination
+    const dummyGain = actx.createGain(); dummyGain.gain.value = 0; dummyGain.connect(actx.destination);
+    source.connect(analyser); analyser.connect(dummyGain);
+    isMic = true; isPlaying = true;
+    document.getElementById('micBtn').classList.add('active');
+    document.getElementById('trackName').textContent = '\u{1F3A4} microphone';
+  }).catch(() => { document.getElementById('trackName').textContent = 'mic denied'; });
+}
+
+function updateProgress() {
+  if (!audioEl) return;
+  document.getElementById('progressFill').style.width = (audioEl.currentTime / audioEl.duration * 100) + '%';
+  const f = t => Math.floor(t/60)+':'+String(Math.floor(t%60)).padStart(2,'0');
+  document.getElementById('trackTime').textContent = f(audioEl.currentTime)+' / '+f(audioEl.duration||0);
+}
+function seek(e) { if (!audioEl) return; audioEl.currentTime = ((e.clientX - e.target.getBoundingClientRect().left) / e.target.offsetWidth) * audioEl.duration; }
+
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => { e.preventDefault(); const f = e.dataTransfer.files[0]; if (f && f.type.startsWith('audio/')) loadFile(f); });
+
+// ═══ FRAMEWORK ═══
+const FAMILY = new Set([2,3,5,7,11,13,23,47]);
+const BANDS = [2,3,5,7,11,13,23]; // 7 family-prime frequency bands
+const BAND_COLORS = [
+  new THREE.Color(0.31, 0.91, 0.56),  // 2: green
+  new THREE.Color(1.0, 0.67, 0.25),   // 3: gold
+  new THREE.Color(0.29, 0.62, 1.0),   // 5: blue
+  new THREE.Color(1.0, 0.38, 0.53),   // 7: pink
+  new THREE.Color(0.63, 0.47, 1.0),   // 11: purple
+  new THREE.Color(1.0, 0.86, 0.39),   // 13: yellow
+  new THREE.Color(0.39, 1.0, 0.86),   // 23: cyan
+];
+
+let smoothBands = new Float32Array(7);
+
+function getBandEnergy() {
+  if (!freqData) return;
+  const n = freqData.length;
+  const bw = Math.floor(n / 7);
+  for (let b = 0; b < 7; b++) {
+    let sum = 0;
+    for (let i = b * bw; i < (b+1) * bw && i < n; i++) sum += freqData[i] / 255;
+    const raw = sum / bw;
+    smoothBands[b] = Math.max(raw, smoothBands[b] * 0.92);
+  }
+}
+
+// ═══ THREE.JS SETUP ═══
+const scene = new THREE.Scene();
+scene.fog = new THREE.FogExp2(0x020204, 0.004);
+const camera = new THREE.PerspectiveCamera(60, innerWidth/innerHeight, 0.5, 2000);
+camera.position.set(0, 60, 150);
+const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false });
+renderer.setSize(innerWidth, innerHeight);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setClearColor(0x020204);
+document.body.appendChild(renderer.domElement);
+
+// ═══ CAMERA CONTROLS (synergonesis-style, untethered) ═══
+const cam = {
+  rotX: 0, rotY: 0.3, dist: 150,
+  panX: 0, panY: 0, panZ: 0,
+  isDrag: false, isShift: false,
+  dsx: 0, dsy: 0, drx: 0, dry: 0, dpx: 0, dpy: 0,
+  targetDist: 150,
+  zoomTier: 1 // 4th axis: what tier of detail we're at
+};
+
+function updateCamera() {
+  const cx = cam.dist * Math.sin(cam.rotX) * Math.cos(cam.rotY);
+  const cy = cam.dist * Math.sin(cam.rotY);
+  const cz = cam.dist * Math.cos(cam.rotX) * Math.cos(cam.rotY);
+  camera.position.set(cx + cam.panX, cy + cam.panY, cz + cam.panZ);
+  camera.lookAt(cam.panX, cam.panY * 0.3, cam.panZ);
+  
+  // 4th axis: zoom tier determines particle behavior scale
+  cam.zoomTier = Math.max(0.1, Math.min(10, cam.dist / 50));
+}
+
+const cvEl = renderer.domElement;
+cvEl.addEventListener('mousedown', e => {
+  cam.isDrag = true; cam.isShift = e.shiftKey;
+  cam.dsx = e.clientX; cam.dsy = e.clientY;
+  cam.drx = cam.rotX; cam.dry = cam.rotY;
+  cam.dpx = cam.panX; cam.dpy = cam.panY;
+  cvEl.style.cursor = 'grabbing';
+});
+cvEl.addEventListener('mousemove', e => {
+  if (!cam.isDrag) return;
+  const dx = e.clientX - cam.dsx, dy = e.clientY - cam.dsy;
+  if (cam.isShift || e.shiftKey) {
+    cam.panX = cam.dpx - dx * 0.3;
+    cam.panY = cam.dpy + dy * 0.3;
+  } else {
+    cam.rotX = cam.drx + dx * 0.005;
+    cam.rotY = Math.max(-1.4, Math.min(1.4, cam.dry + dy * 0.005));
+  }
+  updateCamera();
+});
+cvEl.addEventListener('mouseup', () => { cam.isDrag = false; cvEl.style.cursor = 'grab'; });
+cvEl.addEventListener('wheel', e => {
+  e.preventDefault();
+  cam.dist = Math.max(5, Math.min(600, cam.dist * (e.deltaY > 0 ? 1.08 : 0.92)));
+  updateCamera();
+}, { passive: false });
+cvEl.style.cursor = 'grab';
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+
+// ═══ LIGHTING ═══
+const ambLight = new THREE.AmbientLight(0x222244, 0.3);
+scene.add(ambLight);
+const ptLight = new THREE.PointLight(0xffffff, 0.5, 500);
+ptLight.position.set(0, 50, 0);
+scene.add(ptLight);
+
+// ═══ PARTICLE SYSTEM (InstancedMesh) ═══
+let PARTICLE_COUNT = 6000;
+let particleMesh, particleData;
+
+const pGeo = new THREE.SphereGeometry(0.3, 4, 3);
+const pMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.9 });
+
+// Per-particle data
+function createParticles() {
+  if (particleMesh) scene.remove(particleMesh);
+  PARTICLE_COUNT = parseInt(document.getElementById('pCount').value);
+  
+  particleMesh = new THREE.InstancedMesh(pGeo, pMat, PARTICLE_COUNT);
+  particleMesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+  
+  // Allocate color buffer
+  const colors = new Float32Array(PARTICLE_COUNT * 3);
+  
+  particleData = [];
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const band = Math.floor(Math.random() * 7);
+    const col = BAND_COLORS[band];
+    colors[i*3] = col.r;
+    colors[i*3+1] = col.g;
+    colors[i*3+2] = col.b;
+    
+    const theta = Math.random() * Math.PI * 2;
+    const phi = Math.acos(2 * Math.random() - 1);
+    const r = 10 + Math.random() * 80;
+    
+    particleData.push({
+      band,
+      homeR: r,
+      theta,
+      phi,
+      phase: Math.random() * Math.PI * 2,
+      speed: 0.001 + Math.random() * 0.005,
+      energy: 0,
+      x: r * Math.sin(phi) * Math.cos(theta),
+      y: r * Math.sin(phi) * Math.sin(theta),
+      z: r * Math.cos(phi),
+      vx: 0, vy: 0, vz: 0
+    });
+  }
+  
+  particleMesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+  scene.add(particleMesh);
+}
+
+// ═══ BLACK HOLE ATTRACTOR ═══
+// Central singularity that warps particle trajectories
+const bhGeo = new THREE.SphereGeometry(2, 16, 16);
+const bhMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+const blackHole = new THREE.Mesh(bhGeo, bhMat);
+scene.add(blackHole);
+
+// Event horizon glow
+const ehGeo = new THREE.SphereGeometry(3, 24, 24);
+const ehMat = new THREE.MeshBasicMaterial({ color: 0x332244, transparent: true, opacity: 0.15, wireframe: true });
+const eventHorizon = new THREE.Mesh(ehGeo, ehMat);
+scene.add(eventHorizon);
+
+// Accretion ring
+const ringGeo = new THREE.TorusGeometry(8, 0.3, 8, 64);
+const ringMat = new THREE.MeshBasicMaterial({ color: 0xff8844, transparent: true, opacity: 0.2 });
+const accretionRing = new THREE.Mesh(ringGeo, ringMat);
+accretionRing.rotation.x = Math.PI / 2;
+scene.add(accretionRing);
+
+// ═══ VISUALIZATION MODES ═══
+let vizMode = 0;
+const dummy = new THREE.Object3D();
+
+function setMode(m) {
+  vizMode = m;
+  document.querySelectorAll('.vb').forEach((b, i) => b.classList.toggle('active', i === m));
+}
+
+function updateParticles(time, dt) {
+  if (!particleMesh || !particleData) return;
+  
+  const reactivity = parseInt(document.getElementById('reactivity').value) / 50;
+  const sym = parseInt(document.getElementById('symmetry').value);
+  const grav = parseInt(document.getElementById('gravity').value) / 100;
+  const trail = parseInt(document.getElementById('trail').value) / 100;
+  const totalE = smoothBands.reduce((a,b) => a+b, 0) / 7;
+  const tier = cam.zoomTier; // 4th axis
+  
+  // Update event horizon
+  const ehScale = 3 + totalE * 8;
+  eventHorizon.scale.setScalar(ehScale);
+  eventHorizon.rotation.y = time * 0.0003;
+  eventHorizon.rotation.z = time * 0.0002;
+  eventHorizon.material.opacity = 0.05 + totalE * 0.2;
+  
+  accretionRing.scale.setScalar(1 + totalE * 3);
+  accretionRing.rotation.z = time * 0.0005;
+  accretionRing.material.opacity = 0.1 + totalE * 0.3;
+  
+  // Point light pulses with audio
+  ptLight.intensity = 0.3 + totalE * 2;
+  ptLight.color.setHSL(0.08 + totalE * 0.1, 0.8, 0.5 + totalE * 0.3);
+  
+  const colors = particleMesh.instanceColor.array;
+
+  for (let i = 0; i < PARTICLE_COUNT; i++) {
+    const p = particleData[i];
+    const bandE = smoothBands[p.band] * reactivity;
+    p.energy = p.energy * (0.85 + trail * 0.14) + bandE * (1 - trail * 0.14) * 0.15;
+    p.phase += p.speed * dt * (1 + p.energy * 3);
+    
+    let tx, ty, tz;
+    
+    if (vizMode === 0) {
+      // CYMATIC — 3D standing wave nodal surfaces
+      const r = p.homeR * (0.5 + 0.5 / tier);
+      const angularNode = Math.cos(sym * p.theta + p.band * 0.5 + time * 0.0002);
+      const radialNode = Math.cos(p.band * p.homeR / (20 * tier) * Math.PI + totalE * 8);
+      const verticalNode = Math.cos(p.phi * sym * 0.5 + bandE * 5);
+      
+      const displacement = angularNode * radialNode * verticalNode * bandE * 20;
+      
+      const effectiveR = r + displacement;
+      tx = effectiveR * Math.sin(p.phi + p.phase * 0.1) * Math.cos(p.theta + p.phase);
+      ty = effectiveR * Math.cos(p.phi + p.phase * 0.1) * 0.6;
+      tz = effectiveR * Math.sin(p.phi + p.phase * 0.1) * Math.sin(p.theta + p.phase);
+      
+    } else if (vizMode === 1) {
+      // COLLAPSE — gravitational pull toward singularity
+      const dx = -p.x, dy = -p.y, dz = -p.z;
+      const dist = Math.sqrt(dx*dx + dy*dy + dz*dz) + 0.1;
+      const force = grav * 500 / (dist * dist + 10) * (1 + bandE * 5);
+      
+      // Tangential velocity (orbit)
+      const tangX = -dz / dist;
+      const tangZ = dx / dist;
+      const orbitSpeed = (0.5 + bandE * 2) * p.speed * 50;
+      
+      p.vx += (dx / dist * force + tangX * orbitSpeed - p.vx * 0.02) * dt * 0.05;
+      p.vy += (dy / dist * force * 0.3 - p.vy * 0.05) * dt * 0.05;
+      p.vz += (dz / dist * force + tangZ * orbitSpeed - p.vz * 0.02) * dt * 0.05;
+      
+      tx = p.x + p.vx * dt;
+      ty = p.y + p.vy * dt;
+      tz = p.z + p.vz * dt;
+      
+      // Respawn if collapsed past event horizon
+      if (dist < 2 + totalE * 5) {
+        const phi = Math.acos(2 * Math.random() - 1);
+        const theta = Math.random() * Math.PI * 2;
+        const r = 60 + Math.random() * 40;
+        tx = r * Math.sin(phi) * Math.cos(theta);
+        ty = r * Math.sin(phi) * Math.sin(theta) * 0.3;
+        tz = r * Math.cos(phi);
+        p.vx = p.vy = p.vz = 0;
+      }
+      
+    } else if (vizMode === 2) {
+      // LATTICE — crystalline structure perturbed by audio
+      const gridSize = Math.ceil(Math.pow(PARTICLE_COUNT, 1/3));
+      const idx = i;
+      const ix = idx % gridSize;
+      const iy = Math.floor(idx / gridSize) % gridSize;
+      const iz = Math.floor(idx / (gridSize * gridSize));
+      const spacing = 120 / gridSize;
+      
+      const baseX = (ix - gridSize/2) * spacing;
+      const baseY = (iy - gridSize/2) * spacing * 0.8;
+      const baseZ = (iz - gridSize/2) * spacing;
+      
+      // Perturb along lattice fault lines
+      const pertX = Math.sin(baseX * 0.05 * BANDS[p.band] / tier + totalE * 10) * bandE * 15;
+      const pertY = Math.cos(baseY * 0.05 * BANDS[p.band] / tier + totalE * 10) * bandE * 15;
+      const pertZ = Math.sin(baseZ * 0.05 * BANDS[p.band] / tier + totalE * 8) * bandE * 15;
+      
+      tx = baseX + pertX;
+      ty = baseY + pertY;
+      tz = baseZ + pertZ;
+      
+    } else {
+      // HELIX — triple spiral driven by audio (the ternary helix!)
+      const helixPhase = (i / PARTICLE_COUNT) * Math.PI * 14;
+      const strand = p.band % 3; // three strands
+      const strandOffset = strand * Math.PI * 2 / 3;
+      const helixR = 15 + bandE * 30;
+      const rise = (i / PARTICLE_COUNT - 0.5) * 150;
+      
+      const spiralAngle = helixPhase + strandOffset + time * 0.0003 * (1 + totalE * 2);
+      
+      tx = Math.cos(spiralAngle) * helixR;
+      ty = rise;
+      tz = Math.sin(spiralAngle) * helixR;
+      
+      // Mediator particles (Li/B bridge) — particles between strands
+      if (p.band === 1 || p.band === 2) { // band 3(Li) and band 5(B) are mediators
+        const nextStrand = ((strand + 1) % 3) * Math.PI * 2 / 3;
+        const midAngle = (strandOffset + nextStrand) / 2 + helixPhase + time * 0.0003;
+        const midR = helixR * 0.6;
+        tx = Math.cos(midAngle) * midR;
+        tz = Math.sin(midAngle) * midR;
+      }
+    }
+    
+    // Smooth movement (lerp)
+    const lerpRate = 0.03 + p.energy * 0.12;
+    if (vizMode === 1) {
+      p.x = tx; p.y = ty; p.z = tz; // direct for physics mode
+    } else {
+      p.x += (tx - p.x) * lerpRate * dt;
+      p.y += (ty - p.y) * lerpRate * dt;
+      p.z += (tz - p.z) * lerpRate * dt;
+    }
+    
+    // Set instance transform
+    const scale = 0.5 + p.energy * 4;
+    dummy.position.set(p.x, p.y, p.z);
+    dummy.scale.setScalar(scale);
+    dummy.updateMatrix();
+    particleMesh.setMatrixAt(i, dummy.matrix);
+    
+    // Update color brightness with energy
+    const col = BAND_COLORS[p.band];
+    const bright = 0.3 + p.energy * 2;
+    colors[i*3]   = Math.min(1, col.r * bright);
+    colors[i*3+1] = Math.min(1, col.g * bright);
+    colors[i*3+2] = Math.min(1, col.b * bright);
+  }
+  
+  particleMesh.instanceMatrix.needsUpdate = true;
+  particleMesh.instanceColor.needsUpdate = true;
+}
+
+// ═══ POST-PROCESSING (bloom-like glow via additive plane) ═══
+// Simple fog-based depth + bloom feel from point light
+
+// ═══ MAIN LOOP ═══
+let lastTime = 0;
+
+function animate(time) {
+  requestAnimationFrame(animate);
+  const dt = Math.min((time - lastTime) / 16, 3);
+  lastTime = time;
+  
+  // Audio analysis
+  if (analyser && (isPlaying || isMic)) {
+    analyser.getByteFrequencyData(freqData);
+    analyser.getByteTimeDomainData(timeData);
+  } else if (!freqData) {
+    freqData = new Uint8Array(1024);
+  }
+  
+  // Idle shimmer
+  if (!isPlaying && !isMic) {
+    for (let i = 0; i < 30; i++)
+      freqData[i] = Math.floor(Math.sin(time * 0.001 + i * 0.5) * 12 + 18);
+  }
+  
+  getBandEnergy();
+  updateParticles(time, dt);
+  
+  // HUD
+  const totalE = smoothBands.reduce((a,b) => a+b, 0) / 7;
+  document.getElementById('metric').textContent = 
+    `xyz[${cam.panX.toFixed(0)}, ${cam.panY.toFixed(0)}, ${cam.panZ.toFixed(0)}] ` +
+    `d:${cam.dist.toFixed(0)} tier:${cam.zoomTier.toFixed(2)} ` +
+    `E:${(totalE*100).toFixed(0)}% p:${PARTICLE_COUNT}`;
+  
+  renderer.render(scene, camera);
+}
+
+// ═══ INIT ═══
+updateCamera();
+createParticles();
+
+// Rebuild particles when count changes
+document.getElementById('pCount').addEventListener('change', createParticles);
+
+requestAnimationFrame(animate);
+</script>
+</body>
+</html>

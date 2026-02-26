@@ -1,0 +1,138 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-02-26",
+  "base_path": "Song_Repository",
+  "categories": [
+    {
+      "id": "songs",
+      "label": "Songs",
+      "folders": [
+        {
+          "id": "1-Ash_And_Fire",
+          "label": "1 · Ash And Fire",
+          "files": []
+        },
+        {
+          "id": "2-Black_Hole_Soul",
+          "label": "2 · Black Hole Soul",
+          "files": []
+        },
+        {
+          "id": "3-Changes",
+          "label": "3 · Changes",
+          "files": []
+        },
+        {
+          "id": "4-Deceit_And_Demands",
+          "label": "4 · Deceit And Demands",
+          "files": []
+        },
+        {
+          "id": "5-Dumpster_Phoenix",
+          "label": "5 · Dumpster Phoenix",
+          "files": []
+        },
+        {
+          "id": "6-Eternity_In_A_Heartbeat",
+          "label": "6 · Eternity In A Heartbeat",
+          "files": []
+        },
+        {
+          "id": "7-Everything_Changes",
+          "label": "7 · Everything Changes",
+          "files": []
+        },
+        {
+          "id": "8-Inside_My_Mind",
+          "label": "8 · Inside My Mind",
+          "files": []
+        },
+        {
+          "id": "9-Inside_Origin",
+          "label": "9 · Inside (Origin)",
+          "files": []
+        },
+        {
+          "id": "10-Into_The_Known",
+          "label": "10 · Into The Known",
+          "files": []
+        },
+        {
+          "id": "11-New_Name",
+          "label": "11 · New Name",
+          "files": []
+        },
+        {
+          "id": "12-No_Kings",
+          "label": "12 · No Kings",
+          "files": []
+        },
+        {
+          "id": "13-Slow_And_Somber",
+          "label": "13 · Slow And Somber",
+          "files": []
+        },
+        {
+          "id": "14-Through_The_Gates",
+          "label": "14 · Through The Gates",
+          "files": []
+        },
+        {
+          "id": "15-Unbound_Libertys_Call",
+          "label": "15 · Unbound (Liberty's Call)",
+          "files": []
+        },
+        {
+          "id": "OOS-Ad_Pontificem",
+          "label": "OOS · Ad Pontificem",
+          "files": []
+        }
+      ]
+    },
+    {
+      "id": "progress_reports",
+      "label": "Progress Reports",
+      "folders": [
+        {
+          "id": "Progress_Reports",
+          "label": "All Reports",
+          "files": []
+        }
+      ]
+    },
+    {
+      "id": "white_papers",
+      "label": "White Papers",
+      "folders": [
+        {
+          "id": "White_Papers",
+          "label": "All Papers",
+          "files": []
+        }
+      ]
+    },
+    {
+      "id": "design_docs",
+      "label": "Design Documents",
+      "folders": [
+        {
+          "id": "Design_Documents",
+          "label": "All Design Docs",
+          "files": []
+        }
+      ]
+    },
+    {
+      "id": "visualizers",
+      "label": "Visualizers",
+      "folders": [
+        {
+          "id": "Visualizers",
+          "label": "HTML Visualizers",
+          "files": []
+        }
+      ]
+    }
+  ],
+  "_comment": "File arrays are auto-populated. Each entry: { \"name\": \"filename.md\", \"label\": \"Display Name\" }. If files[] is empty, the reader will attempt GitHub API discovery as fallback."
+}

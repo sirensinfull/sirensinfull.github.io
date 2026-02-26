@@ -10,6 +10,7 @@
   <meta property="og:type" content="website">
   <meta property="og:url" content="https://sirenSinfull.com">
   <link rel="stylesheet" href="ouroboros.css">
+  <link rel="stylesheet" href="repo-browser.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
 </head>
 <body>
@@ -231,8 +232,8 @@
     </div>
   </div>
 
-  <!-- SPEEDREADER -->
-  <div id="speedreaderPanel" class="panel hidden" style="left:600px;top:390px;width:340px;">
+<!-- SPEEDREADER -->
+  <div id="speedreaderPanel" class="panel hidden" style="left:600px;top:390px;width:380px;">
     <div class="panel-header">
       Speedreader
       <span class="panel-header-controls">
@@ -241,7 +242,7 @@
       </span>
     </div>
     <div class="panel-content">
-      <textarea id="speedreaderInput" rows="4" placeholder="Paste text here..." aria-label="Text input for speed reading"></textarea>
+      <textarea id="speedreaderInput" rows="4" placeholder="Paste text or select from Library..." aria-label="Text input for speed reading"></textarea>
       <div class="speedreader-toolbar">
         <input id="srWpmInput" type="number" min="100" max="2000" value="400" title="Words per minute" aria-label="WPM">
         <select id="srPhaseDropdown" aria-label="Phase lock frequency">
@@ -253,6 +254,13 @@
         </select>
         <button id="startRSVP" class="btn">Start</button>
         <button id="closeRSVP" class="btn">Stop</button>
+        <button id="repoToggle" class="btn" title="Browse Song Repository">📚</button>
+      </div>
+      <!-- REPOSITORY LIBRARY BROWSER -->
+      <div id="repoLibrary" class="hidden">
+        <input id="repoSearch" type="text" placeholder="Search documents..." aria-label="Search repository">
+        <div id="repoTree"></div>
+        <span id="repoStatus"></span>
       </div>
     </div>
   </div>
@@ -446,6 +454,7 @@
     .catch(()=>{});
   </script>
   <script src="ouroboros.js"></script>
+  <script src="repo-browser.js"></script>
 <script data-goatcounter="https://sirensinfull.goatcounter.com/count" async src="//gc.zgo.at/count.js"></script>
 </body>
 </html>

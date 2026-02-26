@@ -1,1 +1,118 @@
+/* ============================================================
+   REPO BROWSER — Song Repository Library for SpeedReader
+   ============================================================ */
+#repoLibrary {
+  margin-top: 8px;
+  border-top: 1px solid var(--border-subtle, rgba(200,160,100,0.08));
+  padding-top: 8px;
+  max-height: 280px;
+  overflow-y: auto;
+  transition: max-height 0.3s ease;
+}
+#repoLibrary.hidden { display: none; }
 
+#repoSearch {
+  width: 100%;
+  background: rgba(0,0,0,0.4);
+  border: 1px solid var(--border-subtle, rgba(200,160,100,0.08));
+  color: var(--text-main, rgba(200,160,100,0.7));
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 4px 8px;
+  border-radius: 2px;
+  outline: none;
+  margin-bottom: 6px;
+  box-sizing: border-box;
+}
+#repoSearch::placeholder { color: rgba(200,160,100,0.25); }
+#repoSearch:focus { border-color: rgba(200,160,100,0.2); }
+
+#repoStatus {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 8px;
+  color: rgba(200,160,100,0.25);
+  letter-spacing: 1px;
+  margin-top: 4px;
+  display: block;
+}
+
+#repoTree {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+}
+
+.repo-category { margin-bottom: 2px; }
+.repo-cat-header {
+  padding: 4px 6px;
+  color: var(--accent, rgba(200,160,100,0.8));
+  font-size: 9px;
+  font-weight: 600;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 2px;
+  transition: background 0.15s;
+}
+.repo-cat-header:hover { background: rgba(200,160,100,0.05); }
+.repo-cat-header::before { content: '▸ '; font-size: 8px; }
+.repo-category.expanded > .repo-cat-header::before { content: '▾ '; }
+
+.repo-cat-body { display: none; padding-left: 6px; }
+.repo-category.expanded > .repo-cat-body { display: block; }
+
+.repo-folder { margin-bottom: 1px; }
+.repo-folder-header {
+  padding: 3px 6px;
+  color: rgba(200,160,100,0.5);
+  font-size: 10px;
+  cursor: pointer;
+  user-select: none;
+  border-radius: 2px;
+  transition: background 0.15s, color 0.15s;
+}
+.repo-folder-header:hover {
+  background: rgba(200,160,100,0.04);
+  color: rgba(200,160,100,0.7);
+}
+.repo-folder-icon { font-size: 10px; margin-right: 2px; }
+.repo-discover-hint {
+  float: right;
+  font-size: 9px;
+  opacity: 0.4;
+}
+
+.repo-folder-body { display: none; padding-left: 12px; }
+.repo-folder.expanded > .repo-folder-body { display: block; }
+
+.repo-file {
+  padding: 3px 6px;
+  color: rgba(200,160,100,0.4);
+  font-size: 9.5px;
+  cursor: pointer;
+  border-radius: 2px;
+  transition: background 0.15s, color 0.15s;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.repo-file:hover {
+  background: rgba(200,160,100,0.06);
+  color: rgba(200,160,100,0.8);
+}
+.repo-file.active {
+  background: rgba(200,160,100,0.08);
+  color: var(--accent, rgba(200,160,100,0.9));
+}
+.repo-file-icon { font-size: 9px; margin-right: 3px; }
+
+/* Scrollbar for repo library */
+#repoLibrary::-webkit-scrollbar { width: 4px; }
+#repoLibrary::-webkit-scrollbar-track { background: transparent; }
+#repoLibrary::-webkit-scrollbar-thumb { background: var(--border-subtle, rgba(200,160,100,0.08)); border-radius: 2px; }
+
+/* Repo toggle button in speedreader toolbar */
+#repoToggle {
+  font-size: 0.6rem;
+  padding: 4px 8px;
+}

@@ -845,9 +845,7 @@ class SpeedReader {
     // ESC to close
     this.overlay?.addEventListener('keydown', e => { if (e.key === 'Escape') this.close(); });
   }
-if (typeof RepoBrowser !== 'undefined') {
-  const repoBrowser = new RepoBrowser(sr);
-}
+
   launch(text) {
     const src = text || this.input?.value || '';
     if (!src.trim()) { bus.emit('error', { msg: 'No text to read. Paste text into the Speedreader panel first.' }); return; }
@@ -1090,7 +1088,9 @@ document.addEventListener('DOMContentLoaded', () => {
   window.rgbOverlay = new RGBOverlay();
   window.slideshowEngine = new SlideshowEngine();
   window.speedReader = new SpeedReader();
-  window.repoBrowser = new RepoBrowser(window.speedReader);
+  if (typeof RepoBrowser !== 'undefined') {
+    window.repoBrowser = new RepoBrowser(window.speedReader);
+  }
   window.windowManager = new WindowManager([
     'playlistPanel', 'controlsPanel', 'visualizerPanel',
     'overlayPanel', 'settingsPanel', 'slideshowPanel', 'speedreaderPanel',

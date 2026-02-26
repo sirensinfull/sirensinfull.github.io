@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Siren Sinfull — Music &amp; Words</title>
-  <meta name="description" content="Siren Sinfull — musician, author, and architect of recursive sound. Enter the Ouroboros.">
-  <meta property="og:title" content="Siren Sinfull">
+  <title>Siren Sinful — Music &amp; Words</title>
+  <meta name="description" content="Siren Sinful — musician, author, and architect of recursive sound. Enter the Ouroboros.">
+  <meta property="og:title" content="Siren Sinful">
   <meta property="og:description" content="Musician. Author. Enter the Ouroboros.">
   <meta property="og:type" content="website">
-  <meta property="og:url" content="https://sirenSinfull.com">
+  <meta property="og:url" content="https://sirensinfull.com">
   <link rel="stylesheet" href="ouroboros.css">
   <link rel="stylesheet" href="repo-browser.css">
   <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐍</text></svg>">
@@ -20,7 +20,7 @@
        ============================================================ -->
   <div id="landingOverlay" role="button" tabindex="0" aria-label="Click to enter site">
     <div class="landing-brand">
-      <h1>Siren Sinfull</h1>
+      <h1>Siren Sinful</h1>
       <div class="landing-sub">musician · author · architect of recursive sound</div>
     </div>
     <div class="landing-enter">click anywhere to enter</div>
@@ -30,14 +30,13 @@
        NAVIGATION — Persistent top bar
        ============================================================ -->
   <nav id="siteNav" role="navigation" aria-label="Site navigation">
-    <a href="/" class="nav-brand">Siren Sinfull</a>
+    <a href="/" class="nav-brand">Siren Sinful</a>
     <ul class="nav-links">
       <li><a href="/">Engine</a></li>
       <li><a href="/music.html">Music</a></li>
       <li><a href="/books.html">Books</a></li>
       <li><a href="/about.html">About</a></li>
       <li><a href="/lab.html">Lab</a></li>
-      <li><a href="#" id="navParticles">Particles</a></li>
     </ul>
   </nav>
 
@@ -232,7 +231,7 @@
     </div>
   </div>
 
-<!-- SPEEDREADER -->
+  <!-- SPEEDREADER -->
   <div id="speedreaderPanel" class="panel hidden" style="left:600px;top:390px;width:380px;">
     <div class="panel-header">
       Speedreader
@@ -264,111 +263,6 @@
       </div>
     </div>
   </div>
-
-  <!-- PARTICLE VISUALIZERS HUB -->
-  <div id="particlePanel" class="panel hidden" style="left:300px;top:120px;width:340px;">
-    <div class="panel-header">
-      Particle Visualizers
-      <span class="panel-header-controls">
-        <button class="panel-lock" title="Lock position">🔒</button>
-        <button class="panel-hide" title="Close panel">✕</button>
-      </span>
-    </div>
-    <div class="panel-content">
-      <div style="font-size:0.55rem;color:rgba(200,160,100,0.25);margin-bottom:8px;letter-spacing:1px;text-transform:uppercase;text-align:center;">each opens in its own window · spawn as many as you want</div>
-
-      <div style="font-size:0.6rem;color:rgba(200,160,100,0.35);margin:6px 0 4px;letter-spacing:1.5px;text-transform:uppercase;">━━ Lattice Field ━━</div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;">
-        <button class="btn" onclick="VIZ.launch('viz_particles_2d.html')" style="text-align:left;padding:6px 10px;">
-          <span style="color:rgba(200,160,100,0.7);font-size:0.7rem;">◈</span> Particle Engine 2D
-          <span style="float:right;font-size:0.5rem;color:rgba(200,160,100,0.2);">4 modes · radial · scatter · lattice · spiral</span>
-        </button>
-        <button class="btn" onclick="VIZ.launch('viz_field_3d.html')" style="text-align:left;padding:6px 10px;">
-          <span style="color:rgba(80,232,144,0.7);font-size:0.7rem;">◈</span> 3D Field
-          <span style="float:right;font-size:0.5rem;color:rgba(200,160,100,0.2);">cymatic · collapse · lattice · helix</span>
-        </button>
-        <button class="btn" onclick="VIZ.launch('viz_field_3d_sys.html')" style="text-align:left;padding:6px 10px;">
-          <span style="color:rgba(74,158,255,0.7);font-size:0.7rem;">◈</span> 3D Field + System Audio
-          <span style="float:right;font-size:0.5rem;color:rgba(200,160,100,0.2);">vibes with any tab</span>
-        </button>
-      </div>
-
-      <div style="font-size:0.6rem;color:rgba(200,160,100,0.35);margin:6px 0 4px;letter-spacing:1.5px;text-transform:uppercase;">━━ Black Hole ━━</div>
-      <div style="display:flex;flex-direction:column;gap:4px;margin-bottom:10px;">
-        <button class="btn" onclick="VIZ.launch('viz_blackhole_v1.html')" style="text-align:left;padding:6px 10px;">
-          <span style="color:rgba(255,96,136,0.7);font-size:0.7rem;">●</span> Black Hole v1
-          <span style="float:right;font-size:0.5rem;color:rgba(200,160,100,0.2);">Keplerian physics · clusters</span>
-        </button>
-        <button class="btn" onclick="VIZ.launch('viz_blackhole_v2.html')" style="text-align:left;padding:6px 10px;">
-          <span style="color:rgba(255,170,64,0.7);font-size:0.7rem;">●</span> Black Hole v2 — EH Bounce
-          <span style="float:right;font-size:0.5rem;color:rgba(200,160,100,0.2);">pulsing event horizon</span>
-        </button>
-        <button class="btn" onclick="VIZ.launch('viz_blackhole_houses.html')" style="text-align:left;padding:6px 10px;">
-          <span style="color:rgba(100,75,255,0.7);font-size:0.7rem;">●</span> Black Hole — 7 Houses
-          <span style="float:right;font-size:0.5rem;color:rgba(200,160,100,0.2);">per-house band physics</span>
-        </button>
-        <button class="btn" onclick="VIZ.launch('viz_blackhole_final.html')" style="text-align:left;padding:6px 10px;">
-          <span style="color:rgba(255,220,60,0.8);font-size:0.7rem;">★</span> Black Hole — FINAL
-          <span style="float:right;font-size:0.5rem;color:rgba(200,160,100,0.2);">7 houses · screensaver · RNG</span>
-        </button>
-      </div>
-
-      <div style="font-size:0.6rem;color:rgba(200,160,100,0.35);margin:6px 0 4px;letter-spacing:1.5px;text-transform:uppercase;">━━ Multi-Spawn ━━</div>
-      <div style="display:flex;gap:4px;">
-        <button class="btn" onclick="VIZ.launchAll()" style="flex:1;padding:6px 10px;font-size:0.6rem;">🌀 ALL 7</button>
-        <button class="btn" onclick="VIZ.launchSet('lattice')" style="flex:1;padding:6px 10px;font-size:0.6rem;">◈ All Fields</button>
-        <button class="btn" onclick="VIZ.launchSet('blackhole')" style="flex:1;padding:6px 10px;font-size:0.6rem;">● All Holes</button>
-      </div>
-      <div style="margin-top:6px;display:flex;gap:4px;">
-        <button class="btn" onclick="VIZ.closeAll()" style="flex:1;padding:5px 10px;font-size:0.55rem;color:rgba(255,96,136,0.5);">✕ Close All Windows</button>
-      </div>
-      <div id="vizCount" style="font-size:0.5rem;color:rgba(200,160,100,0.15);text-align:center;margin-top:6px;letter-spacing:1px;">0 windows open</div>
-    </div>
-  </div>
-
-  <script>
-  // ═══ PARTICLE VISUALIZER LAUNCHER ═══
-  const VIZ = {
-    windows: [],
-    files: {
-      lattice: ['viz_particles_2d.html','viz_field_3d.html','viz_field_3d_sys.html'],
-      blackhole: ['viz_blackhole_v1.html','viz_blackhole_v2.html','viz_blackhole_houses.html','viz_blackhole_final.html']
-    },
-    launch(file) {
-      const w = window.open(file, '_blank', 'width=1200,height=800,menubar=no,toolbar=no,location=no,status=no');
-      if (w) { this.windows.push(w); this.updateCount(); }
-      else { alert('Popup blocked — allow popups for this site'); }
-    },
-    launchAll() {
-      [...this.files.lattice, ...this.files.blackhole].forEach((f, i) => {
-        setTimeout(() => this.launch(f), i * 300);
-      });
-    },
-    launchSet(set) {
-      (this.files[set] || []).forEach((f, i) => {
-        setTimeout(() => this.launch(f), i * 300);
-      });
-    },
-    closeAll() {
-      this.windows.forEach(w => { try { if (w && !w.closed) w.close(); } catch(e){} });
-      this.windows = [];
-      this.updateCount();
-    },
-    updateCount() {
-      this.windows = this.windows.filter(w => w && !w.closed);
-      const el = document.getElementById('vizCount');
-      if (el) el.textContent = this.windows.length + ' window' + (this.windows.length !== 1 ? 's' : '') + ' open';
-    }
-  };
-  // Poll for closed windows
-  setInterval(() => VIZ.updateCount(), 2000);
-  // Nav link toggles panel
-  document.getElementById('navParticles').addEventListener('click', function(e) {
-    e.preventDefault();
-    const panel = document.getElementById('particlePanel');
-    panel.classList.toggle('hidden');
-  });
-  </script>
 
   <!-- BROWSER -->
   <div id="browserPanel" class="panel hidden" style="left:300px;top:52px;width:700px;height:500px;">

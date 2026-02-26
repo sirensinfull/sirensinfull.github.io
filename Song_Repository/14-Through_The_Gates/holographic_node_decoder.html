@@ -1,0 +1,991 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Holographic Node Interpretive Decoder</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --bg-deep: #04060f;
+    --bg-mid: #0a0e1a;
+    --bg-surface: #111627;
+    --dim-blue: #2a3a6e;
+    --med-cyan: #4ecdc4;
+    --warm-amber: #f4a261;
+    --hot-orange: #e76f51;
+    --blaze-white: #fefae0;
+    --prime-violet: #7b2cbf;
+    --glow-cyan: rgba(78, 205, 196, 0.4);
+    --text-primary: #e0e6f0;
+    --text-dim: #6b7394;
+    --text-accent: #4ecdc4;
+    --border-subtle: rgba(78, 205, 196, 0.15);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg-deep);
+    color: var(--text-primary);
+    font-family: 'Rajdhani', sans-serif;
+    overflow-x: hidden;
+    min-height: 100vh;
+  }
+
+  /* === HEADER === */
+  .header {
+    padding: 24px 32px 16px;
+    border-bottom: 1px solid var(--border-subtle);
+    background: linear-gradient(180deg, rgba(10,14,26,1) 0%, rgba(4,6,15,0) 100%);
+    position: relative;
+  }
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--med-cyan), transparent);
+    opacity: 0.3;
+  }
+  .header h1 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    background: linear-gradient(90deg, var(--med-cyan), var(--blaze-white), var(--warm-amber));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: var(--text-dim);
+    letter-spacing: 1.5px;
+    margin-top: 4px;
+  }
+
+  /* === CONTROLS === */
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 16px 32px;
+    background: var(--bg-mid);
+    border-bottom: 1px solid var(--border-subtle);
+    flex-wrap: wrap;
+  }
+  .control-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .control-group label {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--text-dim);
+  }
+  .control-group input[type="range"] {
+    -webkit-appearance: none;
+    width: 140px;
+    height: 4px;
+    background: var(--dim-blue);
+    border-radius: 2px;
+    outline: none;
+  }
+  .control-group input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: var(--med-cyan);
+    cursor: pointer;
+    box-shadow: 0 0 8px var(--glow-cyan);
+  }
+  .control-group input[type="number"] {
+    width: 60px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 13px;
+    text-align: center;
+  }
+  .btn {
+    padding: 6px 16px;
+    background: transparent;
+    border: 1px solid var(--med-cyan);
+    color: var(--med-cyan);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.2s;
+  }
+  .btn:hover {
+    background: rgba(78, 205, 196, 0.1);
+    box-shadow: 0 0 12px rgba(78, 205, 196, 0.2);
+  }
+  .btn.active {
+    background: var(--med-cyan);
+    color: var(--bg-deep);
+  }
+  .selected-display {
+    font-size: 12px;
+    color: var(--text-dim);
+    margin-left: auto;
+  }
+  .selected-display span {
+    color: var(--warm-amber);
+    font-family: 'Orbitron', sans-serif;
+  }
+
+  /* === MAIN VISUALIZATION === */
+  .viz-container {
+    padding: 20px 32px;
+    position: relative;
+  }
+
+  /* Sine wave canvas */
+  #waveCanvas {
+    width: 100%;
+    height: 200px;
+    display: block;
+  }
+
+  /* Node grid */
+  .node-grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 8px 0;
+    justify-content: flex-start;
+  }
+  .node {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    position: relative;
+    border: 1px solid transparent;
+    user-select: none;
+  }
+  .node::after {
+    content: '';
+    position: absolute;
+    inset: -2px;
+    border-radius: 8px;
+    opacity: 0;
+    transition: opacity 0.25s;
+    pointer-events: none;
+  }
+  .node:hover {
+    transform: scale(1.15);
+    z-index: 10;
+  }
+  .node:hover::after {
+    opacity: 1;
+  }
+  .node.selected {
+    border-color: var(--blaze-white);
+    transform: scale(1.1);
+    z-index: 5;
+  }
+  .node.harmonic-hit {
+    animation: pulseGlow 1.5s ease-in-out infinite;
+  }
+  @keyframes pulseGlow {
+    0%, 100% { filter: brightness(1); }
+    50% { filter: brightness(1.3); }
+  }
+  .node .divisor-count {
+    position: absolute;
+    bottom: 2px;
+    right: 4px;
+    font-size: 8px;
+    opacity: 0.6;
+    font-weight: 400;
+  }
+
+  /* Brightness bar underneath each node */
+  .brightness-bar-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 0;
+    justify-content: flex-start;
+  }
+  .brightness-bar {
+    width: 48px;
+    height: 6px;
+    border-radius: 3px;
+    transition: all 0.3s;
+  }
+
+  /* === INFO PANEL === */
+  .info-panel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 320px;
+    background: var(--bg-surface);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    padding: 16px;
+    font-size: 13px;
+    z-index: 100;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 30px rgba(0,0,0,0.5);
+    transition: opacity 0.3s;
+    opacity: 0;
+    pointer-events: none;
+  }
+  .info-panel.visible {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .info-panel h3 {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+    color: var(--med-cyan);
+    margin-bottom: 8px;
+  }
+  .info-row {
+    display: flex;
+    justify-content: space-between;
+    padding: 4px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+  }
+  .info-row .label { color: var(--text-dim); }
+  .info-row .value { 
+    font-family: 'Orbitron', sans-serif; 
+    font-size: 12px;
+    color: var(--text-primary);
+  }
+  .info-row .value.bright { color: var(--warm-amber); }
+  .info-row .value.prime { color: var(--prime-violet); }
+
+  /* === LEGEND === */
+  .legend {
+    display: flex;
+    gap: 20px;
+    padding: 12px 32px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 11px;
+    color: var(--text-dim);
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .legend-swatch {
+    width: 14px;
+    height: 14px;
+    border-radius: 3px;
+  }
+
+  /* === STATS BAR === */
+  .stats-bar {
+    display: flex;
+    gap: 24px;
+    padding: 12px 32px;
+    background: var(--bg-mid);
+    border-top: 1px solid var(--border-subtle);
+    font-size: 12px;
+  }
+  .stat {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .stat .stat-label { color: var(--text-dim); letter-spacing: 0.5px; }
+  .stat .stat-value { 
+    font-family: 'Orbitron', sans-serif; 
+    font-size: 13px; 
+    color: var(--warm-amber); 
+  }
+
+  /* === TOOLTIP === */
+  .tooltip {
+    position: fixed;
+    background: var(--bg-surface);
+    border: 1px solid var(--med-cyan);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12px;
+    z-index: 1000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+    max-width: 280px;
+  }
+  .tooltip.show { opacity: 1; }
+  .tooltip .tt-num {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 16px;
+    color: var(--med-cyan);
+  }
+  .tooltip .tt-row {
+    margin-top: 4px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+  .tooltip .tt-row strong {
+    color: var(--text-primary);
+  }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Holographic Node Decoder</h1>
+  <div class="subtitle">HARMONIC OVERLAY VISUALIZATION — WP XLII — RESONANCE PHASE INSTRUMENT</div>
+</div>
+
+<div class="controls">
+  <div class="control-group">
+    <label>Range</label>
+    <input type="number" id="rangeMin" value="1" min="1" max="500">
+    <span style="color:var(--text-dim)">–</span>
+    <input type="number" id="rangeMax" value="120" min="2" max="500">
+    <button class="btn" onclick="rebuildGrid()">Apply</button>
+  </div>
+  <div class="control-group">
+    <label>Wave Amp</label>
+    <input type="range" id="waveAmp" min="0" max="100" value="70">
+  </div>
+  <div class="control-group">
+    <button class="btn" id="btnShowWaves" onclick="toggleWaves()">Waves</button>
+    <button class="btn" onclick="clearSelection()">Clear</button>
+    <button class="btn" onclick="selectPrimes()">Primes</button>
+    <button class="btn" onclick="selectHC()">HC Numbers</button>
+  </div>
+  <div class="selected-display">
+    Selected: <span id="selectedList">none</span>
+  </div>
+</div>
+
+<div class="viz-container">
+  <canvas id="waveCanvas"></canvas>
+  <div class="node-grid" id="nodeGrid"></div>
+  <div class="brightness-bar-container" id="barGrid"></div>
+</div>
+
+<div class="stats-bar">
+  <div class="stat">
+    <span class="stat-label">Brightest Node</span>
+    <span class="stat-value" id="statBrightest">—</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Peak Brightness</span>
+    <span class="stat-value" id="statPeak">—</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Avg Brightness</span>
+    <span class="stat-value" id="statAvg">—</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">Primes in Range</span>
+    <span class="stat-value" id="statPrimes">—</span>
+  </div>
+  <div class="stat">
+    <span class="stat-label">HC Numbers</span>
+    <span class="stat-value" id="statHC">—</span>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(123,44,191,0.7)"></div>
+    <span>Prime (d=2)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(42,58,110,0.9)"></div>
+    <span>Dim (d≤3)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(78,205,196,0.8)"></div>
+    <span>Medium (d=4-6)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(244,162,97,0.9)"></div>
+    <span>Bright (d=7-9)</span>
+  </div>
+  <div class="legend-item">
+    <div class="legend-swatch" style="background:rgba(254,250,224,1)"></div>
+    <span>Blaze (d≥10)</span>
+  </div>
+  <div class="legend-item" style="margin-left:auto; color:var(--text-dim)">
+    <span>Click: select | Shift+click: multi-select | Hover: inspect</span>
+  </div>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+// ========== MATH UTILITIES ==========
+
+function getDivisors(n) {
+  const divs = [];
+  for (let i = 1; i <= Math.sqrt(n); i++) {
+    if (n % i === 0) {
+      divs.push(i);
+      if (i !== n / i) divs.push(n / i);
+    }
+  }
+  return divs.sort((a, b) => a - b);
+}
+
+function divisorCount(n) {
+  return getDivisors(n).length;
+}
+
+function isPrime(n) {
+  if (n < 2) return false;
+  if (n < 4) return true;
+  if (n % 2 === 0 || n % 3 === 0) return false;
+  for (let i = 5; i * i <= n; i += 6) {
+    if (n % i === 0 || n % (i + 2) === 0) return false;
+  }
+  return true;
+}
+
+function primeFactorization(n) {
+  if (n <= 1) return '1';
+  const factors = [];
+  let temp = n;
+  for (let p = 2; p * p <= temp; p++) {
+    let exp = 0;
+    while (temp % p === 0) { exp++; temp /= p; }
+    if (exp > 0) factors.push(exp > 1 ? `${p}^${exp}` : `${p}`);
+  }
+  if (temp > 1) factors.push(`${temp}`);
+  return factors.join(' × ');
+}
+
+function isHighlyComposite(n, maxN) {
+  const dc = divisorCount(n);
+  for (let i = 1; i < n; i++) {
+    if (divisorCount(i) >= dc) return false;
+  }
+  return true;
+}
+
+// ========== COLOR MAPPING ==========
+
+function brightnessColor(d, maxD) {
+  const ratio = d / Math.max(maxD, 1);
+  if (isPrime(d) && d > 1) {
+    // Special case: if the NUMBER is prime, not the divisor count
+  }
+  if (d <= 2) {
+    return `rgba(123, 44, 191, ${0.4 + ratio * 0.5})`;
+  } else if (d <= 3) {
+    return `rgba(42, 58, 110, ${0.6 + ratio * 0.3})`;
+  } else if (d <= 6) {
+    const t = (d - 3) / 3;
+    const r = Math.round(42 + t * (78 - 42));
+    const g = Math.round(58 + t * (205 - 58));
+    const b = Math.round(110 + t * (196 - 110));
+    return `rgba(${r}, ${g}, ${b}, ${0.7 + ratio * 0.3})`;
+  } else if (d <= 9) {
+    const t = (d - 6) / 3;
+    const r = Math.round(78 + t * (244 - 78));
+    const g = Math.round(205 + t * (162 - 205));
+    const b = Math.round(196 + t * (97 - 196));
+    return `rgba(${r}, ${g}, ${b}, ${0.8 + ratio * 0.2})`;
+  } else {
+    const t = Math.min((d - 9) / 6, 1);
+    const r = Math.round(244 + t * (254 - 244));
+    const g = Math.round(162 + t * (250 - 162));
+    const b = Math.round(97 + t * (224 - 97));
+    return `rgba(${r}, ${g}, ${b}, 1)`;
+  }
+}
+
+function nodeBackground(n, d, maxD) {
+  const base = brightnessColor(d, maxD);
+  const glowIntensity = Math.min(d / maxD, 1);
+  return base;
+}
+
+function glowShadow(d, maxD) {
+  const intensity = d / Math.max(maxD, 1);
+  if (d <= 2) {
+    return `0 0 ${4 + intensity * 8}px rgba(123, 44, 191, ${intensity * 0.5})`;
+  } else if (d <= 6) {
+    return `0 0 ${6 + intensity * 12}px rgba(78, 205, 196, ${intensity * 0.6})`;
+  } else if (d <= 9) {
+    return `0 0 ${8 + intensity * 16}px rgba(244, 162, 97, ${intensity * 0.7})`;
+  } else {
+    return `0 0 ${10 + intensity * 24}px rgba(254, 250, 224, ${intensity * 0.8}), 0 0 ${20 + intensity * 40}px rgba(244, 162, 97, ${intensity * 0.4})`;
+  }
+}
+
+function barColor(d, maxD) {
+  if (d <= 2) return 'rgba(123, 44, 191, 0.7)';
+  if (d <= 3) return 'rgba(42, 58, 110, 0.8)';
+  if (d <= 6) return 'rgba(78, 205, 196, 0.8)';
+  if (d <= 9) return 'rgba(244, 162, 97, 0.9)';
+  return 'rgba(254, 250, 224, 1)';
+}
+
+// ========== STATE ==========
+
+let rangeMin = 1;
+let rangeMax = 120;
+let selectedNodes = new Set();
+let showWaves = true;
+let nodeData = []; // {n, d, divisors, isPrime, isHC, factorization}
+let maxD = 1;
+
+// ========== BUILD ==========
+
+function computeNodeData() {
+  nodeData = [];
+  maxD = 1;
+  
+  // Pre-compute HC numbers
+  let maxDSoFar = 0;
+  const hcSet = new Set();
+  for (let i = 1; i <= rangeMax; i++) {
+    const d = divisorCount(i);
+    if (d > maxDSoFar) {
+      maxDSoFar = d;
+      hcSet.add(i);
+    }
+  }
+  
+  for (let n = rangeMin; n <= rangeMax; n++) {
+    const divs = getDivisors(n);
+    const d = divs.length;
+    if (d > maxD) maxD = d;
+    nodeData.push({
+      n,
+      d,
+      divisors: divs,
+      isPrime: isPrime(n),
+      isHC: hcSet.has(n),
+      factorization: primeFactorization(n)
+    });
+  }
+}
+
+function rebuildGrid() {
+  rangeMin = Math.max(1, parseInt(document.getElementById('rangeMin').value) || 1);
+  rangeMax = Math.max(rangeMin + 1, parseInt(document.getElementById('rangeMax').value) || 120);
+  document.getElementById('rangeMin').value = rangeMin;
+  document.getElementById('rangeMax').value = rangeMax;
+  selectedNodes.clear();
+  computeNodeData();
+  renderNodes();
+  renderBars();
+  updateStats();
+  updateSelectedDisplay();
+  drawWaves();
+}
+
+function renderNodes() {
+  const grid = document.getElementById('nodeGrid');
+  grid.innerHTML = '';
+  
+  nodeData.forEach(nd => {
+    const el = document.createElement('div');
+    el.className = 'node';
+    el.dataset.n = nd.n;
+    el.textContent = nd.n;
+    
+    el.style.background = nodeBackground(nd.n, nd.d, maxD);
+    el.style.boxShadow = glowShadow(nd.d, maxD);
+    el.style.color = nd.d <= 3 ? 'rgba(255,255,255,0.5)' : nd.d <= 6 ? 'rgba(255,255,255,0.8)' : '#fff';
+    
+    if (nd.isPrime) {
+      el.style.borderColor = 'rgba(123, 44, 191, 0.5)';
+    }
+
+    const dc = document.createElement('span');
+    dc.className = 'divisor-count';
+    dc.textContent = 'd=' + nd.d;
+    el.appendChild(dc);
+    
+    el.addEventListener('click', (e) => handleNodeClick(nd.n, e));
+    el.addEventListener('mouseenter', (e) => showTooltip(nd, e));
+    el.addEventListener('mouseleave', hideTooltip);
+    
+    grid.appendChild(el);
+  });
+}
+
+function renderBars() {
+  const barGrid = document.getElementById('barGrid');
+  barGrid.innerHTML = '';
+  
+  nodeData.forEach(nd => {
+    const bar = document.createElement('div');
+    bar.className = 'brightness-bar';
+    const heightRatio = nd.d / maxD;
+    bar.style.background = barColor(nd.d, maxD);
+    bar.style.opacity = 0.3 + heightRatio * 0.7;
+    bar.style.boxShadow = nd.d > 6 ? `0 0 6px ${barColor(nd.d, maxD)}` : 'none';
+    barGrid.appendChild(bar);
+  });
+}
+
+// ========== INTERACTION ==========
+
+function handleNodeClick(n, e) {
+  if (e.shiftKey) {
+    if (selectedNodes.has(n)) selectedNodes.delete(n);
+    else selectedNodes.add(n);
+  } else {
+    if (selectedNodes.has(n) && selectedNodes.size === 1) {
+      selectedNodes.clear();
+    } else {
+      selectedNodes.clear();
+      selectedNodes.add(n);
+    }
+  }
+  updateHighlights();
+  updateSelectedDisplay();
+  drawWaves();
+}
+
+function clearSelection() {
+  selectedNodes.clear();
+  updateHighlights();
+  updateSelectedDisplay();
+  drawWaves();
+}
+
+function selectPrimes() {
+  selectedNodes.clear();
+  nodeData.forEach(nd => { if (nd.isPrime) selectedNodes.add(nd.n); });
+  updateHighlights();
+  updateSelectedDisplay();
+  drawWaves();
+}
+
+function selectHC() {
+  selectedNodes.clear();
+  nodeData.forEach(nd => { if (nd.isHC) selectedNodes.add(nd.n); });
+  updateHighlights();
+  updateSelectedDisplay();
+  drawWaves();
+}
+
+function toggleWaves() {
+  showWaves = !showWaves;
+  document.getElementById('btnShowWaves').classList.toggle('active', showWaves);
+  drawWaves();
+}
+
+function updateHighlights() {
+  // Determine which positions are "hit" by selected harmonics
+  const hitCounts = {};
+  selectedNodes.forEach(selN => {
+    for (let mult = 1; mult * selN <= rangeMax; mult++) {
+      const pos = mult * selN;
+      if (pos >= rangeMin) {
+        hitCounts[pos] = (hitCounts[pos] || 0) + 1;
+      }
+    }
+    // Also mark the node itself
+    if (selN >= rangeMin && selN <= rangeMax) {
+      hitCounts[selN] = (hitCounts[selN] || 0);
+    }
+  });
+
+  const maxHit = Math.max(1, ...Object.values(hitCounts));
+
+  document.querySelectorAll('.node').forEach(el => {
+    const n = parseInt(el.dataset.n);
+    const nd = nodeData.find(d => d.n === n);
+    
+    el.classList.remove('selected', 'harmonic-hit');
+    
+    if (selectedNodes.has(n)) {
+      el.classList.add('selected');
+    }
+    
+    if (selectedNodes.size > 0) {
+      const hits = hitCounts[n] || 0;
+      if (hits > 0) {
+        el.classList.add('harmonic-hit');
+        const hitIntensity = hits / maxHit;
+        el.style.background = nodeBackground(n, nd.d + hits * 2, maxD + maxHit * 2);
+        el.style.boxShadow = `0 0 ${8 + hitIntensity * 30}px rgba(254, 250, 224, ${hitIntensity * 0.8}), ${glowShadow(nd.d, maxD)}`;
+        el.style.borderColor = `rgba(254, 250, 224, ${0.3 + hitIntensity * 0.7})`;
+      } else {
+        el.style.opacity = '0.25';
+        el.style.background = nodeBackground(n, nd.d, maxD);
+        el.style.boxShadow = 'none';
+        el.style.borderColor = 'transparent';
+      }
+    } else {
+      el.style.opacity = '1';
+      el.style.background = nodeBackground(n, nd.d, maxD);
+      el.style.boxShadow = glowShadow(nd.d, maxD);
+      el.style.borderColor = nd.isPrime ? 'rgba(123, 44, 191, 0.5)' : 'transparent';
+    }
+  });
+}
+
+function updateSelectedDisplay() {
+  const el = document.getElementById('selectedList');
+  if (selectedNodes.size === 0) {
+    el.textContent = 'none';
+  } else {
+    const sorted = [...selectedNodes].sort((a, b) => a - b);
+    el.textContent = sorted.length > 8 ? sorted.slice(0, 8).join(', ') + ` +${sorted.length - 8}` : sorted.join(', ');
+  }
+}
+
+function updateStats() {
+  let brightest = nodeData[0];
+  let totalD = 0;
+  let primeCount = 0;
+  let hcCount = 0;
+  
+  nodeData.forEach(nd => {
+    if (nd.d > brightest.d) brightest = nd;
+    totalD += nd.d;
+    if (nd.isPrime) primeCount++;
+    if (nd.isHC) hcCount++;
+  });
+  
+  document.getElementById('statBrightest').textContent = brightest.n;
+  document.getElementById('statPeak').textContent = 'd=' + brightest.d;
+  document.getElementById('statAvg').textContent = (totalD / nodeData.length).toFixed(1);
+  document.getElementById('statPrimes').textContent = primeCount;
+  document.getElementById('statHC').textContent = hcCount;
+}
+
+// ========== WAVE CANVAS ==========
+
+function drawWaves() {
+  const canvas = document.getElementById('waveCanvas');
+  const rect = canvas.parentElement.getBoundingClientRect();
+  canvas.width = rect.width;
+  canvas.height = 200;
+  
+  const ctx = canvas.getContext('2d');
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  
+  if (!showWaves || selectedNodes.size === 0) {
+    // Draw baseline
+    ctx.strokeStyle = 'rgba(78, 205, 196, 0.1)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(0, canvas.height / 2);
+    ctx.lineTo(canvas.width, canvas.height / 2);
+    ctx.stroke();
+    
+    // Draw subtle divisor-based landscape if no selection
+    if (selectedNodes.size === 0) {
+      drawDivisorLandscape(ctx, canvas);
+    }
+    return;
+  }
+  
+  const amp = parseInt(document.getElementById('waveAmp').value) / 100;
+  const midY = canvas.height / 2;
+  const range = rangeMax - rangeMin;
+  const pxPerUnit = canvas.width / range;
+  
+  // Draw individual waves
+  const waveColors = [
+    'rgba(78, 205, 196, 0.3)',
+    'rgba(244, 162, 97, 0.3)',
+    'rgba(123, 44, 191, 0.3)',
+    'rgba(254, 250, 224, 0.3)',
+    'rgba(231, 111, 81, 0.3)',
+    'rgba(42, 157, 143, 0.3)',
+  ];
+  
+  let colorIdx = 0;
+  selectedNodes.forEach(selN => {
+    const color = waveColors[colorIdx % waveColors.length];
+    colorIdx++;
+    
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    
+    for (let px = 0; px < canvas.width; px++) {
+      const x = rangeMin + (px / canvas.width) * range;
+      const y = midY + Math.sin(2 * Math.PI * x / selN) * midY * 0.8 * amp;
+      if (px === 0) ctx.moveTo(px, y);
+      else ctx.lineTo(px, y);
+    }
+    ctx.stroke();
+  });
+  
+  // Draw composite wave (sum)
+  ctx.strokeStyle = 'rgba(254, 250, 224, 0.8)';
+  ctx.lineWidth = 2;
+  ctx.shadowColor = 'rgba(254, 250, 224, 0.4)';
+  ctx.shadowBlur = 8;
+  ctx.beginPath();
+  
+  const selArr = [...selectedNodes];
+  for (let px = 0; px < canvas.width; px++) {
+    const x = rangeMin + (px / canvas.width) * range;
+    let sum = 0;
+    selArr.forEach(selN => {
+      sum += Math.sin(2 * Math.PI * x / selN);
+    });
+    sum /= selArr.length; // normalize
+    const y = midY + sum * midY * 0.8 * amp;
+    if (px === 0) ctx.moveTo(px, y);
+    else ctx.lineTo(px, y);
+  }
+  ctx.stroke();
+  ctx.shadowBlur = 0;
+  
+  // Draw convergence markers (bright vertical lines at harmonic hits)
+  const hitCounts = {};
+  selectedNodes.forEach(selN => {
+    for (let mult = 1; mult * selN <= rangeMax; mult++) {
+      const pos = mult * selN;
+      if (pos >= rangeMin) {
+        hitCounts[pos] = (hitCounts[pos] || 0) + 1;
+      }
+    }
+  });
+  
+  const maxHit = Math.max(1, ...Object.values(hitCounts));
+  Object.entries(hitCounts).forEach(([pos, count]) => {
+    const px = ((pos - rangeMin) / range) * canvas.width;
+    const intensity = count / maxHit;
+    
+    const grad = ctx.createLinearGradient(px, 0, px, canvas.height);
+    grad.addColorStop(0, `rgba(254, 250, 224, 0)`);
+    grad.addColorStop(0.3, `rgba(254, 250, 224, ${intensity * 0.4})`);
+    grad.addColorStop(0.5, `rgba(254, 250, 224, ${intensity * 0.7})`);
+    grad.addColorStop(0.7, `rgba(254, 250, 224, ${intensity * 0.4})`);
+    grad.addColorStop(1, `rgba(254, 250, 224, 0)`);
+    
+    ctx.fillStyle = grad;
+    ctx.fillRect(px - 1, 0, 3, canvas.height);
+  });
+}
+
+function drawDivisorLandscape(ctx, canvas) {
+  const midY = canvas.height * 0.8;
+  const range = rangeMax - rangeMin;
+  
+  // Draw brightness landscape as filled area
+  ctx.beginPath();
+  ctx.moveTo(0, midY);
+  
+  nodeData.forEach((nd, i) => {
+    const px = (i / nodeData.length) * canvas.width;
+    const height = (nd.d / maxD) * canvas.height * 0.65;
+    ctx.lineTo(px, midY - height);
+  });
+  
+  ctx.lineTo(canvas.width, midY);
+  ctx.closePath();
+  
+  const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  grad.addColorStop(0, 'rgba(78, 205, 196, 0.15)');
+  grad.addColorStop(0.5, 'rgba(244, 162, 97, 0.08)');
+  grad.addColorStop(1, 'rgba(123, 44, 191, 0.02)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+  
+  // Draw peak markers for HC numbers
+  nodeData.forEach((nd, i) => {
+    if (nd.isHC) {
+      const px = (i / nodeData.length) * canvas.width;
+      const height = (nd.d / maxD) * canvas.height * 0.65;
+      
+      ctx.fillStyle = 'rgba(254, 250, 224, 0.6)';
+      ctx.beginPath();
+      ctx.arc(px, midY - height, 3, 0, Math.PI * 2);
+      ctx.fill();
+      
+      ctx.fillStyle = 'rgba(254, 250, 224, 0.4)';
+      ctx.font = '9px Orbitron';
+      ctx.textAlign = 'center';
+      ctx.fillText(nd.n, px, midY - height - 8);
+    }
+  });
+}
+
+// ========== TOOLTIP ==========
+
+function showTooltip(nd, e) {
+  const tt = document.getElementById('tooltip');
+  
+  let html = `<div class="tt-num">${nd.n}</div>`;
+  html += `<div class="tt-row"><strong>Brightness:</strong> d = ${nd.d}</div>`;
+  html += `<div class="tt-row"><strong>Factorization:</strong> ${nd.factorization}</div>`;
+  html += `<div class="tt-row"><strong>Divisors:</strong> {${nd.divisors.join(', ')}}</div>`;
+  if (nd.isPrime) html += `<div class="tt-row" style="color:#7b2cbf"><strong>★ PRIME</strong> — harmonically isolated</div>`;
+  if (nd.isHC) html += `<div class="tt-row" style="color:#fefae0"><strong>◆ HIGHLY COMPOSITE</strong> — maximum convergence</div>`;
+  
+  // Show which selected nodes hit this position
+  if (selectedNodes.size > 0) {
+    const hitters = [...selectedNodes].filter(s => nd.n % s === 0).sort((a,b) => a - b);
+    if (hitters.length > 0) {
+      html += `<div class="tt-row" style="color:#4ecdc4"><strong>Hit by:</strong> {${hitters.join(', ')}} (${hitters.length} series)</div>`;
+    }
+  }
+  
+  tt.innerHTML = html;
+  tt.classList.add('show');
+  
+  const rect = tt.getBoundingClientRect();
+  let x = e.clientX + 16;
+  let y = e.clientY - 10;
+  if (x + rect.width > window.innerWidth) x = e.clientX - rect.width - 16;
+  if (y + rect.height > window.innerHeight) y = window.innerHeight - rect.height - 10;
+  
+  tt.style.left = x + 'px';
+  tt.style.top = y + 'px';
+}
+
+function hideTooltip() {
+  document.getElementById('tooltip').classList.remove('show');
+}
+
+// ========== RESIZE ==========
+
+window.addEventListener('resize', () => {
+  drawWaves();
+});
+
+// ========== INIT ==========
+
+computeNodeData();
+renderNodes();
+renderBars();
+updateStats();
+document.getElementById('btnShowWaves').classList.add('active');
+drawWaves();
+
+document.getElementById('waveAmp').addEventListener('input', drawWaves);
+
+</script>
+</body>
+</html>

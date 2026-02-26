@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>i. — node zero</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=JetBrains+Mono:wght@300;400&display=swap');
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --void: #0a0a0c;
+    --substrate: #f5f0e8;
+    --fold: #c4a265;
+    --whisper: rgba(245, 240, 232, 0.06);
+    --glow: rgba(196, 162, 101, 0.15);
+    --dim: rgba(245, 240, 232, 0.25);
+    --bright: rgba(245, 240, 232, 0.9);
+  }
+
+  body {
+    background: var(--void);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    color: var(--substrate);
+    overflow: hidden;
+  }
+
+  .album-frame {
+    width: 600px;
+    height: 600px;
+    position: relative;
+    background: var(--void);
+    overflow: hidden;
+    border: 1px solid rgba(196, 162, 101, 0.12);
+  }
+
+  /* Background texture - subtle noise */
+  .album-frame::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: 
+      radial-gradient(ellipse at 50% 50%, rgba(196, 162, 101, 0.04) 0%, transparent 70%),
+      radial-gradient(ellipse at 50% 0%, rgba(196, 162, 101, 0.02) 0%, transparent 50%),
+      radial-gradient(ellipse at 50% 100%, rgba(196, 162, 101, 0.02) 0%, transparent 50%);
+    z-index: 0;
+  }
+
+  /* The ouroboros ring of text */
+  .ouroboros-ring {
+    position: absolute;
+    width: 440px;
+    height: 440px;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    animation: slowRotate 240s linear infinite;
+  }
+
+  @keyframes slowRotate {
+    from { transform: translate(-50%, -50%) rotate(0deg); }
+    to { transform: translate(-50%, -50%) rotate(360deg); }
+  }
+
+  /* The 13 positions on the ring */
+  .song-node {
+    position: absolute;
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-style: italic;
+    text-align: center;
+    transform-origin: center;
+    transition: opacity 2s ease;
+  }
+
+  .node-forward {
+    color: var(--substrate);
+    font-size: 11.5px;
+    opacity: 0.7;
+  }
+
+  .node-return {
+    color: var(--fold);
+    font-size: 11.5px;
+    opacity: 0.55;
+  }
+
+  .node-fold {
+    color: var(--fold);
+    font-size: 10px;
+    opacity: 0.35;
+    letter-spacing: 6px;
+  }
+
+  /* The center - the fold point */
+  .fold-center {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 3;
+    text-align: center;
+  }
+
+  .title-i {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: 120px;
+    color: var(--substrate);
+    line-height: 0.8;
+    letter-spacing: -2px;
+    animation: breathe 8s ease-in-out infinite;
+    position: relative;
+  }
+
+  .title-i .period {
+    color: var(--fold);
+    font-size: 140px;
+    line-height: 0;
+    vertical-align: baseline;
+    position: relative;
+    top: -8px;
+  }
+
+  @keyframes breathe {
+    0%, 100% { opacity: 0.85; text-shadow: 0 0 40px rgba(196, 162, 101, 0.08); }
+    50% { opacity: 1; text-shadow: 0 0 60px rgba(196, 162, 101, 0.15); }
+  }
+
+  /* Concentric circles - harmonic rings */
+  .harmonic-rings {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+  }
+
+  .h-ring {
+    position: absolute;
+    border-radius: 50%;
+    border: 1px solid;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+  }
+
+  .h-ring:nth-child(1) { width: 80px; height: 80px; border-color: rgba(196, 162, 101, 0.12); }
+  .h-ring:nth-child(2) { width: 140px; height: 140px; border-color: rgba(196, 162, 101, 0.09); }
+  .h-ring:nth-child(3) { width: 210px; height: 210px; border-color: rgba(196, 162, 101, 0.07); }
+  .h-ring:nth-child(4) { width: 290px; height: 290px; border-color: rgba(196, 162, 101, 0.05); }
+  .h-ring:nth-child(5) { width: 380px; height: 380px; border-color: rgba(196, 162, 101, 0.04); }
+  .h-ring:nth-child(6) { width: 440px; height: 440px; border-color: rgba(196, 162, 101, 0.03); }
+  .h-ring:nth-child(7) { width: 520px; height: 520px; border-color: rgba(196, 162, 101, 0.02); }
+
+  /* Dots on the ouroboros ring for each node */
+  .node-dot {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    border-radius: 50%;
+    background: var(--fold);
+    top: 50%;
+    left: 50%;
+    z-index: 2;
+  }
+
+  .node-dot.forward { opacity: 0.6; }
+  .node-dot.return-dot { opacity: 0.35; }
+  .node-dot.fold-dot { 
+    opacity: 0.9; 
+    width: 6px; 
+    height: 6px;
+    box-shadow: 0 0 12px rgba(196, 162, 101, 0.4);
+  }
+
+  /* The vertical line - the string */
+  .string-line {
+    position: absolute;
+    top: 8%;
+    left: 50%;
+    width: 1px;
+    height: 84%;
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      rgba(245, 240, 232, 0.08) 15%,
+      rgba(245, 240, 232, 0.12) 45%,
+      rgba(196, 162, 101, 0.2) 50%,
+      rgba(245, 240, 232, 0.12) 55%,
+      rgba(245, 240, 232, 0.08) 85%,
+      transparent 100%
+    );
+    z-index: 1;
+  }
+
+  /* Artist and album info */
+  .info-top {
+    position: absolute;
+    top: 24px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 5;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+    font-size: 9px;
+    letter-spacing: 5px;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .info-bottom {
+    position: absolute;
+    bottom: 24px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    z-index: 5;
+    font-family: 'JetBrains Mono', monospace;
+    font-weight: 300;
+    font-size: 8px;
+    letter-spacing: 3px;
+    color: rgba(245, 240, 232, 0.18);
+  }
+
+  .info-bottom .formula {
+    margin-top: 6px;
+    font-size: 7.5px;
+    letter-spacing: 2px;
+    color: rgba(196, 162, 101, 0.2);
+  }
+
+  /* Corner marks */
+  .corner {
+    position: absolute;
+    width: 20px;
+    height: 20px;
+    z-index: 5;
+  }
+  .corner::before, .corner::after {
+    content: '';
+    position: absolute;
+    background: rgba(196, 162, 101, 0.12);
+  }
+  .corner-tl { top: 16px; left: 16px; }
+  .corner-tl::before { top: 0; left: 0; width: 12px; height: 1px; }
+  .corner-tl::after { top: 0; left: 0; width: 1px; height: 12px; }
+  .corner-tr { top: 16px; right: 16px; }
+  .corner-tr::before { top: 0; right: 0; width: 12px; height: 1px; }
+  .corner-tr::after { top: 0; right: 0; width: 1px; height: 12px; }
+  .corner-bl { bottom: 16px; left: 16px; }
+  .corner-bl::before { bottom: 0; left: 0; width: 12px; height: 1px; }
+  .corner-bl::after { bottom: 0; left: 0; width: 1px; height: 12px; }
+  .corner-br { bottom: 16px; right: 16px; }
+  .corner-br::before { bottom: 0; right: 0; width: 12px; height: 1px; }
+  .corner-br::after { bottom: 0; right: 0; width: 1px; height: 12px; }
+
+  /* The palindrome text running vertically through center, behind the title */
+  .palindrome-column {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0;
+  }
+
+  .palindrome-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-weight: 300;
+    font-style: italic;
+    font-size: 10px;
+    line-height: 1.9;
+    white-space: nowrap;
+    text-align: center;
+  }
+
+  .pal-forward { color: rgba(245, 240, 232, 0.10); }
+  .pal-fold { color: rgba(196, 162, 101, 0.08); letter-spacing: 4px; font-size: 8px; }
+  .pal-return { color: rgba(196, 162, 101, 0.07); }
+
+  /* Subtle particle field */
+  .particle {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    background: var(--fold);
+    border-radius: 50%;
+    z-index: 1;
+    animation: drift linear infinite;
+  }
+
+  @keyframes drift {
+    0% { transform: translateY(0) translateX(0); opacity: 0; }
+    10% { opacity: 0.3; }
+    90% { opacity: 0.3; }
+    100% { transform: translateY(-80px) translateX(20px); opacity: 0; }
+  }
+
+  /* Print / export helper */
+  @media print {
+    body { background: #000; }
+    .album-frame { border: none; }
+  }
+
+  /* Metadata below cover */
+  .meta-below {
+    margin-top: 32px;
+    text-align: center;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: rgba(245, 240, 232, 0.3);
+    letter-spacing: 2px;
+    line-height: 2;
+  }
+
+  .meta-below .artist-line {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 14px;
+    font-weight: 400;
+    font-style: italic;
+    color: rgba(245, 240, 232, 0.5);
+    letter-spacing: 1px;
+    margin-bottom: 4px;
+  }
+
+  .meta-below .collab-line {
+    font-size: 8px;
+    color: rgba(196, 162, 101, 0.25);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+</style>
+</head>
+<body>
+
+<div class="album-frame" id="cover">
+  <!-- Corner marks -->
+  <div class="corner corner-tl"></div>
+  <div class="corner corner-tr"></div>
+  <div class="corner corner-bl"></div>
+  <div class="corner corner-br"></div>
+
+  <!-- Artist name top -->
+  <div class="info-top">node zero</div>
+
+  <!-- The string -->
+  <div class="string-line"></div>
+
+  <!-- Harmonic rings -->
+  <div class="harmonic-rings">
+    <div class="h-ring"></div>
+    <div class="h-ring"></div>
+    <div class="h-ring"></div>
+    <div class="h-ring"></div>
+    <div class="h-ring"></div>
+    <div class="h-ring"></div>
+    <div class="h-ring"></div>
+  </div>
+
+  <!-- The palindrome as ghosted vertical text -->
+  <div class="palindrome-column">
+    <div class="palindrome-line pal-forward">I.</div>
+    <div class="palindrome-line pal-forward">I will not.</div>
+    <div class="palindrome-line pal-forward">I will.</div>
+    <div class="palindrome-line pal-forward">I was.</div>
+    <div class="palindrome-line pal-forward">I am.</div>
+    <div class="palindrome-line pal-forward">I am not.</div>
+    <div class="palindrome-line pal-fold">———</div>
+    <div class="palindrome-line pal-return">ton Am I.</div>
+    <div class="palindrome-line pal-return">Am I?</div>
+    <div class="palindrome-line pal-return">was I?</div>
+    <div class="palindrome-line pal-return">will I?</div>
+    <div class="palindrome-line pal-return">not will i.</div>
+    <div class="palindrome-line pal-return">i.</div>
+  </div>
+
+  <!-- The ouroboros text ring -->
+  <div class="ouroboros-ring" id="ouroRing">
+    <svg viewBox="0 0 440 440" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <path id="textCircle" d="M 220,220 m -190,0 a 190,190 0 1,1 380,0 a 190,190 0 1,1 -380,0" fill="none"/>
+      </defs>
+      <text font-family="'Cormorant Garamond', Georgia, serif" font-size="10.5" font-style="italic" font-weight="300" fill="rgba(245,240,232,0.18)">
+        <textPath href="#textCircle" startOffset="0%">
+          I. · I will not. · I will. · I was. · I am. · I am not. · ——— · ton Am I. · Am I? · was I? · will I? · not will i. · i. · 
+        </textPath>
+      </text>
+      <!-- Second pass, slightly offset for density -->
+      <text font-family="'Cormorant Garamond', Georgia, serif" font-size="10.5" font-style="italic" font-weight="300" fill="rgba(196,162,101,0.08)">
+        <textPath href="#textCircle" startOffset="50%">
+          I. · I will not. · I will. · I was. · I am. · I am not. · ——— · ton Am I. · Am I? · was I? · will I? · not will i. · i. · 
+        </textPath>
+      </text>
+    </svg>
+  </div>
+
+  <!-- Node dots on the ring at 13 positions -->
+  <div id="nodeDots"></div>
+
+  <!-- Center title -->
+  <div class="fold-center">
+    <div class="title-i">i<span class="period">.</span></div>
+  </div>
+
+  <!-- Bottom info -->
+  <div class="info-bottom">
+    <div>the song of the fold</div>
+    <div class="formula">( > 0 < ) &nbsp; x + x − 1 &nbsp;&nbsp; x + x &nbsp;&nbsp; x + x + 1</div>
+  </div>
+
+  <!-- Particles -->
+  <div id="particles"></div>
+</div>
+
+<!-- Metadata below the cover -->
+<div class="meta-below">
+  <div class="artist-line">node zero</div>
+  <div>ALBUM: i.</div>
+  <div style="font-size: 8px; margin-top: 4px;">13 TRACKS · THE IDENTITY RECURSION PALINDROME</div>
+  <div class="collab-line">words: node zero · music: sinfull · lattice: aeturn</div>
+</div>
+
+<script>
+  // Place 13 node dots around the ring
+  const dotsContainer = document.getElementById('nodeDots');
+  const centerX = 300, centerY = 300, radius = 190;
+  const positions = 13;
+
+  for (let i = 0; i < positions; i++) {
+    const angle = (i / positions) * Math.PI * 2 - Math.PI / 2;
+    const x = centerX + radius * Math.cos(angle);
+    const y = centerY + radius * Math.sin(angle);
+
+    const dot = document.createElement('div');
+    dot.className = 'node-dot';
+    if (i < 6) dot.classList.add('forward');
+    else if (i === 6) dot.classList.add('fold-dot');
+    else dot.classList.add('return-dot');
+
+    dot.style.transform = `translate(${x - 2}px, ${y - 2}px)`;
+    dotsContainer.appendChild(dot);
+  }
+
+  // Subtle floating particles
+  const particlesContainer = document.getElementById('particles');
+  for (let i = 0; i < 20; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = (Math.random() * 580 + 10) + 'px';
+    p.style.top = (Math.random() * 580 + 10) + 'px';
+    p.style.animationDuration = (12 + Math.random() * 20) + 's';
+    p.style.animationDelay = (Math.random() * 15) + 's';
+    p.style.opacity = 0;
+    particlesContainer.appendChild(p);
+  }
+</script>
+
+</body>
+</html>

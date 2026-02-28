@@ -1,0 +1,1220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Operand Observatory</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+
+  :root {
+    --void: #06060c;
+    --deep: #0c0c18;
+    --surface: #12122a;
+    --border: #1e1e40;
+    --muted: #4a4a7a;
+    --text: #c8c8e8;
+    --bright: #e8e8ff;
+    --mitosis: #4a9eff;
+    --mitosis-glow: #4a9eff44;
+    --stable: #50e890;
+    --stable-glow: #50e89044;
+    --growth: #ffaa40;
+    --growth-glow: #ffaa4044;
+    --accent: #ff6088;
+    --accent-glow: #ff608833;
+    --seed: #ffffff;
+    --yhvh-y: #ffd700;
+    --yhvh-h: #ff6088;
+    --yhvh-v: #4ae8ff;
+    --family: #50e890;
+    --font-mono: 'JetBrains Mono', monospace;
+    --font-serif: 'Cormorant Garamond', serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: var(--void); color: var(--text); font-family: var(--font-mono); font-size: 13px; overflow: hidden; height: 100vh; width: 100vw; }
+
+  .app { display: grid; grid-template-columns: 330px 1fr; grid-template-rows: 52px 1fr 180px; height: 100vh; width: 100vw; }
+
+  /* HEADER */
+  .header { grid-column: 1 / -1; background: var(--deep); border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; padding: 0 20px; z-index: 10; }
+  .header h1 { font-family: var(--font-serif); font-size: 20px; font-weight: 400; color: var(--bright); letter-spacing: 2px; }
+  .header h1 span { color: var(--growth); }
+  .header-controls { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+  .mode-btn { background: transparent; border: 1px solid var(--border); color: var(--muted); font-family: var(--font-mono); font-size: 10px; padding: 5px 10px; cursor: pointer; border-radius: 3px; transition: all 0.2s; letter-spacing: 0.5px; text-transform: uppercase; white-space: nowrap; }
+  .mode-btn:hover { border-color: var(--muted); color: var(--text); }
+  .mode-btn.active { border-color: var(--growth); color: var(--growth); background: var(--growth-glow); }
+
+  /* SIDEBAR */
+  .sidebar { background: var(--deep); border-right: 1px solid var(--border); padding: 14px; overflow-y: auto; grid-row: 2 / 4; }
+  .sidebar::-webkit-scrollbar { width: 4px; }
+  .sidebar::-webkit-scrollbar-track { background: var(--deep); }
+  .sidebar::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+  .panel { margin-bottom: 16px; }
+  .panel-title { font-family: var(--font-serif); font-size: 14px; color: var(--bright); margin-bottom: 8px; letter-spacing: 1px; display: flex; align-items: center; gap: 7px; }
+  .panel-title .dot { width: 6px; height: 6px; border-radius: 50%; display: inline-block; flex-shrink: 0; }
+
+  .seed-row { display: flex; gap: 6px; margin-bottom: 10px; }
+  .seed-input { flex: 1; background: var(--surface); border: 1px solid var(--border); color: var(--bright); font-family: var(--font-mono); font-size: 15px; padding: 7px 10px; border-radius: 3px; outline: none; text-align: center; min-width: 0; }
+  .seed-input:focus { border-color: var(--growth); }
+
+  .btn { background: var(--surface); border: 1px solid var(--border); color: var(--text); font-family: var(--font-mono); font-size: 10px; padding: 7px 12px; cursor: pointer; border-radius: 3px; transition: all 0.2s; white-space: nowrap; }
+  .btn:hover { border-color: var(--muted); background: var(--border); }
+  .btn.active { border-color: var(--growth); color: var(--growth); }
+
+  .operand-btns { display: flex; gap: 5px; margin-bottom: 10px; }
+  .op-btn { flex: 1; padding: 8px 4px; text-align: center; background: var(--surface); border: 1px solid var(--border); border-radius: 3px; cursor: pointer; transition: all 0.25s; font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.5px; text-transform: uppercase; }
+  .op-btn .op-formula { font-size: 12px; font-weight: 600; margin-bottom: 1px; display: block; }
+  .op-btn.mitosis { color: var(--mitosis); border-color: #1a3a66; }
+  .op-btn.mitosis:hover { background: var(--mitosis-glow); border-color: var(--mitosis); }
+  .op-btn.stable { color: var(--stable); border-color: #1a4a2a; }
+  .op-btn.stable:hover { background: var(--stable-glow); border-color: var(--stable); }
+  .op-btn.growth { color: var(--growth); border-color: #4a3a1a; }
+  .op-btn.growth:hover { background: var(--growth-glow); border-color: var(--growth); }
+  .op-btn.all-three { color: var(--bright); border-color: var(--muted); }
+  .op-btn.all-three:hover { background: #ffffff11; border-color: var(--bright); }
+
+  .result-display { background: var(--surface); border: 1px solid var(--border); border-radius: 4px; padding: 10px; margin-bottom: 10px; }
+  .result-triple { display: flex; justify-content: center; align-items: center; gap: 12px; font-size: 18px; font-weight: 600; padding: 6px 0; }
+  .result-triple .val { padding: 3px 10px; border-radius: 3px; border: 1px solid; min-width: 50px; text-align: center; }
+  .result-triple .val.m { color: var(--mitosis); border-color: #1a3a66; background: var(--mitosis-glow); }
+  .result-triple .val.s { color: var(--stable); border-color: #1a4a2a; background: var(--stable-glow); }
+  .result-triple .val.g { color: var(--growth); border-color: #4a3a1a; background: var(--growth-glow); }
+  .result-label { font-size: 8px; text-transform: uppercase; letter-spacing: 1.5px; color: var(--muted); text-align: center; margin-top: 3px; }
+
+  .depth-control { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+  .depth-control label { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); white-space: nowrap; }
+  .depth-control input[type="range"] { flex: 1; -webkit-appearance: none; background: var(--border); height: 3px; border-radius: 2px; outline: none; }
+  .depth-control input[type="range"]::-webkit-slider-thumb { -webkit-appearance: none; width: 12px; height: 12px; background: var(--growth); border-radius: 50%; cursor: pointer; }
+  .depth-val { color: var(--bright); font-weight: 600; min-width: 20px; text-align: center; font-size: 12px; }
+
+  .util-row { display: flex; gap: 5px; margin-bottom: 10px; }
+  .util-row .btn { flex: 1; text-align: center; font-size: 9px; }
+
+  .help-text { font-size: 10px; color: var(--muted); line-height: 1.6; margin-top: 6px; }
+  .help-text kbd { background: var(--surface); border: 1px solid var(--border); padding: 1px 4px; border-radius: 2px; font-size: 9px; color: var(--text); }
+
+  /* CANVAS */
+  .canvas-wrap { position: relative; overflow: hidden; background: var(--void); }
+  #mainCanvas { display: block; width: 100%; height: 100%; }
+  .canvas-info { position: absolute; bottom: 10px; right: 14px; font-size: 9px; color: var(--muted); letter-spacing: 0.5px; pointer-events: none; text-align: right; line-height: 1.5; }
+  .canvas-crosshair { position: absolute; top: 10px; left: 14px; font-size: 11px; color: var(--text); pointer-events: none; font-weight: 500; }
+  .zoom-controls { position: absolute; top: 10px; right: 14px; display: flex; flex-direction: column; gap: 3px; }
+  .zoom-btn { width: 28px; height: 28px; background: var(--surface); border: 1px solid var(--border); color: var(--text); font-size: 14px; display: flex; align-items: center; justify-content: center; cursor: pointer; border-radius: 3px; transition: all 0.2s; font-family: var(--font-mono); }
+  .zoom-btn:hover { background: var(--border); border-color: var(--muted); }
+
+  /* BOTTOM PANEL */
+  .bottom-panel { background: var(--deep); border-top: 1px solid var(--border); padding: 10px 16px; overflow: auto; display: flex; flex-direction: column; }
+  .bottom-panel-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .bottom-panel-title { font-family: var(--font-serif); font-size: 13px; color: var(--bright); letter-spacing: 1px; }
+  .legend { display: flex; gap: 12px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 9px; color: var(--muted); }
+  .legend-swatch { width: 10px; height: 3px; border-radius: 1px; }
+  .trail-list { display: flex; flex-wrap: wrap; gap: 3px; flex: 1; align-content: flex-start; overflow-y: auto; }
+  .trail-node { padding: 3px 8px; border-radius: 3px; font-size: 12px; font-weight: 600; border: 1px solid; transition: all 0.2s; cursor: pointer; }
+  .trail-node:hover { transform: translateY(-1px); }
+  .trail-node.seed-node { color: var(--seed); border-color: #555; background: #ffffff11; }
+  .trail-node.m-node { color: var(--mitosis); border-color: #1a3a66; background: var(--mitosis-glow); }
+  .trail-node.s-node { color: var(--stable); border-color: #1a4a2a; background: var(--stable-glow); }
+  .trail-node.g-node { color: var(--growth); border-color: #4a3a1a; background: var(--growth-glow); }
+  .trail-arrow { color: var(--muted); font-size: 9px; display: flex; align-items: center; padding: 0 1px; }
+
+  .panel-section { display: none; }
+  .panel-section.visible { display: block; }
+
+  /* Fold table */
+  .fold-table { width: 100%; border-collapse: collapse; font-size: 11px; }
+  .fold-table th { font-size: 8px; text-transform: uppercase; letter-spacing: 1px; padding: 5px 3px; border-bottom: 1px solid var(--border); }
+  .fold-table th.m-col { color: var(--mitosis); }
+  .fold-table th.s-col { color: var(--stable); }
+  .fold-table th.g-col { color: var(--growth); }
+  .fold-table td { text-align: center; padding: 4px 3px; border-bottom: 1px solid #0e0e20; font-weight: 500; font-size: 11px; }
+  .fold-table td.m-val { color: var(--mitosis); }
+  .fold-table td.s-val { color: var(--stable); }
+  .fold-table td.g-val { color: var(--growth); }
+  .fold-table td.fold-n { color: var(--muted); font-size: 10px; }
+  .fold-table tr:hover td { background: #ffffff06; }
+  .fold-table tr.highlight td { background: #ffaa4012; }
+
+  /* Lattice */
+  .lattice-grid { display: grid; grid-template-columns: 50px repeat(3, 1fr); gap: 2px; margin-top: 8px; }
+  .lattice-header { font-size: 8px; text-transform: uppercase; letter-spacing: 1px; text-align: center; padding: 5px 2px; }
+  .lattice-cell { text-align: center; padding: 8px 3px; border-radius: 3px; font-weight: 600; font-size: 13px; background: var(--surface); border: 1px solid var(--border); transition: all 0.3s; cursor: pointer; }
+  .lattice-cell:hover { transform: scale(1.05); }
+  .lattice-cell.diag { border-color: var(--accent); background: var(--accent-glow); }
+  .lattice-row-label { font-size: 11px; display: flex; align-items: center; justify-content: center; color: var(--muted); font-weight: 500; }
+
+  /* YHVH specific */
+  .yhvh-val-row { display: flex; gap: 4px; margin-bottom: 10px; }
+  .yhvh-input { width: 56px; background: var(--surface); border: 1px solid var(--border); color: var(--bright); font-family: var(--font-mono); font-size: 14px; padding: 6px; border-radius: 3px; outline: none; text-align: center; }
+  .yhvh-input:focus { border-color: var(--growth); }
+  .yhvh-label { font-size: 9px; text-align: center; margin-top: 2px; letter-spacing: 1px; }
+
+  .yhvh-result-grid { display: grid; grid-template-columns: 44px repeat(3, 1fr); gap: 2px; margin-bottom: 8px; font-size: 11px; }
+  .yhvh-result-grid .rh { font-size: 8px; text-transform: uppercase; letter-spacing: 0.5px; text-align: center; padding: 4px 2px; color: var(--muted); }
+  .yhvh-result-grid .rv { text-align: center; padding: 6px 2px; background: var(--surface); border: 1px solid var(--border); border-radius: 2px; font-weight: 500; cursor: pointer; transition: all 0.2s; }
+  .yhvh-result-grid .rv:hover { border-color: var(--muted); }
+  .yhvh-result-grid .rv.fam { border-color: var(--family); color: var(--family); }
+  .yhvh-result-grid .rv.prime { border-color: var(--yhvh-h); color: var(--yhvh-h); }
+  .yhvh-result-grid .rl { font-size: 10px; display: flex; align-items: center; color: var(--muted); font-weight: 500; }
+
+  .chain-result { background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 8px; margin-bottom: 6px; font-size: 11px; max-height: 200px; overflow-y: auto; }
+  .chain-result::-webkit-scrollbar { width: 3px; }
+  .chain-result::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+  .chain-row { display: flex; gap: 4px; align-items: center; padding: 2px 0; }
+  .chain-val { font-weight: 600; min-width: 32px; text-align: center; }
+  .chain-op { font-size: 8px; color: var(--muted); letter-spacing: 0.5px; }
+
+  /* Family panel */
+  .family-ring { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 10px; }
+  .family-node { padding: 5px 10px; border-radius: 3px; font-weight: 600; font-size: 13px; background: var(--surface); border: 1px solid var(--border); cursor: pointer; transition: all 0.2s; text-align: center; min-width: 36px; }
+  .family-node:hover { transform: translateY(-2px); }
+  .family-node.active { border-color: var(--family); color: var(--family); background: #50e89022; }
+  .family-node.on-spine { border-color: var(--yhvh-y); color: var(--yhvh-y); }
+
+  .family-detail { background: var(--surface); border: 1px solid var(--border); border-radius: 3px; padding: 10px; margin-bottom: 8px; font-size: 11px; line-height: 1.7; }
+  .family-detail .fd-title { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+  .family-detail .fd-row { display: flex; gap: 6px; align-items: baseline; }
+  .family-detail .fd-label { color: var(--muted); font-size: 9px; text-transform: uppercase; letter-spacing: 1px; min-width: 50px; }
+  .family-detail .fd-val { font-weight: 500; }
+  .fd-fam { color: var(--family); }
+  .fd-prime { color: var(--yhvh-h); }
+  .fd-comp { color: var(--muted); }
+
+  /* Paint indicator */
+  .paint-indicator { position: absolute; bottom: 10px; left: 14px; display: flex; gap: 6px; align-items: center; pointer-events: none; }
+  .paint-dot { width: 6px; height: 6px; border-radius: 50%; animation: pulse 1.5s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:0.4;transform:scale(1)} 50%{opacity:1;transform:scale(1.3)} }
+  .paint-label { font-size: 9px; letter-spacing: 1px; text-transform: uppercase; }
+
+  /* Tab sub-sections */
+  .sub-tab-row { display: flex; gap: 3px; margin-bottom: 10px; flex-wrap: wrap; }
+  .sub-tab { padding: 4px 8px; font-size: 9px; letter-spacing: 0.5px; text-transform: uppercase; background: transparent; border: 1px solid var(--border); color: var(--muted); cursor: pointer; border-radius: 2px; transition: all 0.2s; font-family: var(--font-mono); }
+  .sub-tab:hover { color: var(--text); border-color: var(--muted); }
+  .sub-tab.active { color: var(--growth); border-color: var(--growth); background: var(--growth-glow); }
+  .sub-section { display: none; }
+  .sub-section.visible { display: block; }
+
+  /* 432 box */
+  .hz-box { background: #ffaa4010; border: 1px solid #ffaa4030; border-radius: 4px; padding: 10px; text-align: center; margin: 8px 0; }
+  .hz-big { font-size: 28px; font-weight: 700; color: var(--growth); font-family: var(--font-serif); }
+  .hz-sub { font-size: 9px; color: var(--muted); letter-spacing: 1px; margin-top: 2px; }
+
+  .info-line { font-size: 10px; color: var(--muted); line-height: 1.7; padding: 3px 0; }
+  .info-line .hl { color: var(--bright); font-weight: 600; }
+  .info-line .hf { color: var(--family); font-weight: 600; }
+  .info-line .ha { color: var(--accent); font-weight: 600; }
+  .info-line .hy { color: var(--yhvh-y); font-weight: 600; }
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="header">
+    <h1>THE <span>OPERAND</span> OBSERVATORY</h1>
+    <div class="header-controls">
+      <button class="mode-btn active" data-mode="explore" onclick="setMode('explore')">EXPLORE</button>
+      <button class="mode-btn" data-mode="fold" onclick="setMode('fold')">FOLD</button>
+      <button class="mode-btn" data-mode="lattice" onclick="setMode('lattice')">LATTICE</button>
+      <button class="mode-btn" data-mode="yhvh" onclick="setMode('yhvh')">YHVH</button>
+      <button class="mode-btn" data-mode="family" onclick="setMode('family')">FAMILY</button>
+      <button class="mode-btn" data-mode="genome" onclick="setMode('genome')">GENOME</button>
+      <button class="mode-btn" data-mode="paint" onclick="setMode('paint')">PAINT</button>
+    </div>
+  </header>
+
+  <aside class="sidebar">
+    <!-- ═══ EXPLORE ═══ -->
+    <div class="panel-section visible" id="panel-explore">
+      <div class="panel">
+        <div class="panel-title"><span class="dot" style="background:var(--growth)"></span> Seed</div>
+        <div class="seed-row">
+          <input type="number" class="seed-input" id="seedInput" value="4" placeholder="any integer">
+          <button class="btn" onclick="applySeed()">PLANT</button>
+        </div>
+        <div class="panel-title"><span class="dot" style="background:var(--accent)"></span> Apply Operand</div>
+        <div class="operand-btns">
+          <div class="op-btn mitosis" onclick="applyOp('mitosis')"><span class="op-formula">2x−1</span>mitosis</div>
+          <div class="op-btn stable" onclick="applyOp('stable')"><span class="op-formula">2x</span>stable</div>
+          <div class="op-btn growth" onclick="applyOp('growth')"><span class="op-formula">2x+1</span>growth</div>
+        </div>
+        <div class="operand-btns">
+          <div class="op-btn all-three" onclick="applyOp('all')"><span class="op-formula">△</span>all three</div>
+        </div>
+        <div class="depth-control">
+          <label>Depth</label>
+          <input type="range" id="depthSlider" min="1" max="12" value="1" oninput="document.getElementById('depthLabel').textContent=this.value">
+          <span class="depth-val" id="depthLabel">1</span>
+        </div>
+        <div class="result-display" id="resultDisplay"><div style="color:var(--muted);font-size:10px;text-align:center;padding:10px 0;">Plant a seed and apply operands</div></div>
+        <div class="util-row">
+          <button class="btn" onclick="clearCanvas()">CLEAR</button>
+          <button class="btn" onclick="undoLast()">UNDO</button>
+          <button class="btn" onclick="fitToView()">FIT</button>
+        </div>
+        <div class="help-text"><kbd>Scroll</kbd> zoom · <kbd>Drag</kbd> pan · <kbd>Click</kbd> pick seed<br><kbd>M</kbd> <kbd>S</kbd> <kbd>G</kbd> <kbd>A</kbd> operands · <kbd>F</kbd> fit view</div>
+      </div>
+    </div>
+
+    <!-- ═══ FOLD ═══ -->
+    <div class="panel-section" id="panel-fold">
+      <div class="panel">
+        <div class="panel-title"><span class="dot" style="background:var(--stable)"></span> The Folding Table</div>
+        <p class="info-line">Each fold: <span class="hl">(2<sup>n</sup>−1, 2<sup>n</sup>, 2<sup>n</sup>+1)</span>. Mitosis, Stable, Growth. The operand system IS the fold.</p>
+        <div class="depth-control">
+          <label>Folds</label>
+          <input type="range" id="foldSlider" min="0" max="14" value="8" oninput="updateFoldTable()">
+          <span class="depth-val" id="foldLabel">8</span>
+        </div>
+        <div id="foldTableWrap" style="max-height:380px;overflow-y:auto;"></div>
+        <div class="util-row" style="margin-top:8px;">
+          <button class="btn" onclick="plotAllFolds()">PLOT ON LINE</button>
+          <button class="btn" onclick="clearCanvas()">CLEAR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ LATTICE ═══ -->
+    <div class="panel-section" id="panel-lattice">
+      <div class="panel">
+        <div class="panel-title"><span class="dot" style="background:var(--accent)"></span> The Operand Lattice</div>
+        <p class="info-line">The diagonals thread — every output is an input. The lattice is <span class="ha">self-weaving</span>.</p>
+        <div class="seed-row">
+          <input type="number" class="seed-input" id="latticeA" value="3" style="font-size:13px">
+          <input type="number" class="seed-input" id="latticeB" value="4" style="font-size:13px">
+          <input type="number" class="seed-input" id="latticeC" value="5" style="font-size:13px">
+        </div>
+        <button class="btn" style="width:100%;margin-bottom:10px;" onclick="buildLattice()">BUILD</button>
+        <div id="latticeWrap"></div>
+        <div class="util-row" style="margin-top:8px;">
+          <button class="btn" onclick="plotLattice()">PLOT</button>
+          <button class="btn" onclick="cascadeLattice()">CASCADE →</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ YHVH ENGINE ═══ -->
+    <div class="panel-section" id="panel-yhvh">
+      <div class="panel">
+        <div class="panel-title"><span class="dot" style="background:var(--yhvh-y)"></span> The Tetragrammaton</div>
+        <div class="yhvh-val-row">
+          <div style="flex:1;text-align:center"><input type="number" class="yhvh-input" id="yhvhY" value="10" style="border-color:#ffd70050"><div class="yhvh-label" style="color:var(--yhvh-y)">Y</div></div>
+          <div style="flex:1;text-align:center"><input type="number" class="yhvh-input" id="yhvhH1" value="5" style="border-color:#ff608850"><div class="yhvh-label" style="color:var(--yhvh-h)">H</div></div>
+          <div style="flex:1;text-align:center"><input type="number" class="yhvh-input" id="yhvhV" value="6" style="border-color:#4ae8ff50"><div class="yhvh-label" style="color:var(--yhvh-v)">V</div></div>
+          <div style="flex:1;text-align:center"><input type="number" class="yhvh-input" id="yhvhH2" value="5" style="border-color:#ff608850"><div class="yhvh-label" style="color:var(--yhvh-h)">H</div></div>
+          <button class="btn" onclick="runYHVH()" style="align-self:start;margin-top:2px">RUN</button>
+        </div>
+
+        <div class="sub-tab-row">
+          <div class="sub-tab active" onclick="setYHVHSub('triadic')">Triadic</div>
+          <div class="sub-tab" onclick="setYHVHSub('cross')">Cross-Ops</div>
+          <div class="sub-tab" onclick="setYHVHSub('chain')">Chains</div>
+          <div class="sub-tab" onclick="setYHVHSub('432')">432</div>
+          <div class="sub-tab" onclick="setYHVHSub('decomp')">Decompose</div>
+        </div>
+
+        <div class="sub-section visible" id="yhvh-triadic">
+          <div id="yhvhTriadicGrid"></div>
+          <div class="util-row" style="margin-top:8px"><button class="btn" style="width:100%" onclick="plotYHVHTriadic()">PLOT ALL ON LINE</button></div>
+        </div>
+        <div class="sub-section" id="yhvh-cross">
+          <p class="info-line" style="margin-bottom:6px">Every pair: <span class="hl">X+Y−1, X+Y, X+Y+1</span></p>
+          <div id="yhvhCrossGrid" style="max-height:300px;overflow-y:auto;"></div>
+        </div>
+        <div class="sub-section" id="yhvh-chain">
+          <p class="info-line" style="margin-bottom:6px">Sequential: Y→+H→+V→+H with ±1 at each step. <span class="hl">27 chains</span>.</p>
+          <div id="yhvhChainGrid" style="max-height:340px;overflow-y:auto;"></div>
+        </div>
+        <div class="sub-section" id="yhvh-432">
+          <div id="yhvh432Content"></div>
+        </div>
+        <div class="sub-section" id="yhvh-decomp">
+          <div id="yhvhDecompContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ FAMILY SPINE ═══ -->
+    <div class="panel-section" id="panel-family">
+      <div class="panel">
+        <div class="panel-title"><span class="dot" style="background:var(--family)"></span> The Family of 2</div>
+        <p class="info-line" style="margin-bottom:8px">The Sophie Germain chain: each <span class="hf">2p+1</span> produces the next. Select a member to explore its connections.</p>
+        <div class="family-ring" id="familyRing"></div>
+        <div id="familyDetail"></div>
+        <div class="sub-tab-row" style="margin-top:8px">
+          <div class="sub-tab active" onclick="setFamilySub('detail')">Detail</div>
+          <div class="sub-tab" onclick="setFamilySub('adjacency')">Adjacency</div>
+          <div class="sub-tab" onclick="setFamilySub('expansion')">Expansion</div>
+        </div>
+        <div class="sub-section visible" id="fam-detail"><div id="famDetailContent"></div></div>
+        <div class="sub-section" id="fam-adjacency"><div id="famAdjContent"></div></div>
+        <div class="sub-section" id="fam-expansion">
+          <div class="depth-control">
+            <label>Tiers</label>
+            <input type="range" id="famExpDepth" min="1" max="5" value="3" oninput="document.getElementById('famExpLabel').textContent=this.value;expandFamily()">
+            <span class="depth-val" id="famExpLabel">3</span>
+          </div>
+          <div id="famExpContent" style="max-height:300px;overflow-y:auto;"></div>
+        </div>
+        <div class="util-row" style="margin-top:8px">
+          <button class="btn" onclick="plotFamilySpine()">PLOT SPINE</button>
+          <button class="btn" onclick="plotFamilyAll()">PLOT ALL</button>
+          <button class="btn" onclick="clearCanvas()">CLEAR</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ GENOME LAB ═══ -->
+    <div class="panel-section" id="panel-genome">
+      <div class="panel">
+        <div class="panel-title"><span class="dot" style="background:var(--accent)"></span> Genome Lab</div>
+        <p class="info-line" style="margin-bottom:6px">Full kernel stack: seed n → K1 through Kn. Each kernel <span class="hl">kx−1, kx, kx+1</span>. The complete prime vocabulary of a chromosome count.</p>
+
+        <div class="sub-tab-row">
+          <div class="sub-tab active" onclick="setGenomeSub('organism')">Organism</div>
+          <div class="sub-tab" onclick="setGenomeSub('kernels')">Kernels</div>
+          <div class="sub-tab" onclick="setGenomeSub('lexicon')">Lexicon</div>
+          <div class="sub-tab" onclick="setGenomeSub('compare')">Compare</div>
+          <div class="sub-tab" onclick="setGenomeSub('meiosis')">Meiosis</div>
+        </div>
+
+        <!-- ORGANISM sub -->
+        <div class="sub-section visible" id="genome-organism">
+          <div style="margin-bottom:8px">
+            <select id="orgSelect" onchange="selectOrganism()" style="width:100%;background:var(--surface);border:1px solid var(--border);color:var(--bright);font-family:var(--font-mono);font-size:11px;padding:6px 8px;border-radius:3px;outline:none;cursor:pointer;">
+              <option value="4">Fruit fly (n=4)</option>
+              <option value="7">Garden pea (n=7)</option>
+              <option value="16">Honey bee (n=16)</option>
+              <option value="19">Cat (n=19)</option>
+              <option value="20">Mouse (n=20)</option>
+              <option value="23" selected>Human (n=23)</option>
+              <option value="24">Gorilla (n=24)</option>
+              <option value="30">Octopus (n=30)</option>
+              <option value="32">Horse (n=32)</option>
+              <option value="39">Dog (n=39)</option>
+              <option value="47">Goldfish (n=47)</option>
+              <option value="52">Carp (n=52)</option>
+              <option value="custom">Custom seed...</option>
+            </select>
+          </div>
+          <div class="seed-row" id="customSeedRow" style="display:none;margin-bottom:8px">
+            <input type="number" class="seed-input" id="genomeSeed" value="23" placeholder="seed">
+            <button class="btn" onclick="runGenome()">ANALYZE</button>
+          </div>
+          <div id="orgSummary"></div>
+          <div class="util-row" style="margin-top:8px">
+            <button class="btn" style="flex:1" onclick="plotGenomeSpread()">PLOT ON LINE</button>
+            <button class="btn" onclick="clearCanvas()">CLEAR</button>
+          </div>
+        </div>
+
+        <!-- KERNELS sub -->
+        <div class="sub-section" id="genome-kernels">
+          <p class="info-line" style="margin-bottom:6px">Every kernel K1–Kn. Scroll to explore the full stack.</p>
+          <div id="kernelStack" style="max-height:380px;overflow-y:auto;"></div>
+        </div>
+
+        <!-- LEXICON sub -->
+        <div class="sub-section" id="genome-lexicon">
+          <p class="info-line" style="margin-bottom:6px">The complete prime vocabulary — every base prime that appears across all kernel triples. The <span class="hf">sublexiconology</span> of the seed.</p>
+          <div id="lexiconContent"></div>
+        </div>
+
+        <!-- COMPARE sub -->
+        <div class="sub-section" id="genome-compare">
+          <p class="info-line" style="margin-bottom:6px">Domain overlap between two organisms. Not genealogy — <span class="ha">structural inevitability</span>.</p>
+          <div style="display:flex;gap:6px;margin-bottom:8px">
+            <select id="cmpA" style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--bright);font-family:var(--font-mono);font-size:10px;padding:5px;border-radius:3px;outline:none;">
+              <option value="23">Human (23)</option>
+              <option value="4">Fruit fly (4)</option>
+              <option value="7">Pea (7)</option>
+              <option value="16">Bee (16)</option>
+              <option value="24">Gorilla (24)</option>
+              <option value="30">Octopus (30)</option>
+              <option value="32">Horse (32)</option>
+              <option value="47">Goldfish (47)</option>
+            </select>
+            <span style="color:var(--muted);display:flex;align-items:center;font-size:10px">vs</span>
+            <select id="cmpB" style="flex:1;background:var(--surface);border:1px solid var(--border);color:var(--bright);font-family:var(--font-mono);font-size:10px;padding:5px;border-radius:3px;outline:none;">
+              <option value="24">Gorilla (24)</option>
+              <option value="4">Fruit fly (4)</option>
+              <option value="7">Pea (7)</option>
+              <option value="16">Bee (16)</option>
+              <option value="23">Human (23)</option>
+              <option value="30">Octopus (30)</option>
+              <option value="32">Horse (32)</option>
+              <option value="47">Goldfish (47)</option>
+            </select>
+          </div>
+          <button class="btn" style="width:100%;margin-bottom:8px" onclick="runComparison()">COMPARE LEXICONS</button>
+          <div id="compareContent" style="max-height:320px;overflow-y:auto;"></div>
+        </div>
+
+        <!-- MEIOSIS sub -->
+        <div class="sub-section" id="genome-meiosis">
+          <div id="meiosisContent"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══ PAINT ═══ -->
+    <div class="panel-section" id="panel-paint">
+      <div class="panel">
+        <div class="panel-title"><span class="dot" style="background:var(--accent)"></span> Paint With Math</div>
+        <p class="info-line" style="margin-bottom:8px">Click the line to plant seeds. Build forests of mathematical structure.</p>
+        <div class="operand-btns">
+          <div class="op-btn mitosis" id="brush-m" onclick="setPaintBrush('mitosis')"><span class="op-formula">2x−1</span>mitosis</div>
+          <div class="op-btn stable" id="brush-s" onclick="setPaintBrush('stable')"><span class="op-formula">2x</span>stable</div>
+          <div class="op-btn growth" id="brush-g" onclick="setPaintBrush('growth')"><span class="op-formula">2x+1</span>growth</div>
+        </div>
+        <div class="operand-btns">
+          <div class="op-btn all-three" id="brush-a" onclick="setPaintBrush('all')"><span class="op-formula">△</span>all three</div>
+        </div>
+        <div class="depth-control">
+          <label>Brush depth</label>
+          <input type="range" id="paintDepth" min="1" max="8" value="3" oninput="document.getElementById('paintDepthLabel').textContent=this.value">
+          <span class="depth-val" id="paintDepthLabel">3</span>
+        </div>
+        <div class="util-row">
+          <button class="btn" onclick="clearCanvas()">CLEAR</button>
+          <button class="btn" onclick="undoLast()">UNDO</button>
+          <button class="btn" onclick="fitToView()">FIT</button>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <div class="canvas-wrap" id="canvasWrap">
+    <canvas id="mainCanvas"></canvas>
+    <div class="zoom-controls">
+      <button class="zoom-btn" onclick="zoomIn()">+</button>
+      <button class="zoom-btn" onclick="zoomOut()">−</button>
+      <button class="zoom-btn" onclick="resetView()" style="font-size:10px">⟲</button>
+    </div>
+    <div class="canvas-crosshair" id="crosshairInfo"></div>
+    <div class="canvas-info" id="canvasInfo">scroll to zoom · drag to pan</div>
+    <div class="paint-indicator" id="paintIndicator" style="display:none;">
+      <div class="paint-dot" id="paintDot"></div>
+      <span class="paint-label" id="paintLabel"></span>
+    </div>
+  </div>
+
+  <div class="bottom-panel">
+    <div class="bottom-panel-header">
+      <span class="bottom-panel-title">Trail</span>
+      <div class="legend">
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--seed)"></div>SEED</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--mitosis)"></div>2x−1</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--stable)"></div>2x</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--growth)"></div>2x+1</div>
+        <div class="legend-item"><div class="legend-swatch" style="background:var(--family)"></div>FAMILY</div>
+      </div>
+    </div>
+    <div class="trail-list" id="trailList"><span style="color:var(--muted);font-size:9px;">Operations appear here as you explore...</span></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════════════════
+// THE OPERAND OBSERVATORY v2 — Full Engine
+// ══════════════════════════════════════════════════════════
+
+const FAMILY = [2,3,5,7,11,13,23,47];
+const FSET = new Set(FAMILY);
+
+function isPrime(n) { n=Math.abs(n); if(n<2)return false; if(n<4)return true; if(n%2===0||n%3===0)return false; for(let i=5;i*i<=n;i+=6)if(n%i===0||n%(i+2)===0)return false; return true; }
+function primeFactors(n) { n=Math.abs(n); if(n<2)return{}; const f={}; let d=2; while(d*d<=n){while(n%d===0){f[d]=(f[d]||0)+1;n/=d}d++} if(n>1)f[n]=(f[n]||0)+1; return f; }
+function fmtFactors(n) { const f=primeFactors(n); if(!Object.keys(f).length)return ''+n; return Object.entries(f).sort((a,b)=>a[0]-b[0]).map(([p,e])=>e>1?p+'<sup>'+e+'</sup>':p).join(' × '); }
+function fmtFactorsPlain(n) { const f=primeFactors(n); if(!Object.keys(f).length)return ''+n; return Object.entries(f).sort((a,b)=>a[0]-b[0]).map(([p,e])=>e>1?p+'^'+e:p).join('×'); }
+function isFamily(n) { return FSET.has(Math.abs(n)); }
+function familyFactors(n) { return Object.keys(primeFactors(n)).map(Number).filter(p=>FSET.has(p)); }
+function allFamilyFactors(n) { return Object.keys(primeFactors(n)).map(Number).every(p=>FSET.has(p)); }
+function digitalRoot(n) { n=Math.abs(n); while(n>=10){let s=0;while(n>0){s+=n%10;n=Math.floor(n/10)}n=s} return n; }
+
+const OPS = { mitosis: x=>2*x-1, stable: x=>2*x, growth: x=>2*x+1 };
+const COLORS = { mitosis:'#4a9eff', stable:'#50e890', growth:'#ffaa40', seed:'#ffffff', all:'#e8e8ff', family:'#50e890', yhvh_y:'#ffd700', yhvh_h:'#ff6088', yhvh_v:'#4ae8ff' };
+
+// ── STATE ──
+const state = {
+  mode:'explore', seed:4, currentValue:4,
+  viewCenter:10, viewScale:30, minScale:0.1, maxScale:200,
+  isDragging:false, dragStartX:0, dragStartY:0, dragStartCenter:0, dragStartCenterY:0,
+  points:[], connections:[], groupCounter:0, history:[],
+  paintBrush:'all', canvasW:0, canvasH:0, viewCenterY:0, mouseX:0, mouseY:0,
+  selectedFamily: 2,
+};
+
+// ── CANVAS ──
+const canvas = document.getElementById('mainCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  const wrap=document.getElementById('canvasWrap'); const dpr=window.devicePixelRatio||1;
+  state.canvasW=wrap.clientWidth; state.canvasH=wrap.clientHeight;
+  canvas.width=state.canvasW*dpr; canvas.height=state.canvasH*dpr;
+  canvas.style.width=state.canvasW+'px'; canvas.style.height=state.canvasH+'px';
+  ctx.setTransform(dpr,0,0,dpr,0,0); render();
+}
+window.addEventListener('resize',resizeCanvas);
+
+function valueToX(v){return state.canvasW/2+(v-state.viewCenter)*state.viewScale}
+function xToValue(px){return(px-state.canvasW/2)/state.viewScale+state.viewCenter}
+function depthToY(d){return state.canvasH*0.45+state.viewCenterY-d*Math.min(36,Math.max(16,state.viewScale*0.5))}
+
+function render(){ctx.clearRect(0,0,state.canvasW,state.canvasH);drawGrid();drawConnections();drawPoints();updateInfo()}
+
+function drawGrid(){
+  const L=xToValue(0),R=xToValue(state.canvasW),range=R-L;
+  let step=1; const steps=[1,2,5,10,20,50,100,200,500,1000,2000,5000,10000,50000,100000];
+  for(let s of steps)if(range/s<60){step=s;break}
+  const baseY=state.canvasH*0.45+state.viewCenterY;
+  const start=Math.floor(L/step)*step;
+  ctx.font='10px "JetBrains Mono"'; ctx.textAlign='center';
+  for(let v=start;v<=R+step;v+=step){
+    const x=valueToX(v); if(x<-20||x>state.canvasW+20)continue;
+    ctx.strokeStyle='#ffffff06';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,state.canvasH);ctx.stroke();
+    const iz=v===0; ctx.strokeStyle=iz?'#ffffff30':'#ffffff15';ctx.lineWidth=iz?2:1;
+    ctx.beginPath();ctx.moveTo(x,baseY-6);ctx.lineTo(x,baseY+6);ctx.stroke();
+    ctx.fillStyle=iz?'#ffffff60':'#ffffff25';ctx.fillText(v.toLocaleString(),x,baseY+18);
+  }
+  if(state.viewScale>8){const ms=step<5?1:step/5;for(let v=start-step;v<=R+step;v+=ms){const x=valueToX(v);if(x<-5||x>state.canvasW+5)continue;ctx.strokeStyle='#ffffff08';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(x,baseY-3);ctx.lineTo(x,baseY+3);ctx.stroke()}}
+  ctx.strokeStyle='#ffffff18';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(0,baseY);ctx.lineTo(state.canvasW,baseY);ctx.stroke();
+  const zx=valueToX(0);if(zx>-5&&zx<state.canvasW+5){ctx.strokeStyle='#ffffff10';ctx.lineWidth=1;ctx.setLineDash([4,4]);ctx.beginPath();ctx.moveTo(zx,0);ctx.lineTo(zx,state.canvasH);ctx.stroke();ctx.setLineDash([])}
+}
+
+function drawConnections(){
+  for(const c of state.connections){
+    const fp=state.points.find(p=>p.value===c.from&&p.groupId===c.groupId);
+    const tp=state.points.find(p=>p.value===c.to&&p.groupId===c.groupId);
+    if(!fp||!tp)continue;
+    const x1=valueToX(c.from),y1=depthToY(fp.depth),x2=valueToX(c.to),y2=depthToY(tp.depth);
+    const col=COLORS[c.type]||COLORS.seed;
+    const cpY=Math.min(y1,y2)-12;
+    ctx.strokeStyle=col+'28';ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo((x1+x2)/2,cpY,x2,y2);ctx.stroke();
+    ctx.strokeStyle=col+'88';ctx.lineWidth=1.5;ctx.beginPath();ctx.moveTo(x1,y1);ctx.quadraticCurveTo((x1+x2)/2,cpY,x2,y2);ctx.stroke();
+  }
+}
+
+function drawPoints(){
+  const seen=new Set();
+  for(const pt of state.points){
+    const k=pt.value+'|'+pt.depth+'|'+pt.groupId; if(seen.has(k))continue; seen.add(k);
+    const x=valueToX(pt.value),y=depthToY(pt.depth);
+    if(x<-30||x>state.canvasW+30||y<-30||y>state.canvasH+30)continue;
+    const col=COLORS[pt.type]||COLORS.seed; const isSeed=pt.type==='seed'; const r=isSeed?5:3.5;
+    const isFam=FSET.has(pt.value);
+    ctx.beginPath();ctx.arc(x,y,r+6,0,Math.PI*2);ctx.fillStyle=col+'12';ctx.fill();
+    if(isFam){ctx.beginPath();ctx.arc(x,y,r+3,0,Math.PI*2);ctx.strokeStyle=COLORS.family+'60';ctx.lineWidth=1;ctx.stroke()}
+    ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fillStyle=col;ctx.fill();
+    const ls=state.viewScale>10?10:(state.viewScale>3?8:0);
+    if(ls>0){ctx.font=`${isSeed?600:500} ${ls}px "JetBrains Mono"`;ctx.fillStyle=isFam?COLORS.family:col;ctx.textAlign='center';ctx.fillText(pt.value.toLocaleString(),x,y-r-5)}
+  }
+}
+
+function updateInfo(){
+  const L=Math.round(xToValue(0)),R=Math.round(xToValue(state.canvasW));
+  document.getElementById('canvasInfo').innerHTML=`[${L.toLocaleString()} … ${R.toLocaleString()}] · ${state.viewScale.toFixed(1)} px/u · ${state.points.length} pts`;
+}
+
+// ── CANVAS INTERACTION ──
+canvas.addEventListener('mousedown',e=>{state.isDragging=true;state.dragStartX=e.clientX;state.dragStartY=e.clientY;state.dragStartCenter=state.viewCenter;state.dragStartCenterY=state.viewCenterY;canvas.style.cursor='grabbing'});
+canvas.addEventListener('mousemove',e=>{const r=canvas.getBoundingClientRect();state.mouseX=e.clientX-r.left;state.mouseY=e.clientY-r.top;if(state.isDragging){state.viewCenter=state.dragStartCenter-(e.clientX-state.dragStartX)/state.viewScale;state.viewCenterY=state.dragStartCenterY+(e.clientY-state.dragStartY);render()}document.getElementById('crosshairInfo').textContent=Math.round(xToValue(state.mouseX)).toLocaleString()});
+canvas.addEventListener('mouseup',e=>{if(Math.abs(e.clientX-state.dragStartX)<3&&Math.abs(e.clientY-state.dragStartY)<3){const v=Math.round(xToValue(state.mouseX));if(state.mode==='paint')paintAt(v);else{document.getElementById('seedInput').value=v;applySeed()}}state.isDragging=false;canvas.style.cursor='crosshair'});
+canvas.addEventListener('mouseleave',()=>{state.isDragging=false;canvas.style.cursor='crosshair'});
+canvas.style.cursor='crosshair';
+canvas.addEventListener('wheel',e=>{e.preventDefault();const mv=xToValue(state.mouseX);const f=e.deltaY>0?0.88:1.14;const ns=Math.max(state.minScale,Math.min(state.maxScale,state.viewScale*f));state.viewCenter=mv-(state.mouseX-state.canvasW/2)/ns;state.viewScale=ns;render()},{passive:false});
+
+function setMode(m){state.mode=m;document.querySelectorAll('.mode-btn').forEach(b=>b.classList.toggle('active',b.dataset.mode===m));document.querySelectorAll('.panel-section').forEach(p=>p.classList.remove('visible'));document.getElementById('panel-'+m).classList.add('visible');document.getElementById('paintIndicator').style.display=m==='paint'?'flex':'none';if(m==='paint')updatePaintIndicator();if(m==='fold')updateFoldTable();if(m==='lattice')buildLattice();if(m==='yhvh')runYHVH();if(m==='family')initFamily();if(m==='genome')runGenome()}
+
+// ── CORE OPS ──
+function saveHistory(){state.history.push({points:JSON.parse(JSON.stringify(state.points)),connections:JSON.parse(JSON.stringify(state.connections)),gc:state.groupCounter});if(state.history.length>50)state.history.shift()}
+function undoLast(){if(!state.history.length)return;const p=state.history.pop();state.points=p.points;state.connections=p.connections;state.groupCounter=p.gc;render();updateTrail()}
+function clearCanvas(){saveHistory();state.points=[];state.connections=[];render();updateTrail()}
+function addPoint(v,t,pv,d,gid){if(!state.points.find(p=>p.value===v&&p.groupId===gid&&p.depth===d))state.points.push({value:v,type:t,parentValue:pv,depth:d,groupId:gid})}
+function addConn(f,t,type,gid){state.connections.push({from:f,to:t,type,groupId:gid})}
+function zoomIn(){state.viewScale=Math.min(state.maxScale,state.viewScale*1.4);render()}
+function zoomOut(){state.viewScale=Math.max(state.minScale,state.viewScale/1.4);render()}
+function resetView(){state.viewCenter=10;state.viewScale=30;state.viewCenterY=0;render()}
+function fitToView(){if(!state.points.length){resetView();return}const vs=state.points.map(p=>p.value);const mn=Math.min(...vs),mx=Math.max(...vs),r=mx-mn||10;state.viewCenter=(mn+mx)/2;state.viewScale=Math.max(state.minScale,Math.min(state.maxScale,(state.canvasW-100)/r));state.viewCenterY=0;render()}
+
+function applySeed(){const v=parseInt(document.getElementById('seedInput').value);if(isNaN(v))return;state.seed=v;state.currentValue=v;saveHistory();const g=state.groupCounter++;addPoint(v,'seed',null,0,g);state.viewCenter=v;updateResultDisplay(v);render();updateTrail()}
+function applyOp(op){const v=state.currentValue,d=parseInt(document.getElementById('depthSlider').value);saveHistory();const g=state.groupCounter++;addPoint(v,'seed',null,0,g);if(op==='all'){applyRec(v,'mitosis',d,0,g);applyRec(v,'stable',d,0,g);applyRec(v,'growth',d,0,g)}else applyRec(v,op,d,0,g);render();updateResultDisplay(v);updateTrail()}
+function applyRec(v,op,md,cd,g){if(cd>=md)return;const r=OPS[op](v);addPoint(r,op,v,cd+1,g);addConn(v,r,op,g);applyRec(r,op,md,cd+1,g)}
+function applyRecTree(v,md,cd,g){if(cd>=md)return;for(const op of['mitosis','stable','growth']){const r=OPS[op](v);addPoint(r,op,v,cd+1,g);addConn(v,r,op,g);applyRecTree(r,md,cd+1,g)}}
+
+function updateResultDisplay(v){const m=OPS.mitosis(v),s=OPS.stable(v),g=OPS.growth(v);document.getElementById('resultDisplay').innerHTML=`<div style="text-align:center;font-size:9px;color:var(--muted);margin-bottom:3px">Seed: <span style="color:var(--bright);font-weight:600">${v}</span>${isPrime(v)?' <span style="color:var(--yhvh-h)">PRIME</span>':''}${isFamily(v)?' <span style="color:var(--family)">FAMILY</span>':''}</div><div class="result-triple"><div class="val m">${m}</div><div class="val s">${s}</div><div class="val g">${g}</div></div><div style="display:flex;justify-content:center;gap:12px"><div class="result-label" style="min-width:50px;color:var(--mitosis)">2x−1</div><div class="result-label" style="min-width:50px;color:var(--stable)">2x</div><div class="result-label" style="min-width:50px;color:var(--growth)">2x+1</div></div>`;state.currentValue=v}
+
+function updateTrail(){const list=document.getElementById('trailList');list.innerHTML='';const groups=[...new Set(state.points.map(p=>p.groupId))].slice(-15);for(const gid of groups){const pts=state.points.filter(p=>p.groupId===gid).sort((a,b)=>a.depth-b.depth);for(let i=0;i<Math.min(pts.length,20);i++){const p=pts[i];const cls=p.type==='seed'?'seed-node':p.type==='mitosis'?'m-node':p.type==='stable'?'s-node':'g-node';const n=document.createElement('div');n.className='trail-node '+cls;n.textContent=p.value;n.onclick=()=>{state.currentValue=p.value;document.getElementById('seedInput').value=p.value;state.viewCenter=p.value;updateResultDisplay(p.value);render()};list.appendChild(n);if(i<pts.length-1){const a=document.createElement('div');a.className='trail-arrow';a.textContent='→';list.appendChild(a)}}if(gid!==groups[groups.length-1]){const s=document.createElement('div');s.style.cssText='width:1px;height:18px;background:var(--border);margin:0 6px;';list.appendChild(s)}}list.scrollLeft=list.scrollWidth}
+
+// ══════════════════════════════════
+// FOLD MODE
+// ══════════════════════════════════
+function updateFoldTable(){const n=parseInt(document.getElementById('foldSlider').value);document.getElementById('foldLabel').textContent=n;let h='<table class="fold-table"><tr><th style="color:var(--muted)">n</th><th class="m-col">2<sup>n</sup>−1</th><th class="s-col">2<sup>n</sup></th><th class="g-col">2<sup>n</sup>+1</th></tr>';for(let i=0;i<=n;i++){const p=Math.pow(2,i);h+=`<tr class="${i===n?'highlight':''}" onclick="selectFold(${i})" style="cursor:pointer"><td class="fold-n">${i}</td><td class="m-val">${(p-1).toLocaleString()}</td><td class="s-val">${p.toLocaleString()}</td><td class="g-val">${(p+1).toLocaleString()}</td></tr>`}h+='</table>';document.getElementById('foldTableWrap').innerHTML=h}
+
+function selectFold(n){const p=Math.pow(2,n);state.viewCenter=p;saveHistory();const g=state.groupCounter++;addPoint(p-1,'mitosis',p,0,g);addPoint(p,'seed',null,0,g);addPoint(p+1,'growth',p,0,g);addConn(p,p-1,'mitosis',g);addConn(p,p+1,'growth',g);render();updateTrail()}
+
+function plotAllFolds(){const n=parseInt(document.getElementById('foldSlider').value);saveHistory();const g=state.groupCounter++;for(let i=0;i<=n;i++){const p=Math.pow(2,i);addPoint(p-1,'mitosis',null,i,g);addPoint(p,'seed',null,i,g);addPoint(p+1,'growth',null,i,g);if(i>0){const pp=Math.pow(2,i-1);addConn(pp,p-1,'mitosis',g);addConn(pp,p,'stable',g);addConn(pp,p+1,'growth',g)}}fitToView();updateTrail()}
+
+// ══════════════════════════════════
+// LATTICE MODE
+// ══════════════════════════════════
+function buildLattice(){const a=parseInt(document.getElementById('latticeA').value)||3,b=parseInt(document.getElementById('latticeB').value)||4,c=parseInt(document.getElementById('latticeC').value)||5;const t=[a,b,c],grid=t.map(x=>[OPS.mitosis(x),OPS.stable(x),OPS.growth(x)]);const diags=new Set();for(let i=0;i<2;i++){if(grid[i][2]===grid[i+1][0]){diags.add(i+',2');diags.add((i+1)+',0')}if(grid[i][1]===grid[i+1][0]){diags.add(i+',1');diags.add((i+1)+',0')}}const oc=[COLORS.mitosis,COLORS.stable,COLORS.growth];let h='<div class="lattice-grid"><div class="lattice-header" style="color:var(--muted)">seed</div><div class="lattice-header" style="color:var(--mitosis)">2x−1</div><div class="lattice-header" style="color:var(--stable)">2x</div><div class="lattice-header" style="color:var(--growth)">2x+1</div>';for(let r=0;r<3;r++){h+=`<div class="lattice-row-label" style="color:${oc[r]}">${t[r]}</div>`;for(let c=0;c<3;c++)h+=`<div class="lattice-cell ${diags.has(r+','+c)?'diag':''}" style="color:${oc[c]}" onclick="latticeClick(${grid[r][c]})">${grid[r][c]}</div>`}h+='</div>';const ti=[];if(grid[0][2]===grid[1][0])ti.push(`<span class="ha">${grid[0][2]}</span> threads: growth(${t[0]}) = mitosis(${t[1]})`);if(grid[1][2]===grid[2][0])ti.push(`<span class="ha">${grid[1][2]}</span> threads: growth(${t[1]}) = mitosis(${t[2]})`);if(ti.length)h+=`<div style="margin-top:8px" class="info-line">${ti.map(t=>'↗ '+t).join('<br>')}</div>`;document.getElementById('latticeWrap').innerHTML=h}
+function latticeClick(v){state.currentValue=v;state.viewCenter=v;document.getElementById('seedInput').value=v}
+function plotLattice(){const a=+document.getElementById('latticeA').value||3,b=+document.getElementById('latticeB').value||4,c=+document.getElementById('latticeC').value||5;saveHistory();const g=state.groupCounter++;[a,b,c].forEach(x=>{addPoint(x,'seed',null,0,g);const m=OPS.mitosis(x),s=OPS.stable(x),gr=OPS.growth(x);addPoint(m,'mitosis',x,1,g);addPoint(s,'stable',x,1,g);addPoint(gr,'growth',x,1,g);addConn(x,m,'mitosis',g);addConn(x,s,'stable',g);addConn(x,gr,'growth',g)});fitToView();updateTrail()}
+function cascadeLattice(){const c=+document.getElementById('latticeC').value||5;document.getElementById('latticeA').value=OPS.mitosis(c);document.getElementById('latticeB').value=OPS.stable(c);document.getElementById('latticeC').value=OPS.growth(c);buildLattice();plotLattice()}
+
+// ══════════════════════════════════
+// YHVH ENGINE
+// ══════════════════════════════════
+function setYHVHSub(s){document.querySelectorAll('#panel-yhvh .sub-tab').forEach((t,i)=>t.classList.toggle('active',t.textContent.toLowerCase().replace('-','').includes(s)));document.querySelectorAll('#panel-yhvh .sub-section').forEach(el=>el.classList.remove('visible'));document.getElementById('yhvh-'+s).classList.add('visible')}
+
+function getYHVH(){return{Y:+document.getElementById('yhvhY').value||10,H1:+document.getElementById('yhvhH1').value||5,V:+document.getElementById('yhvhV').value||6,H2:+document.getElementById('yhvhH2').value||5}}
+
+function runYHVH(){
+  const y=getYHVH(), vals=[y.Y,y.H1,y.V,y.H2], names=['Y('+y.Y+')','H('+y.H1+')','V('+y.V+')','H('+y.H2+')'];
+  const sum=vals.reduce((a,b)=>a+b,0), prod=vals.reduce((a,b)=>a*b,1);
+
+  // Triadic
+  let tg='<div class="yhvh-result-grid"><div class="rh"></div><div class="rh" style="color:var(--mitosis)">2x−1</div><div class="rh" style="color:var(--stable)">2x</div><div class="rh" style="color:var(--growth)">2x+1</div>';
+  vals.forEach((x,i)=>{
+    const m=2*x-1,s=2*x,g=2*x+1;
+    tg+=`<div class="rl" style="color:${['var(--yhvh-y)','var(--yhvh-h)','var(--yhvh-v)','var(--yhvh-h)'][i]}">${names[i]}</div>`;
+    [m,s,g].forEach(v=>{const f=isFamily(v),p=isPrime(v);tg+=`<div class="rv ${f?'fam':p?'prime':''}" onclick="yhvhPlot(${v})" title="${fmtFactorsPlain(v)}">${v}</div>`});
+  });
+  // Sum row
+  tg+=`<div class="rl">Σ=${sum}</div>`;
+  [2*sum-1,2*sum,2*sum+1].forEach(v=>{const f=isFamily(v),p=isPrime(v);tg+=`<div class="rv ${f?'fam':p?'prime':''}" onclick="yhvhPlot(${v})">${v}</div>`});
+  tg+='</div>';
+  tg+=`<div class="info-line" style="margin-top:6px">Sum: <span class="hl">${sum}</span> = ${fmtFactors(sum)} · Product: <span class="hl">${prod}</span> = ${fmtFactors(prod)}</div>`;
+  document.getElementById('yhvhTriadicGrid').innerHTML=tg;
+
+  // Cross-ops
+  let cg='<div style="font-size:10px;">';
+  const uvals=[...new Set(vals)];
+  for(let i=0;i<vals.length;i++)for(let j=i+1;j<vals.length;j++){
+    const a=vals[i],b=vals[j],m=a+b-1,s=a+b,g=a+b+1;
+    cg+=`<div style="display:flex;gap:4px;align-items:center;padding:3px 0;border-bottom:1px solid #0e0e20"><span style="color:var(--muted);min-width:80px;font-size:9px">${names[i]}+${names[j]}</span>`;
+    [m,s,g].forEach(v=>{const f=isFamily(v),p=isPrime(v);cg+=`<span style="color:${f?'var(--family)':p?'var(--yhvh-h)':'var(--text)'};font-weight:${f||p?600:400};min-width:30px;text-align:center;cursor:pointer" onclick="yhvhPlot(${v})">${v}</span>`});
+    cg+=`</div>`}
+  cg+='</div>';
+  document.getElementById('yhvhCrossGrid').innerHTML=cg;
+
+  // Sequential chains
+  const Y=y.Y,H=y.H1,V=y.V;
+  let ch='<div style="font-size:10px">';
+  let chainResults=[];
+  for(let o1=-1;o1<=1;o1++)for(let o2=-1;o2<=1;o2++)for(let o3=-1;o3<=1;o3++){
+    const r1=Y+H+o1,r2=r1+V+o2,r3=r2+y.H2+o3;
+    chainResults.push(r3);
+    const f=isFamily(r3),p=isPrime(r3);
+    ch+=`<div style="display:flex;gap:3px;align-items:center;padding:2px 0;border-bottom:1px solid #0a0a18"><span style="color:var(--muted);font-size:8px;min-width:16px">${o1>0?'+':o1<0?'−':'·'}${o2>0?'+':o2<0?'−':'·'}${o3>0?'+':o3<0?'−':'·'}</span><span style="color:var(--text);min-width:20px">${Y}</span><span style="color:var(--muted);font-size:8px">→</span><span style="min-width:20px">${r1}</span><span style="color:var(--muted);font-size:8px">→</span><span style="min-width:20px">${r2}</span><span style="color:var(--muted);font-size:8px">→</span><span style="color:${f?'var(--family)':p?'var(--yhvh-h)':'var(--bright)'};font-weight:600;cursor:pointer" onclick="yhvhPlot(${r3})">${r3}</span><span style="color:var(--muted);font-size:8px;margin-left:4px">${fmtFactorsPlain(r3)}</span></div>`;
+  }
+  ch+='</div>';
+  const famChains=chainResults.filter(v=>isFamily(v)),primeChains=chainResults.filter(v=>isPrime(v));
+  ch+=`<div class="info-line" style="margin-top:6px">Family terminals: <span class="hf">${famChains.join(', ')||'none'}</span> · Prime terminals: <span class="ha">${[...new Set(primeChains)].join(', ')||'none'}</span></div>`;
+  document.getElementById('yhvhChainGrid').innerHTML=ch;
+
+  // 432 derivation
+  let hz='<div class="hz-box"><div class="hz-big">432</div><div class="hz-sub">2<sup>4</sup> × 3<sup>3</sup> = 16 × 27</div></div>';
+  hz+=`<div class="info-line">Kernel embedding depths from YHVH:</div>`;
+  hz+=`<div class="info-line"><span class="hy">V = ${y.V}</span> → depth <span class="hl">4</span> &nbsp; <span style="color:var(--yhvh-h)">H = ${y.H1}</span> → depth <span class="hl">3</span> &nbsp; <span class="hy">Y = ${y.Y}</span> → depth <span class="hl">2</span></div>`;
+  hz+=`<div class="info-line">Lemniscate order: <span class="hl">4, 3, 2, 3</span> repeating</div>`;
+  hz+=`<div class="info-line">432 = 2<sup><span class="hl">4</span></sup> × 3<sup><span class="hl">3</span></sup> — exponents ARE the kernel depths</div>`;
+  hz+=`<div class="info-line">4 × 3 × 2 = <span class="hl">24</span> &nbsp; Digital root: 4+3+2 = <span class="hl">9</span> = 3<sup>2</sup></div>`;
+  hz+=`<div class="info-line" style="margin-top:8px">Octave stack from 432:</div>`;
+  let f=432;hz+='<div style="display:flex;gap:4px;flex-wrap:wrap;margin-top:4px">';
+  for(let i=0;i<8;i++){hz+=`<span class="trail-node g-node" onclick="yhvhPlot(${f})" style="font-size:11px">${f}</span>`;f/=2}
+  hz+='</div>';
+  hz+=`<div class="info-line" style="margin-top:8px">A4=432 · A3=216 · A2=108 · A1=54 · A0=27</div>`;
+  document.getElementById('yhvh432Content').innerHTML=hz;
+
+  // Decomposition
+  let dc=`<div class="info-line" style="font-size:12px;margin-bottom:8px">YHVH decomposed to atomic digits:</div>`;
+  dc+=`<div class="info-line"><span class="hy">Y = ${y.Y}</span> → digits: {${String(y.Y).split('').join(', ')}}</div>`;
+  dc+=`<div class="info-line"><span style="color:var(--yhvh-h)">H = ${y.H1}</span> → digits: {${String(y.H1).split('').join(', ')}}</div>`;
+  dc+=`<div class="info-line"><span style="color:var(--yhvh-v)">V = ${y.V}</span> → digits: {${String(y.V).split('').join(', ')}}</div>`;
+  dc+=`<div class="info-line"><span style="color:var(--yhvh-h)">H = ${y.H2}</span> → digits: {${String(y.H2).split('').join(', ')}}</div>`;
+  const allDigits=[...new Set(String(y.Y)+String(y.H1)+String(y.V)+String(y.H2)).values()].map(Number).filter(n=>!isNaN(n)).sort((a,b)=>a-b);
+  dc+=`<div class="info-line" style="margin-top:6px">Unique atomic elements: <span class="hl">{${allDigits.join(', ')}}</span></div>`;
+  dc+=`<div class="info-line">Factor decomposition:</div>`;
+  vals.forEach((v,i)=>{dc+=`<div class="info-line">&nbsp; ${names[i]} = ${fmtFactors(v)}${isPrime(v)?' <span class="fd-prime">PRIME</span>':''}${isFamily(v)?' <span class="fd-fam">FAMILY</span>':''}</div>`});
+  dc+=`<div class="info-line" style="margin-top:8px">As nodal configurations (factor as node count):</div>`;
+  vals.forEach((v,i)=>{const f=primeFactors(v);const desc=Object.entries(f).sort((a,b)=>a[0]-b[0]).map(([p,e])=>e>1?`${e} tiers of K${p}`:`K${p} node`).join(' × ');dc+=`<div class="info-line">&nbsp; ${names[i]} = "${desc}"</div>`});
+  document.getElementById('yhvhDecompContent').innerHTML=dc;
+}
+
+function yhvhPlot(v){state.currentValue=v;state.viewCenter=v;saveHistory();const g=state.groupCounter++;addPoint(v,'seed',null,0,g);addPoint(OPS.mitosis(v),'mitosis',v,1,g);addPoint(OPS.stable(v),'stable',v,1,g);addPoint(OPS.growth(v),'growth',v,1,g);addConn(v,OPS.mitosis(v),'mitosis',g);addConn(v,OPS.stable(v),'stable',g);addConn(v,OPS.growth(v),'growth',g);render();updateTrail()}
+
+function plotYHVHTriadic(){const y=getYHVH(),vals=[y.Y,y.H1,y.V,y.H2];saveHistory();const g=state.groupCounter++;vals.forEach((x,i)=>{addPoint(x,'seed',null,0,g);const m=OPS.mitosis(x),s=OPS.stable(x),gr=OPS.growth(x);addPoint(m,'mitosis',x,1,g);addPoint(s,'stable',x,1,g);addPoint(gr,'growth',x,1,g);addConn(x,m,'mitosis',g);addConn(x,s,'stable',g);addConn(x,gr,'growth',g)});fitToView();updateTrail()}
+
+// ══════════════════════════════════
+// FAMILY SPINE
+// ══════════════════════════════════
+function initFamily(){
+  const ring=document.getElementById('familyRing');
+  ring.innerHTML='';
+  FAMILY.forEach(p=>{const n=document.createElement('div');n.className='family-node'+(p===state.selectedFamily?' active':'');n.textContent=p;n.onclick=()=>{state.selectedFamily=p;initFamily()};ring.appendChild(n)});
+  showFamilyDetail(state.selectedFamily);
+}
+
+function setFamilySub(s){document.querySelectorAll('#panel-family .sub-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase()===s));document.querySelectorAll('#panel-family .sub-section').forEach(el=>el.classList.remove('visible'));document.getElementById('fam-'+s).classList.add('visible');if(s==='expansion')expandFamily();if(s==='adjacency')showAdjacency()}
+
+function showFamilyDetail(p){
+  const m=2*p-1,s=2*p,g=2*p+1;
+  const sgIdx=FAMILY.indexOf(p);
+  const isSpine=sgIdx>0&&FAMILY[sgIdx-1]===Math.floor((p-1)/2);
+  let h=`<div class="family-detail"><div class="fd-title" style="color:var(--family)">${p}</div>`;
+  h+=`<div class="fd-row"><span class="fd-label">Status</span><span class="fd-val">${isPrime(p)?'<span class="fd-prime">PRIME</span>':fmtFactors(p)} · Family member${isSpine?' · <span style="color:var(--yhvh-y)">SPINE</span>':''}</span></div>`;
+  h+=`<div class="fd-row"><span class="fd-label">2x−1</span><span class="fd-val" style="color:var(--mitosis)">${m}</span> = ${fmtFactors(m)} ${isPrime(m)?'<span class="fd-prime">PRIME</span>':''}${isFamily(m)?'<span class="fd-fam"> FAMILY</span>':''}</div>`;
+  h+=`<div class="fd-row"><span class="fd-label">2x</span><span class="fd-val" style="color:var(--stable)">${s}</span> = ${fmtFactors(s)}</div>`;
+  h+=`<div class="fd-row"><span class="fd-label">2x+1</span><span class="fd-val" style="color:var(--growth)">${g}</span> = ${fmtFactors(g)} ${isPrime(g)?'<span class="fd-prime">PRIME</span>':''}${isFamily(g)?'<span class="fd-fam"> FAMILY</span>':''}</div>`;
+  // Sophie Germain check
+  if(isPrime(g)&&FSET.has(g))h+=`<div class="fd-row" style="margin-top:4px"><span class="fd-label">Chain</span><span class="fd-val"><span class="hf">${p} → ${g}</span> (Sophie Germain: 2p+1 = next family)</span></div>`;
+  // Twin prime check
+  if(isPrime(p-1)&&isPrime(p+1))h+=`<div class="fd-row"><span class="fd-label">Flanked</span><span class="fd-val">Twin primes: ${p-1}, ${p+1}</span></div>`;
+  // Reachable family
+  const reach=new Set();
+  [m,g].forEach(r=>{if(FSET.has(r))reach.add(r);familyFactors(r).forEach(f=>reach.add(f))});
+  h+=`<div class="fd-row"><span class="fd-label">Reaches</span><span class="fd-val" style="color:var(--family)">{${[...reach].sort((a,b)=>a-b).join(', ')}}</span></div>`;
+  h+='</div>';
+  document.getElementById('famDetailContent').innerHTML=h;
+}
+
+function showAdjacency(){
+  let h='<div style="font-size:10px">';
+  FAMILY.forEach(p=>{
+    const m=2*p-1,g=2*p+1;
+    const reachM=familyFactors(m),reachG=familyFactors(g);
+    const mFam=isFamily(m),gFam=isFamily(g);
+    h+=`<div style="padding:4px 0;border-bottom:1px solid #0e0e20;display:flex;gap:4px;align-items:center">`;
+    h+=`<span style="color:var(--family);font-weight:600;min-width:24px">${p}</span>`;
+    h+=`<span style="color:var(--muted);font-size:8px">→</span>`;
+    h+=`<span style="color:var(--mitosis);min-width:36px">${m}${mFam?' ✦':''}</span>`;
+    h+=`<span style="color:var(--muted);font-size:7px;min-width:55px">[${reachM.join(',')}]</span>`;
+    h+=`<span style="color:var(--growth);min-width:36px">${g}${gFam?' ✦':''}</span>`;
+    h+=`<span style="color:var(--muted);font-size:7px">[${reachG.join(',')}]</span>`;
+    h+=`</div>`;
+  });
+  h+='</div>';
+  h+=`<div class="info-line" style="margin-top:6px">✦ = result is itself a family member (direct Sophie Germain link)</div>`;
+  document.getElementById('famAdjContent').innerHTML=h;
+}
+
+function expandFamily(){
+  const p=state.selectedFamily, tiers=+document.getElementById('famExpDepth').value;
+  let cur=new Set([p]),seen=new Set([p]);
+  let h='<div style="font-size:10px">';
+  h+=`<div style="padding:3px 0;color:var(--family);font-weight:600">Tier 0: {${p}}</div>`;
+  for(let t=1;t<=tiers;t++){
+    const next=new Set();
+    for(const v of cur){[OPS.mitosis(v),OPS.stable(v),OPS.growth(v)].forEach(r=>{if(r>0&&!seen.has(r)){next.add(r);seen.add(r)}})}
+    const arr=[...next].sort((a,b)=>a-b);
+    const fam=arr.filter(v=>isFamily(v)),primes=arr.filter(v=>isPrime(v));
+    h+=`<div style="padding:4px 0;border-top:1px solid #0e0e20"><span style="color:var(--muted);font-size:9px">Tier ${t}:</span> <span style="color:var(--text)">${arr.length} values [${arr[0]}..${arr[arr.length-1]}]</span>`;
+    if(fam.length)h+=`<br><span style="color:var(--family);font-size:9px">Family: {${fam.join(', ')}}</span>`;
+    if(primes.length)h+=`<br><span style="color:var(--yhvh-h);font-size:9px">Primes: {${primes.slice(0,8).join(', ')}${primes.length>8?'...':''}}</span>`;
+    h+=`</div>`;
+    cur=next;
+  }
+  h+='</div>';
+  document.getElementById('famExpContent').innerHTML=h;
+}
+
+function plotFamilySpine(){saveHistory();const g=state.groupCounter++;FAMILY.forEach((p,i)=>{addPoint(p,'seed',null,0,g);if(i>0)addConn(FAMILY[i-1],p,'growth',g)});fitToView();updateTrail()}
+
+function plotFamilyAll(){saveHistory();const g=state.groupCounter++;FAMILY.forEach(p=>{addPoint(p,'seed',null,0,g);const m=OPS.mitosis(p),s=OPS.stable(p),gr=OPS.growth(p);addPoint(m,'mitosis',p,1,g);addPoint(s,'stable',p,1,g);addPoint(gr,'growth',p,1,g);addConn(p,m,'mitosis',g);addConn(p,s,'stable',g);addConn(p,gr,'growth',g)});fitToView();updateTrail()}
+
+// ══════════════════════════════════
+// GENOME LAB ENGINE
+// ══════════════════════════════════
+const ORGANISMS = [
+  {name:'Fruit fly',n:4,dn:8},{name:'Garden pea',n:7,dn:14},{name:'Honey bee ♂',n:16,dn:16},
+  {name:'Honey bee ♀',n:16,dn:32},{name:'Cat',n:19,dn:38},{name:'Mouse',n:20,dn:40},
+  {name:'Human',n:23,dn:46},{name:'Gorilla',n:24,dn:48},{name:'Octopus',n:30,dn:60},
+  {name:'Dog',n:39,dn:78},{name:'Horse',n:32,dn:64},{name:'Goldfish',n:47,dn:94},{name:'Carp',n:52,dn:104}
+];
+
+let genomeCache = {};
+
+function fullKernelStack(seed) {
+  if (genomeCache[seed]) return genomeCache[seed];
+  const kernels = []; // [{k, triple:[kx-1, kx, kx+1], factors:[{},{},...]}]
+  const allValues = new Set();
+  const allPrimes = {};  // prime -> count of appearances
+  const familyHits = new Set();
+
+  for (let k = 1; k <= seed; k++) {
+    const m = k * seed - 1, s = k * seed, g = k * seed + 1;
+    const triple = [m, s, g];
+    const factors = triple.map(v => primeFactors(v));
+    kernels.push({ k, triple, factors });
+    triple.forEach((v, i) => {
+      allValues.add(v);
+      const pf = factors[i];
+      Object.keys(pf).forEach(p => {
+        const pn = +p;
+        allPrimes[pn] = (allPrimes[pn] || 0) + pf[pn];
+        if (FSET.has(pn)) familyHits.add(pn);
+      });
+    });
+  }
+
+  // Openness analysis
+  const nm1 = seed - 1, np1 = seed + 1;
+  const nm1Prime = isPrime(nm1), np1Prime = isPrime(np1);
+  let status = '';
+  if (FSET.has(seed)) status = 'FAMILY PRIME (spine)';
+  else if (isPrime(seed)) status = 'prime (non-family)';
+  else {
+    const af = Object.keys(primeFactors(seed)).every(p => FSET.has(+p));
+    const open = (nm1Prime ? 1 : 0) + (np1Prime ? 1 : 0);
+    if (af) status = open === 2 ? 'family factors, BOTH open' : open === 1 ? 'family factors, one-way' : 'family factors, LOCKED';
+    else status = 'non-family factors';
+  }
+
+  // Twin prime flanking
+  const twinFlanked = isPrime(nm1) && isPrime(np1);
+
+  const result = { seed, kernels, allValues, allPrimes, familyHits, status, twinFlanked, nm1Prime, np1Prime };
+  genomeCache[seed] = result;
+  return result;
+}
+
+function setGenomeSub(s) {
+  document.querySelectorAll('#panel-genome .sub-tab').forEach(t => t.classList.toggle('active', t.textContent.toLowerCase() === s));
+  document.querySelectorAll('#panel-genome .sub-section').forEach(el => el.classList.remove('visible'));
+  document.getElementById('genome-' + s).classList.add('visible');
+  if (s === 'meiosis') renderMeiosis();
+}
+
+function selectOrganism() {
+  const sel = document.getElementById('orgSelect');
+  if (sel.value === 'custom') {
+    document.getElementById('customSeedRow').style.display = 'flex';
+    return;
+  }
+  document.getElementById('customSeedRow').style.display = 'none';
+  document.getElementById('genomeSeed').value = sel.value;
+  runGenome();
+}
+
+function runGenome() {
+  const seed = parseInt(document.getElementById('genomeSeed').value || document.getElementById('orgSelect').value);
+  if (isNaN(seed) || seed < 1 || seed > 200) return;
+  const data = fullKernelStack(seed);
+  renderOrgSummary(data);
+  renderKernelStack(data);
+  renderLexicon(data);
+}
+
+function renderOrgSummary(data) {
+  const s = data.seed, dn = 2 * s;
+  const pf = fmtFactors(s), dpf = fmtFactors(dn);
+  const totalVals = data.allValues.size;
+  const uniquePrimes = Object.keys(data.allPrimes).sort((a, b) => a - b);
+  const famPrimes = uniquePrimes.filter(p => FSET.has(+p));
+  const nonFamPrimes = uniquePrimes.filter(p => !FSET.has(+p));
+
+  let h = `<div class="family-detail">`;
+  h += `<div class="fd-title" style="color:var(--bright)">n = ${s} &nbsp; 2n = ${dn}</div>`;
+  h += `<div class="fd-row"><span class="fd-label">Factors</span><span class="fd-val">${pf}</span></div>`;
+  h += `<div class="fd-row"><span class="fd-label">Status</span><span class="fd-val" style="color:${data.status.includes('FAMILY')?'var(--family)':data.status.includes('LOCKED')?'var(--yhvh-h)':'var(--text)'}">${data.status}</span></div>`;
+  h += `<div class="fd-row"><span class="fd-label">n−1</span><span class="fd-val">${s-1} ${data.nm1Prime?'<span class="fd-prime">PRIME</span>':fmtFactors(s-1)}</span></div>`;
+  h += `<div class="fd-row"><span class="fd-label">n+1</span><span class="fd-val">${s+1} ${data.np1Prime?'<span class="fd-prime">PRIME</span>':fmtFactors(s+1)}</span></div>`;
+  if (data.twinFlanked) h += `<div class="fd-row"><span class="fd-label">Flanked</span><span class="fd-val" style="color:var(--yhvh-y)">TWIN PRIMES (${s-1}, ${s+1}) — maximum directional freedom</span></div>`;
+  h += `<div class="fd-row"><span class="fd-label">Kernels</span><span class="fd-val">K1–K${s} → <span class="hl">${s * 3} values</span> across ${totalVals} unique</span></div>`;
+  h += `<div class="fd-row"><span class="fd-label">Vocabulary</span><span class="fd-val"><span class="hf">${uniquePrimes.length} base primes</span></span></div>`;
+  h += `<div class="fd-row"><span class="fd-label">Family</span><span class="fd-val" style="color:var(--family)">{${famPrimes.join(', ')}}</span></div>`;
+  if (nonFamPrimes.length) h += `<div class="fd-row"><span class="fd-label">Non-fam</span><span class="fd-val" style="color:var(--muted)">{${nonFamPrimes.slice(0, 12).join(', ')}${nonFamPrimes.length > 12 ? '...' : ''}}</span></div>`;
+
+  // Sophie Germain check
+  if (FSET.has(s) && FSET.has(2*s+1)) h += `<div class="fd-row"><span class="fd-label">Spine</span><span class="fd-val" style="color:var(--yhvh-y)">${s} → ${2*s+1} (Sophie Germain link to next family)</span></div>`;
+
+  h += `</div>`;
+
+  // K2 quick view
+  h += `<div class="info-line" style="margin-top:6px">K2 triple: <span style="color:var(--mitosis)">${2*s-1}</span> · <span style="color:var(--stable)">${2*s}</span> · <span style="color:var(--growth)">${2*s+1}</span></div>`;
+  const g2 = 2*s+1;
+  if (FSET.has(g2)) h += `<div class="info-line"><span class="hf">2n+1 = ${g2} → FAMILY MEMBER</span> (growth generates next spine link)</div>`;
+  else if (isPrime(g2)) h += `<div class="info-line"><span class="ha">2n+1 = ${g2} → PRIME</span> (growth exits to non-family prime)</div>`;
+
+  document.getElementById('orgSummary').innerHTML = h;
+}
+
+function renderKernelStack(data) {
+  let h = '<table class="fold-table"><tr><th style="color:var(--muted)">K</th><th class="m-col">kx−1</th><th class="s-col">kx</th><th class="g-col">kx+1</th><th style="color:var(--muted);font-size:7px">PRIMES IN</th></tr>';
+  data.kernels.forEach(row => {
+    const [m, s, g] = row.triple;
+    const primeSet = new Set();
+    row.factors.forEach(f => Object.keys(f).forEach(p => primeSet.add(+p)));
+    const famIn = [...primeSet].filter(p => FSET.has(p)).sort((a,b)=>a-b);
+    const isFamRow = famIn.length > 0 && [...primeSet].every(p => FSET.has(p));
+    h += `<tr style="${isFamRow ? 'background:#50e89008' : ''}" onclick="genomeKernelClick(${row.k})" style="cursor:pointer">`;
+    h += `<td class="fold-n">K${row.k}</td>`;
+    [m, s, g].forEach((v, i) => {
+      const cls = i === 0 ? 'm-val' : i === 1 ? 's-val' : 'g-val';
+      const isFam = isFamily(v);
+      const isP = isPrime(v);
+      h += `<td class="${cls}" style="${isFam ? 'text-decoration:underline;text-decoration-color:var(--family)' : isP ? 'font-style:italic' : ''}" title="${fmtFactorsPlain(v)}">${v}</td>`;
+    });
+    h += `<td style="font-size:8px;color:var(--muted)">{${famIn.join(',')}}</td>`;
+    h += '</tr>';
+  });
+  h += '</table>';
+  document.getElementById('kernelStack').innerHTML = h;
+}
+
+function genomeKernelClick(k) {
+  const seed = parseInt(document.getElementById('genomeSeed').value || document.getElementById('orgSelect').value);
+  const m = k * seed - 1, s = k * seed, g = k * seed + 1;
+  saveHistory();
+  const gid = state.groupCounter++;
+  addPoint(s, 'seed', null, 0, gid);
+  addPoint(m, 'mitosis', s, 1, gid);
+  addPoint(g, 'growth', s, 1, gid);
+  addConn(s, m, 'mitosis', gid);
+  addConn(s, g, 'growth', gid);
+  state.viewCenter = s;
+  render(); updateTrail();
+}
+
+function renderLexicon(data) {
+  const primes = Object.entries(data.allPrimes).sort((a, b) => +a[0] - +b[0]);
+  const maxCount = Math.max(...primes.map(([, c]) => c));
+
+  let h = '<div style="font-size:10px">';
+
+  // Family primes section
+  h += '<div class="info-line" style="margin-bottom:4px;font-weight:600;color:var(--family)">Family Primes in Vocabulary</div>';
+  primes.filter(([p]) => FSET.has(+p)).forEach(([p, c]) => {
+    const pct = (c / (data.seed * 3) * 100).toFixed(1);
+    const barW = Math.round(c / maxCount * 100);
+    h += `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;"><span style="min-width:28px;text-align:right;color:var(--family);font-weight:600">${p}</span>`;
+    h += `<div style="flex:1;height:12px;background:var(--surface);border-radius:2px;overflow:hidden"><div style="width:${barW}%;height:100%;background:var(--family);opacity:0.5;border-radius:2px"></div></div>`;
+    h += `<span style="min-width:44px;color:var(--muted);font-size:9px">${c}× ${pct}%</span></div>`;
+  });
+
+  // Non-family primes
+  const nonFam = primes.filter(([p]) => !FSET.has(+p));
+  if (nonFam.length) {
+    h += '<div class="info-line" style="margin-top:8px;margin-bottom:4px;font-weight:600;color:var(--yhvh-h)">Non-Family Primes (breach points)</div>';
+    nonFam.slice(0, 20).forEach(([p, c]) => {
+      const barW = Math.round(c / maxCount * 100);
+      h += `<div style="display:flex;align-items:center;gap:6px;padding:2px 0;"><span style="min-width:28px;text-align:right;color:var(--yhvh-h)">${p}</span>`;
+      h += `<div style="flex:1;height:12px;background:var(--surface);border-radius:2px;overflow:hidden"><div style="width:${barW}%;height:100%;background:var(--yhvh-h);opacity:0.3;border-radius:2px"></div></div>`;
+      h += `<span style="min-width:44px;color:var(--muted);font-size:9px">${c}×</span></div>`;
+    });
+    if (nonFam.length > 20) h += `<div class="info-line">...and ${nonFam.length - 20} more</div>`;
+  }
+
+  // Purity score
+  const famTotal = primes.filter(([p]) => FSET.has(+p)).reduce((s, [, c]) => s + c, 0);
+  const allTotal = primes.reduce((s, [, c]) => s + c, 0);
+  const purity = (famTotal / allTotal * 100).toFixed(1);
+  h += `<div style="margin-top:10px;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:3px;text-align:center">`;
+  h += `<div style="font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase">Family Purity Index</div>`;
+  h += `<div style="font-size:22px;font-weight:700;color:${+purity>70?'var(--family)':+purity>40?'var(--growth)':'var(--yhvh-h)'}">${purity}%</div>`;
+  h += `<div style="font-size:8px;color:var(--muted)">${famTotal} family-factor instances / ${allTotal} total</div>`;
+  h += '</div>';
+
+  // Domain range
+  const vals = [...data.allValues].sort((a, b) => a - b);
+  h += `<div class="info-line" style="margin-top:8px">Domain range: <span class="hl">[${vals[0]} .. ${vals[vals.length - 1]}]</span></div>`;
+  h += `<div class="info-line">K1 floor: <span class="hl">${data.seed - 1}</span> · K${data.seed} ceiling: <span class="hl">${data.seed * data.seed + 1}</span></div>`;
+
+  h += '</div>';
+  document.getElementById('lexiconContent').innerHTML = h;
+}
+
+function runComparison() {
+  const a = +document.getElementById('cmpA').value, b = +document.getElementById('cmpB').value;
+  const dA = fullKernelStack(a), dB = fullKernelStack(b);
+
+  // Value overlap
+  const valsA = dA.allValues, valsB = dB.allValues;
+  const shared = new Set([...valsA].filter(v => valsB.has(v)));
+
+  // Prime vocabulary overlap
+  const primesA = new Set(Object.keys(dA.allPrimes).map(Number));
+  const primesB = new Set(Object.keys(dB.allPrimes).map(Number));
+  const sharedPrimes = [...primesA].filter(p => primesB.has(p)).sort((x, y) => x - y);
+  const onlyA = [...primesA].filter(p => !primesB.has(p)).sort((x, y) => x - y);
+  const onlyB = [...primesB].filter(p => !primesA.has(p)).sort((x, y) => x - y);
+  const sharedFam = sharedPrimes.filter(p => FSET.has(p));
+
+  let h = '<div style="font-size:10px">';
+
+  // Header
+  h += `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);margin-bottom:6px">`;
+  h += `<span style="color:var(--mitosis);font-weight:600">n=${a}</span>`;
+  h += `<span style="color:var(--muted)">⟺</span>`;
+  h += `<span style="color:var(--growth);font-weight:600">n=${b}</span></div>`;
+
+  // Value overlap
+  h += `<div class="fd-row"><span class="fd-label" style="min-width:70px">Values A</span><span class="fd-val">${valsA.size}</span></div>`;
+  h += `<div class="fd-row"><span class="fd-label" style="min-width:70px">Values B</span><span class="fd-val">${valsB.size}</span></div>`;
+  h += `<div class="fd-row"><span class="fd-label" style="min-width:70px">Shared</span><span class="fd-val" style="color:var(--yhvh-y)">${shared.size} values</span></div>`;
+  const overlapPct = (shared.size / Math.min(valsA.size, valsB.size) * 100).toFixed(1);
+  h += `<div class="fd-row"><span class="fd-label" style="min-width:70px">Overlap</span><span class="fd-val" style="color:var(--yhvh-y)">${overlapPct}%</span></div>`;
+
+  // Shared values list (first few)
+  if (shared.size > 0) {
+    const sv = [...shared].sort((a, b) => a - b);
+    h += `<div class="info-line" style="margin-top:4px">Shared values: <span class="hl">${sv.slice(0, 15).join(', ')}${sv.length > 15 ? '...' : ''}</span></div>`;
+    const sharedFamVals = sv.filter(v => isFamily(v));
+    if (sharedFamVals.length) h += `<div class="info-line">Shared <span class="hf">family values</span>: {${sharedFamVals.join(', ')}}</div>`;
+  }
+
+  // Prime vocabulary comparison
+  h += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">`;
+  h += `<div class="info-line" style="font-weight:600;color:var(--bright)">Prime Vocabulary Comparison</div>`;
+  h += `<div class="fd-row"><span class="fd-label" style="min-width:70px">Shared</span><span class="fd-val" style="color:var(--family)">{${sharedPrimes.slice(0, 12).join(', ')}${sharedPrimes.length > 12 ? '...' : ''}}</span></div>`;
+  h += `<div class="fd-row"><span class="fd-label" style="min-width:70px">Shared fam</span><span class="fd-val" style="color:var(--family)">{${sharedFam.join(', ')}}</span></div>`;
+  if (onlyA.length) h += `<div class="fd-row"><span class="fd-label" style="min-width:70px">Only n=${a}</span><span class="fd-val" style="color:var(--mitosis)">{${onlyA.slice(0, 8).join(', ')}${onlyA.length > 8 ? '...' : ''}}</span></div>`;
+  if (onlyB.length) h += `<div class="fd-row"><span class="fd-label" style="min-width:70px">Only n=${b}</span><span class="fd-val" style="color:var(--growth)">{${onlyB.slice(0, 8).join(', ')}${onlyB.length > 8 ? '...' : ''}}</span></div>`;
+  h += '</div>';
+
+  // Kernel-by-kernel overlap heatmap (compact)
+  h += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">`;
+  h += `<div class="info-line" style="font-weight:600;color:var(--bright)">Kernel Crossing Points</div>`;
+  h += `<div class="info-line">Where K<sub>i</sub>(n=${a}) produces same value as K<sub>j</sub>(n=${b}):</div>`;
+  let crossings = [];
+  for (const ka of dA.kernels) {
+    for (const kb of dB.kernels) {
+      const common = ka.triple.filter(v => kb.triple.includes(v));
+      if (common.length > 0) crossings.push({ ka: ka.k, kb: kb.k, vals: common });
+    }
+  }
+  if (crossings.length > 0) {
+    crossings.slice(0, 15).forEach(c => {
+      h += `<div style="display:flex;gap:4px;padding:2px 0;font-size:9px">`;
+      h += `<span style="color:var(--mitosis)">K${c.ka}</span>`;
+      h += `<span style="color:var(--muted)">×</span>`;
+      h += `<span style="color:var(--growth)">K${c.kb}</span>`;
+      h += `<span style="color:var(--muted)">=</span>`;
+      h += `<span style="color:var(--yhvh-y);font-weight:600">${c.vals.join(', ')}</span>`;
+      h += `</div>`;
+    });
+    if (crossings.length > 15) h += `<div class="info-line">...${crossings.length - 15} more crossings</div>`;
+  } else {
+    h += `<div class="info-line">No direct triple value crossings found.</div>`;
+  }
+  h += '</div>';
+
+  // Structural reading
+  h += `<div style="margin-top:10px;padding:8px;background:var(--surface);border:1px solid var(--border);border-radius:3px">`;
+  h += `<div style="font-size:9px;color:var(--muted);letter-spacing:1px;margin-bottom:4px">STRUCTURAL READING</div>`;
+  if (Math.abs(a - b) === 1) {
+    h += `<div class="info-line">n=${Math.min(a,b)} and n=${Math.max(a,b)} are <span class="ha">adjacent</span>. One is the ±1 operand of the other. ${a === 23 && b === 24 || a === 24 && b === 23 ? 'Human chromosome 2 is a FUSION of two ape chromosomes — the mitosis result applied at the karyotype level.' : ''}</div>`;
+  }
+  if (2 * Math.min(a, b) + 1 === Math.max(a, b)) {
+    h += `<div class="info-line">n=${Math.max(a,b)} = 2×${Math.min(a,b)}+1 — the <span class="hf">growth operation</span> connects them. Sophie Germain link.</div>`;
+  }
+  const vocabOverlap = (sharedPrimes.length / Math.max(primesA.size, primesB.size) * 100).toFixed(0);
+  h += `<div class="info-line">Vocabulary overlap: <span class="hl">${vocabOverlap}%</span> — ${+vocabOverlap > 70 ? 'high structural resonance' : +vocabOverlap > 40 ? 'moderate structural overlap' : 'divergent domains'}</div>`;
+  h += '</div>';
+
+  h += '</div>';
+  document.getElementById('compareContent').innerHTML = h;
+}
+
+function renderMeiosis() {
+  const seed = parseInt(document.getElementById('genomeSeed').value || document.getElementById('orgSelect').value) || 23;
+  const dn = 2 * seed;
+  const rep = dn * 2; // replication
+
+  let h = '<div style="font-size:10px">';
+  h += `<div class="info-line" style="font-weight:600;font-size:12px;color:var(--bright);margin-bottom:8px">Meiosis as YHVH Path (n=${seed})</div>`;
+
+  // Meiosis pathway
+  h += `<div style="display:flex;align-items:center;gap:6px;padding:8px;background:var(--surface);border-radius:3px;margin-bottom:8px;flex-wrap:wrap">`;
+  h += `<span class="trail-node seed-node">${dn}</span><span style="color:var(--muted);font-size:8px">×2→</span>`;
+  h += `<span class="trail-node s-node">${rep}</span><span style="color:var(--muted);font-size:8px">÷2→</span>`;
+  h += `<span class="trail-node m-node">${dn}</span><span style="color:var(--muted);font-size:8px">÷2→</span>`;
+  h += `<span class="trail-node g-node">${seed}</span>`;
+  h += `</div>`;
+
+  h += `<div class="info-line"><span class="hy">Y</span> = Expand: ${dn} → ${rep} = ${fmtFactors(rep)}</div>`;
+  h += `<div class="info-line"><span class="ha">H</span> = Cross: Recombination at chiasmata (the lemniscate crossing)</div>`;
+  h += `<div class="info-line"><span style="color:var(--yhvh-v)">V</span> = Reduce: Meiosis I → ${dn} (with crossed material)</div>`;
+  h += `<div class="info-line"><span class="ha">H</span> = Cross: Meiosis II → 4 cells of <span class="hl">${seed}</span> each</div>`;
+
+  // Mutation as operand deviation
+  h += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">`;
+  h += `<div class="info-line" style="font-weight:600;color:var(--yhvh-h)">Mutation as Operand Shift</div>`;
+  h += `<div class="info-line">Normal: ${dn} → <span class="hl">${seed}</span> (stable inverse, clean)</div>`;
+  h += `<div class="info-line">Growth (+1): cell gets <span style="color:var(--growth)">${seed + 1}</span> → fertilized = <span style="color:var(--growth)">${seed + 1 + seed}</span> (trisomy)</div>`;
+  h += `<div class="info-line">Mitosis (−1): cell gets <span style="color:var(--mitosis)">${seed - 1}</span> → fertilized = <span style="color:var(--mitosis)">${seed - 1 + seed}</span> (monosomy)</div>`;
+  h += `</div>`;
+
+  // Viable trisomies (human-specific)
+  if (seed === 23) {
+    h += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">`;
+    h += `<div class="info-line" style="font-weight:600;color:var(--family)">Viable Trisomy Factor Signatures</div>`;
+    h += `<div class="info-line">Chromosomes that <span class="hf">survive</span> trisomy have family-pure factorizations:</div>`;
+    [[13, 'Patau', 'FAMILY PRIME'], [18, 'Edwards', '2 × 3²'], [21, 'Down', '3 × 7'], [23, 'Sex chrm', 'FAMILY PRIME']].forEach(([c, name, fac]) => {
+      h += `<div class="fd-row"><span class="fd-label" style="min-width:28px;color:var(--family)">${c}</span><span class="fd-val">${name}: ${fac} — <span class="hf">all family factors</span></span></div>`;
+    });
+    h += `<div class="info-line" style="margin-top:4px">Trisomy 16 = 2⁴ (pure seed power, no ternary balance) → <span class="ha">most common miscarriage trisomy</span></div>`;
+    h += `<div class="info-line">The cell needs BOTH members of the special pair (2,3) to survive perturbation.</div>`;
+    h += `</div>`;
+  }
+
+  // DNA chemistry
+  h += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">`;
+  h += `<div class="info-line" style="font-weight:600;color:var(--yhvh-y)">Base Pair Chemistry</div>`;
+  h += `<div class="info-line">A-T = <span style="color:var(--mitosis)">2</span> hydrogen bonds = <span class="hf">seed (K2)</span></div>`;
+  h += `<div class="info-line">G-C = <span style="color:var(--growth)">3</span> hydrogen bonds = <span class="hf">ternary kernel (K3)</span></div>`;
+  h += `<div class="info-line">DNA is built from the special pair. Every base pair on Earth is held by 2 or 3 bonds.</div>`;
+  h += `</div>`;
+
+  // Octopus body plan (if seed=30)
+  if (seed === 30) {
+    h += `<div style="margin-top:10px;padding-top:8px;border-top:1px solid var(--border)">`;
+    h += `<div class="info-line" style="font-weight:600;color:var(--yhvh-v)">The Octopus Body Plan</div>`;
+    h += `<div class="info-line">8 arms (2³) × 3 hearts × 9 brains (3²) = <span class="hl">216 = 2³×3³ = A3 (216 Hz)</span></div>`;
+    h += `<div class="info-line">432 / 2 = 216. The body plan IS A, one octave below concert A.</div>`;
+    h += `<div class="info-line">Blue blood: copper = element 29 = n−1 = the <span style="color:var(--mitosis)">mitosis neighbor</span>.</div>`;
+    h += `</div>`;
+  }
+
+  h += '</div>';
+  document.getElementById('meiosisContent').innerHTML = h;
+}
+
+function plotGenomeSpread() {
+  const seed = parseInt(document.getElementById('genomeSeed').value || document.getElementById('orgSelect').value);
+  const data = fullKernelStack(seed);
+  saveHistory();
+  const g = state.groupCounter++;
+
+  // Plot selected kernel triples
+  const step = Math.max(1, Math.floor(data.kernels.length / 12)); // sample ~12 kernels for visual clarity
+  data.kernels.forEach((row, i) => {
+    if (i % step !== 0 && i !== data.kernels.length - 1) return;
+    const [m, s, gr] = row.triple;
+    addPoint(s, 'seed', null, row.k, g);
+    addPoint(m, 'mitosis', s, row.k, g);
+    addPoint(gr, 'growth', s, row.k, g);
+    addConn(s, m, 'mitosis', g);
+    addConn(s, gr, 'growth', g);
+  });
+  fitToView(); updateTrail();
+}
+
+// ══════════════════════════════════
+// PAINT MODE
+// ══════════════════════════════════
+function setPaintBrush(b){state.paintBrush=b;document.querySelectorAll('#panel-paint .op-btn').forEach(el=>el.style.outline='none');const id=b==='all'?'brush-a':'brush-'+b[0];document.getElementById(id).style.outline='2px solid '+COLORS[b];updatePaintIndicator()}
+function updatePaintIndicator(){const d=document.getElementById('paintDot'),l=document.getElementById('paintLabel');const c=COLORS[state.paintBrush];d.style.background=c;l.style.color=c;l.textContent=state.paintBrush==='all'?'ALL THREE':state.paintBrush.toUpperCase()}
+function paintAt(v){const d=+document.getElementById('paintDepth').value;saveHistory();const g=state.groupCounter++;addPoint(v,'seed',null,0,g);if(state.paintBrush==='all')applyRecTree(v,d,0,g);else applyRec(v,state.paintBrush,d,0,g);render();updateTrail()}
+
+// ── KEYBOARD ──
+document.addEventListener('keydown',e=>{if(e.target.tagName==='INPUT')return;switch(e.key){case'm':case'M':applyOp('mitosis');break;case's':case'S':applyOp('stable');break;case'g':case'G':applyOp('growth');break;case'a':case'A':applyOp('all');break;case'z':if(e.ctrlKey||e.metaKey)undoLast();break;case'1':setMode('explore');break;case'2':setMode('fold');break;case'3':setMode('lattice');break;case'4':setMode('yhvh');break;case'5':setMode('family');break;case'6':setMode('genome');break;case'7':setMode('paint');break;case'f':case'F':fitToView();break;case'c':case'C':if(!e.ctrlKey&&!e.metaKey)clearCanvas();break;case'=':case'+':zoomIn();break;case'-':zoomOut();break}});
+
+// ── INIT ──
+window.addEventListener('load',()=>{resizeCanvas();updateFoldTable();buildLattice();setPaintBrush('all');const g=state.groupCounter++;addPoint(4,'seed',null,0,g);state.currentValue=4;updateResultDisplay(4);render();updateTrail()});
+</script>
+</body>
+</html>

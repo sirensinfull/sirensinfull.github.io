@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SYNERGONESIS — Unified Visualizer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;600;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap');
+  :root{--mono:'JetBrains Mono',monospace;--serif:'Cormorant Garamond',serif;
+    --bg:#000;--panel:#0a0a0f;--surface:#111118;--border:#1c1c2e;--muted:#4a4a6a;--text:#aab;--bright:#dde;
+    --mitosis:#4a9eff;--stable:#50e890;--growth:#ffaa40;--family:#50e890;--prime:#ff6088;--overlap:#ffd700;--accent:#ff6088}
+  *{margin:0;padding:0;box-sizing:border-box}
+  body{background:var(--bg);color:var(--text);font-family:var(--mono);font-size:12px;overflow:hidden;height:100vh;width:100vw}
+  canvas#cv{display:block;position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;cursor:grab}
+  canvas#cv:active{cursor:grabbing}
+
+  /* ═══ HUD LAYER ═══ */
+  .hud{position:fixed;z-index:10;pointer-events:none}
+  .hud>*{pointer-events:auto}
+
+  /* Header */
+  .top-bar{top:0;left:0;right:0;height:44px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,#000000ee,#00000000)}
+  .logo{font-family:var(--serif);font-size:17px;color:#fff;letter-spacing:3px;font-weight:400}
+  .logo span{opacity:.35;font-size:13px;letter-spacing:1px}
+  .top-right{display:flex;align-items:center;gap:8px}
+  .node-count{font-size:9px;color:var(--muted);letter-spacing:.5px}
+
+  /* ═══ SOURCE PANEL ═══ */
+  .source-panel{top:52px;left:14px;width:280px;max-height:calc(100vh - 80px);background:#000000dd;border:1px solid var(--border);border-radius:5px;backdrop-filter:blur(12px);display:flex;flex-direction:column;overflow:hidden}
+  .sp-header{padding:10px 12px 8px;border-bottom:1px solid var(--border);flex-shrink:0}
+  .source-select{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--bright);font-family:var(--mono);font-size:11px;padding:6px 8px;border-radius:3px;outline:none;cursor:pointer;margin-bottom:8px}
+  .source-select:focus{border-color:var(--growth)}
+  .source-select option{background:#111;color:#ddd}
+
+  .render-row{display:flex;gap:3px}
+  .rbtn{flex:1;padding:5px 4px;font-size:9px;letter-spacing:.3px;text-transform:uppercase;background:var(--surface);border:1px solid var(--border);color:var(--muted);cursor:pointer;border-radius:2px;text-align:center;font-family:var(--mono);transition:all .2s}
+  .rbtn:hover{color:var(--text);border-color:var(--muted)}
+  .rbtn.go{color:var(--growth);border-color:#ffaa4040}
+  .rbtn.go:hover{border-color:var(--growth);background:#ffaa4015}
+
+  /* Module panels */
+  .sp-body{flex:1;overflow-y:auto;padding:10px 12px}
+  .sp-body::-webkit-scrollbar{width:3px} .sp-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:2px}
+  .mod{display:none} .mod.active{display:block}
+
+  .plabel{font-size:8px;text-transform:uppercase;letter-spacing:1.5px;color:var(--muted);margin-bottom:5px;margin-top:8px}
+  .plabel:first-child{margin-top:0}
+  .info{font-size:9px;color:#445;line-height:1.5;margin-bottom:6px}
+  .info .hl{color:var(--bright);font-weight:500} .info .hf{color:var(--family)} .info .hp{color:var(--prime)} .info .hg{color:var(--growth)}
+
+  .inp-row{display:flex;gap:4px;margin-bottom:6px;align-items:center}
+  .inp{background:var(--surface);border:1px solid var(--border);color:var(--bright);font-family:var(--mono);font-size:13px;padding:5px 7px;border-radius:3px;outline:none;text-align:center;width:56px}
+  .inp:focus{border-color:var(--growth)}
+  .inp-wide{flex:1;width:auto}
+  .btn{background:var(--surface);border:1px solid var(--border);color:var(--muted);font-family:var(--mono);font-size:9px;padding:5px 8px;cursor:pointer;border-radius:3px;transition:all .2s;white-space:nowrap}
+  .btn:hover{border-color:var(--muted);color:var(--text);background:#1a1a2a}
+  .btn.active{border-color:#fff;color:#fff}
+
+  .slider-row{display:flex;align-items:center;gap:6px;margin-bottom:6px}
+  .slider-row label{font-size:8px;text-transform:uppercase;letter-spacing:.8px;color:var(--muted);white-space:nowrap;min-width:40px}
+  .slider-row input[type=range]{flex:1;-webkit-appearance:none;background:var(--border);height:2px;border-radius:1px;outline:none}
+  .slider-row input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:10px;height:10px;background:#fff;border-radius:50%;cursor:pointer}
+  .sval{color:var(--bright);font-weight:600;min-width:18px;text-align:center;font-size:10px}
+
+  .op-row{display:flex;gap:3px;margin-bottom:6px}
+  .opb{flex:1;padding:6px 2px;text-align:center;background:var(--surface);border:1px solid var(--border);border-radius:3px;cursor:pointer;font-family:var(--mono);font-size:9px;transition:all .2s}
+  .opb:hover{border-color:var(--muted)}
+  .opb.m{color:var(--mitosis)} .opb.s{color:var(--stable)} .opb.g{color:var(--growth)} .opb.a{color:var(--bright)}
+  .opb .of{font-size:11px;font-weight:600;display:block;margin-bottom:1px}
+
+  .chip-row{display:flex;flex-wrap:wrap;gap:3px;margin-bottom:6px}
+  .chip{padding:3px 7px;border-radius:3px;font-size:10px;font-weight:600;background:var(--surface);border:1px solid var(--border);cursor:pointer;transition:all .2s}
+  .chip:hover{border-color:var(--muted);transform:translateY(-1px)}
+  .chip.sel{border-color:var(--family);color:var(--family);background:#50e89012}
+
+  .result-box{background:var(--surface);border:1px solid var(--border);border-radius:3px;padding:8px;margin-bottom:6px;font-size:10px;max-height:160px;overflow-y:auto}
+  .result-box::-webkit-scrollbar{width:2px}.result-box::-webkit-scrollbar-thumb{background:var(--border)}
+
+  /* Organism selects */
+  .org-sel{width:100%;background:var(--surface);border:1px solid var(--border);color:var(--bright);font-family:var(--mono);font-size:10px;padding:5px;border-radius:3px;outline:none;margin-bottom:4px}
+
+  /* Right info panel */
+  .info-panel{bottom:14px;right:14px;font-size:9px;color:#333;letter-spacing:.3px;line-height:1.5;text-align:right}
+  .info-panel .b{color:#555}
+
+  /* Node tooltip */
+  .node-tip{top:52px;right:14px;background:#000000dd;border:1px solid var(--border);border-radius:4px;padding:10px 12px;backdrop-filter:blur(8px);font-size:10px;min-width:150px;display:none}
+  .node-tip.vis{display:block}
+  .nt-val{font-size:18px;font-weight:600;color:#fff;margin-bottom:3px}
+  .nt-row{color:var(--muted);line-height:1.6} .nt-row .w{color:#fff} .nt-row .f{color:var(--family)} .nt-row .p{color:var(--prime)}
+
+  /* Display mode bar */
+  .display-bar{bottom:14px;left:14px;display:flex;gap:3px;align-items:center}
+  .dbtn{padding:5px 8px;font-size:8px;letter-spacing:.5px;text-transform:uppercase;background:#000000aa;border:1px solid #1a1a1a;color:#444;cursor:pointer;border-radius:2px;font-family:var(--mono);transition:all .2s;backdrop-filter:blur(4px)}
+  .dbtn:hover{color:#888;border-color:#333}
+  .dbtn.active{color:#fff;border-color:#555;background:#1a1a1a}
+  .dsep{width:1px;height:16px;background:#222;margin:0 2px}
+</style>
+</head>
+<body>
+<canvas id="cv"></canvas>
+
+<!-- HEADER -->
+<div class="hud top-bar">
+  <div class="logo">SYNERGONESIS <span>— unified visualizer</span></div>
+  <div class="top-right"><span class="node-count" id="nodeCount">0 nodes</span></div>
+</div>
+
+<!-- SOURCE PANEL -->
+<div class="hud source-panel">
+  <div class="sp-header">
+    <select class="source-select" id="sourceSel" onchange="switchSource()">
+      <option value="seeds">Seeds — Direct Planting</option>
+      <option value="explorer">Operand Explorer</option>
+      <option value="fold">Folding Table</option>
+      <option value="yhvh">YHVH Engine</option>
+      <option value="family">Family Spine</option>
+      <option value="genome">Genome Lab</option>
+    </select>
+    <div class="render-row">
+      <button class="rbtn go" onclick="generate()">▶ GENERATE</button>
+      <button class="rbtn" onclick="addToScene()">+ ADD</button>
+      <button class="rbtn" onclick="clearScene()">CLEAR</button>
+      <button class="rbtn" id="mirrorBtn" onclick="toggleMirror()">±</button>
+    </div>
+  </div>
+  <div class="sp-body">
+
+    <!-- ═══ SEEDS ═══ -->
+    <div class="mod active" id="mod-seeds">
+      <div class="plabel">Plant Seeds</div>
+      <div class="inp-row">
+        <input type="number" class="inp inp-wide" id="s_seed" value="2" placeholder="integer">
+        <button class="btn" onclick="modules.seeds.add()">PLANT</button>
+      </div>
+      <div class="slider-row"><label>Depth</label><input type="range" id="s_depth" min="1" max="7" value="4" oninput="this.nextElementSibling.textContent=this.value"><span class="sval">4</span></div>
+      <div class="plabel">Presets</div>
+      <div class="inp-row">
+        <button class="btn" onclick="modules.seeds.preset('family')">FAMILY</button>
+        <button class="btn" onclick="modules.seeds.preset('yhvh')">YHVH</button>
+        <button class="btn" onclick="modules.seeds.preset('primes')">PRIMES</button>
+      </div>
+      <div class="plabel">Active Seeds</div>
+      <div id="s_list" class="chip-row"></div>
+    </div>
+
+    <!-- ═══ EXPLORER ═══ -->
+    <div class="mod" id="mod-explorer">
+      <div class="plabel">Seed</div>
+      <div class="inp-row">
+        <input type="number" class="inp inp-wide" id="e_seed" value="4">
+      </div>
+      <div class="plabel">Operand</div>
+      <div class="op-row">
+        <div class="opb m" onclick="modules.explorer.setOp('mitosis')"><span class="of">2x−1</span>mitosis</div>
+        <div class="opb s" onclick="modules.explorer.setOp('stable')"><span class="of">2x</span>stable</div>
+        <div class="opb g" onclick="modules.explorer.setOp('growth')"><span class="of">2x+1</span>growth</div>
+      </div>
+      <div class="op-row"><div class="opb a" onclick="modules.explorer.setOp('all')"><span class="of">△</span>all three</div></div>
+      <div class="slider-row"><label>Depth</label><input type="range" id="e_depth" min="1" max="8" value="4" oninput="this.nextElementSibling.textContent=this.value"><span class="sval">4</span></div>
+      <div class="info">Apply operands recursively from seed. Each node spawns children via <span class="hl">2x−1</span>, <span class="hl">2x</span>, <span class="hl">2x+1</span>.</div>
+    </div>
+
+    <!-- ═══ FOLD ═══ -->
+    <div class="mod" id="mod-fold">
+      <div class="plabel">Folding Table</div>
+      <div class="slider-row"><label>Folds</label><input type="range" id="f_folds" min="1" max="14" value="8" oninput="this.nextElementSibling.textContent=this.value"><span class="sval">8</span></div>
+      <div class="info">Each fold <span class="hl">n</span>: triple <span class="hl">(2<sup>n</sup>−1, 2<sup>n</sup>, 2<sup>n</sup>+1)</span>. The doubling cascade with its mitosis and growth shadows.</div>
+      <div class="result-box" id="f_preview"></div>
+    </div>
+
+    <!-- ═══ YHVH ═══ -->
+    <div class="mod" id="mod-yhvh">
+      <div class="plabel">Tetragrammaton</div>
+      <div class="inp-row">
+        <div style="text-align:center;flex:1"><input type="number" class="inp" id="y_Y" value="10"><div style="font-size:8px;color:var(--growth);margin-top:2px">Y</div></div>
+        <div style="text-align:center;flex:1"><input type="number" class="inp" id="y_H1" value="5"><div style="font-size:8px;color:var(--prime);margin-top:2px">H</div></div>
+        <div style="text-align:center;flex:1"><input type="number" class="inp" id="y_V" value="6"><div style="font-size:8px;color:var(--mitosis);margin-top:2px">V</div></div>
+        <div style="text-align:center;flex:1"><input type="number" class="inp" id="y_H2" value="5"><div style="font-size:8px;color:var(--prime);margin-top:2px">H</div></div>
+      </div>
+      <div class="plabel">Mode</div>
+      <div class="inp-row">
+        <button class="btn active" id="y_triadic" onclick="modules.yhvh.setMode('triadic')">Triadic</button>
+        <button class="btn" id="y_cross" onclick="modules.yhvh.setMode('cross')">Cross</button>
+        <button class="btn" id="y_chain" onclick="modules.yhvh.setMode('chain')">Chains</button>
+        <button class="btn" id="y_expand" onclick="modules.yhvh.setMode('expand')">Expand</button>
+      </div>
+      <div class="slider-row"><label>Depth</label><input type="range" id="y_depth" min="1" max="5" value="2" oninput="this.nextElementSibling.textContent=this.value"><span class="sval">2</span></div>
+      <div class="info">The four values as <span class="hg">operational seeds</span>. Triadic = each through operands. Cross = pairwise. Chains = sequential path. Expand = recursive tree from each.</div>
+    </div>
+
+    <!-- ═══ FAMILY ═══ -->
+    <div class="mod" id="mod-family">
+      <div class="plabel">Family of 2</div>
+      <div class="chip-row" id="fm_chips"></div>
+      <div class="plabel">Display</div>
+      <div class="inp-row">
+        <button class="btn active" id="fm_spine" onclick="modules.family.setMode('spine')">Spine</button>
+        <button class="btn" id="fm_operands" onclick="modules.family.setMode('operands')">Operands</button>
+        <button class="btn" id="fm_adj" onclick="modules.family.setMode('adjacency')">Adjacency</button>
+      </div>
+      <div class="slider-row"><label>Depth</label><input type="range" id="fm_depth" min="1" max="5" value="2" oninput="this.nextElementSibling.textContent=this.value"><span class="sval">2</span></div>
+      <div class="info">The Sophie Germain chain: <span class="hf">2→3→5→7→11→13→23→47</span>. Each member's operand domain, directed adjacency, and factor reach.</div>
+    </div>
+
+    <!-- ═══ GENOME ═══ -->
+    <div class="mod" id="mod-genome">
+      <div class="plabel">Organism A</div>
+      <select class="org-sel" id="g_selA" onchange="document.getElementById('g_seedA').value=this.value">
+        <option value="23" selected>Human (n=23)</option>
+        <option value="4">Fruit fly (n=4)</option><option value="7">Garden pea (n=7)</option>
+        <option value="10">Corn (n=10)</option><option value="16">Honey bee (n=16)</option>
+        <option value="19">Cat (n=19)</option><option value="20">Mouse (n=20)</option>
+        <option value="24">Gorilla (n=24)</option><option value="30">Octopus (n=30)</option>
+        <option value="32">Horse (n=32)</option><option value="39">Dog (n=39)</option>
+        <option value="47">Goldfish (n=47)</option>
+      </select>
+      <div class="inp-row"><label style="font-size:8px;color:var(--prime);min-width:14px">A</label><input type="number" class="inp inp-wide" id="g_seedA" value="23"></div>
+      <div class="plabel">Organism B</div>
+      <select class="org-sel" id="g_selB" onchange="document.getElementById('g_seedB').value=this.value">
+        <option value="30" selected>Octopus (n=30)</option>
+        <option value="4">Fruit fly (n=4)</option><option value="7">Garden pea (n=7)</option>
+        <option value="16">Honey bee (n=16)</option><option value="23">Human (n=23)</option>
+        <option value="24">Gorilla (n=24)</option><option value="32">Horse (n=32)</option>
+        <option value="47">Goldfish (n=47)</option>
+      </select>
+      <div class="inp-row"><label style="font-size:8px;color:var(--mitosis);min-width:14px">B</label><input type="number" class="inp inp-wide" id="g_seedB" value="30"></div>
+      <div class="slider-row"><label>Kernels</label><input type="range" id="g_maxK" min="1" max="30" value="10" oninput="this.nextElementSibling.textContent=this.value"><span class="sval">10</span></div>
+      <div class="info">Sublexicographic kernel expansion: K1 through Ks. <span class="hl">Organism A</span> = warm, <span class="hl">B</span> = cool, <span class="hg">gold</span> = overlap.</div>
+    </div>
+
+  </div>
+</div>
+
+<!-- NODE TOOLTIP -->
+<div class="hud node-tip" id="nodeTip">
+  <div class="nt-val" id="ntVal"></div>
+  <div class="nt-row" id="ntDetail"></div>
+</div>
+
+<!-- DISPLAY MODE BAR -->
+<div class="hud display-bar">
+  <button class="dbtn active" id="dm-tree" onclick="setDisplay('tree')">tree</button>
+  <button class="dbtn" id="dm-radial" onclick="setDisplay('radial')">radial</button>
+  <button class="dbtn" id="dm-helix" onclick="setDisplay('helix')">helix</button>
+  <button class="dbtn" id="dm-lattice" onclick="setDisplay('lattice')">lattice</button>
+  <div class="dsep"></div>
+  <button class="dbtn" id="dm-spin" onclick="toggleSpin()">spin ●</button>
+  <button class="dbtn" id="dm-labels" onclick="toggleLabels()">labels</button>
+</div>
+
+<!-- INFO -->
+<div class="hud info-panel">
+  <span class="b">drag</span> rotate · <span class="b">scroll</span> zoom · <span class="b">shift+drag</span> pan · <span class="b">dblclick</span> expand
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+// SYNERGONESIS — UNIFIED VISUALIZER ENGINE
+// ═══════════════════════════════════════════════════════
+
+// ═══ SHARED MATH ═══
+const FAMILY=[2,3,5,7,11,13,23,47],FSET=new Set(FAMILY);
+function isPrime(n){n=Math.abs(n);if(n<2)return false;if(n<4)return true;if(n%2===0||n%3===0)return false;for(let i=5;i*i<=n;i+=6)if(n%i===0||n%(i+2)===0)return false;return true}
+function primeFactors(n){n=Math.abs(n);if(n<2)return{};const f={};let d=2;while(d*d<=n){while(n%d===0){f[d]=(f[d]||0)+1;n/=d}d++}if(n>1)f[n]=(f[n]||0)+1;return f}
+function fmtP(n){const f=primeFactors(n);if(!Object.keys(f).length)return''+n;return Object.entries(f).sort((a,b)=>a[0]-b[0]).map(([p,e])=>+e>1?p+'^'+e:p).join('×')}
+function isFamily(n){return FSET.has(Math.abs(n))}
+function familyFactorsOf(n){return Object.keys(primeFactors(n)).map(Number).filter(p=>FSET.has(p))}
+const OP={mitosis:x=>2*x-1,stable:x=>2*x,growth:x=>2*x+1};
+
+// ═══ STANDARD NODE FORMAT ═══
+// Each module produces: [{value, depth, parent (value or null), opType, group, color (hex string)}]
+// The 3D engine positions them based on depth, display mode, and parent relationships.
+
+// ═══ THREE.JS ═══
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x000000);scene.fog=new THREE.FogExp2(0x000000,0.0025);
+const camera=new THREE.PerspectiveCamera(55,innerWidth/innerHeight,0.5,2000);camera.position.set(0,40,120);
+const renderer=new THREE.WebGLRenderer({canvas:document.getElementById('cv'),antialias:true});renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+
+const S={
+  display:'tree',spinning:true,showLabels:false,mirror:false,
+  rotX:0.3,rotY:0.3,camDist:120,panX:0,panY:20,
+  isDrag:false,isShift:false,dsx:0,dsy:0,drx:0,dry:0,dpx:0,dpy:0,
+  mouse:new THREE.Vector2(),raycaster:new THREE.Raycaster(),
+  nodeGroup:new THREE.Group(),edgeGroup:new THREE.Group(),labelGroup:new THREE.Group(),
+  allNodes:[],allEdges:[],meshes:[],
+  currentSource:'seeds',
+};
+scene.add(S.nodeGroup);scene.add(S.edgeGroup);scene.add(S.labelGroup);
+
+// Grid
+const gv=[];for(let i=-200;i<=200;i+=10){gv.push(-200,0,i,200,0,i,i,0,-200,i,0,200)}
+const gg=new THREE.BufferGeometry();gg.setAttribute('position',new THREE.Float32BufferAttribute(gv,3));
+scene.add(new THREE.LineSegments(gg,new THREE.LineBasicMaterial({color:0x0a0a0a})));
+
+// ═══ 3D POSITIONING ENGINE ═══
+// Converts flat node list into 3D positions
+function positionNodes(nodes,edges){
+  // Build parent→children map
+  const childMap=new Map();
+  const nodeMap=new Map();// value|depth|group → index
+  nodes.forEach((n,i)=>{n._idx=i;if(!childMap.has(i))childMap.set(i,[])});
+  edges.forEach(e=>{if(childMap.has(e.from))childMap.get(e.from).push(e.to)});
+
+  // Assign positions
+  const groups=[...new Set(nodes.map(n=>n.group))];
+  const groupCount=groups.length;
+
+  nodes.forEach((n,i)=>{
+    const gi=groups.indexOf(n.group);
+    const baseAngle=(gi/Math.max(1,groupCount))*Math.PI*2;
+    const gOff=groupCount>1?25:0;
+    const dir=n.direction||1;
+    const d=n.depth;
+    const sp=1,sc=1;
+
+    if(S.display==='tree'){
+      const tierH=11*sc*dir;
+      const tierSpread=Math.pow(0.7,d)*18*sp;
+      if(d===0){
+        n._pos=new THREE.Vector3(Math.cos(baseAngle)*gOff,0,Math.sin(baseAngle)*gOff);
+      }else{
+        // Find parent position
+        const pe=edges.find(e=>e.to===i);
+        const pp=pe?nodes[pe.from]._pos:new THREE.Vector3(0,0,0);
+        const opAngle=n.opType==='mitosis'?-2.0:n.opType==='growth'?2.0:0;
+        const a=baseAngle+opAngle*0.3/(d*0.5+1)+i*0.02;
+        n._pos=new THREE.Vector3(pp.x+Math.cos(a)*tierSpread,pp.y+tierH,pp.z+Math.sin(a)*tierSpread);
+      }
+    }else if(S.display==='radial'){
+      const r=(d+0.5)*14*sp;
+      const opOff=n.opType==='mitosis'?-0.5:n.opType==='growth'?0.5:0;
+      const a=baseAngle+opOff/(d+1)+i*0.05;
+      n._pos=new THREE.Vector3(Math.cos(a)*r+Math.cos(baseAngle)*gOff,(d-3)*5*sc*dir,Math.sin(a)*r+Math.sin(baseAngle)*gOff);
+    }else if(S.display==='helix'){
+      const angle=d*1.1*dir+baseAngle+i*0.03;
+      const r=(d+1)*7*sp;
+      const opOff=n.opType==='mitosis'?-3:n.opType==='growth'?3:0;
+      n._pos=new THREE.Vector3(Math.cos(angle)*r+Math.cos(baseAngle)*gOff,d*9*sc*dir+opOff*dir,Math.sin(angle)*r+Math.sin(baseAngle)*gOff);
+    }else{ // lattice
+      const pe=edges.find(e=>e.to===i);
+      const pp=pe?nodes[pe.from]._pos:new THREE.Vector3(Math.cos(baseAngle)*gOff,0,Math.sin(baseAngle)*gOff);
+      if(d===0){n._pos=new THREE.Vector3(Math.cos(baseAngle)*gOff,0,Math.sin(baseAngle)*gOff)}
+      else{
+        const localIdx=n.opType==='mitosis'?-1:n.opType==='growth'?1:0;
+        n._pos=new THREE.Vector3(pp.x+localIdx*7*Math.pow(0.65,d),pp.y+10*sc*dir,pp.z+localIdx*3*Math.pow(0.65,d)*0.3);
+      }
+    }
+  });
+}
+
+// ═══ SCENE BUILDER ═══
+function buildScene(nodes,edges,append=false){
+  if(!append){
+    while(S.nodeGroup.children.length)S.nodeGroup.remove(S.nodeGroup.children[0]);
+    while(S.edgeGroup.children.length)S.edgeGroup.remove(S.edgeGroup.children[0]);
+    while(S.labelGroup.children.length)S.labelGroup.remove(S.labelGroup.children[0]);
+    let op;while(op=scene.getObjectByName('zeroPlane'))scene.remove(op);
+    S.meshes=[];S.allNodes=[];S.allEdges=[];
+  }
+
+  // If mirror, duplicate with negation
+  let finalNodes=[...nodes],finalEdges=[...edges];
+  if(S.mirror){
+    const offset=nodes.length;
+    const mirrorNodes=nodes.map(n=>({...n,value:-n.value,direction:-1,isMirror:true,group:n.group+'_m'}));
+    const mirrorEdges=edges.map(e=>({...e,from:e.from+offset,to:e.to+offset}));
+    finalNodes=finalNodes.concat(mirrorNodes);
+    finalEdges=finalEdges.concat(mirrorEdges);
+  }
+
+  positionNodes(finalNodes,finalEdges);
+
+  if(append){
+    const off=S.allNodes.length;
+    finalEdges.forEach(e=>{e.from+=off;e.to+=off});
+    S.allNodes.push(...finalNodes);S.allEdges.push(...finalEdges);
+  }else{
+    S.allNodes=finalNodes;S.allEdges=finalEdges;
+  }
+
+  // Rebuild all meshes from S.allNodes/S.allEdges
+  while(S.nodeGroup.children.length)S.nodeGroup.remove(S.nodeGroup.children[0]);
+  while(S.edgeGroup.children.length)S.edgeGroup.remove(S.edgeGroup.children[0]);
+  while(S.labelGroup.children.length)S.labelGroup.remove(S.labelGroup.children[0]);
+  S.meshes=[];
+
+  const geo=new THREE.SphereGeometry(1,8,6);
+  S.allNodes.forEach((n,i)=>{
+    const mirror=n.isMirror;
+    const bright=n.depth===0?1:n.isFam?0.8:n.isPrime?0.65:0.35;
+    const b=mirror?bright*0.5:bright;
+    const size=n.depth===0?1.8:n.isFam?1.2:n.isPrime?1.0:0.55;
+    let col;
+    if(n.color){col=new THREE.Color(n.color);if(mirror){col.r*=0.5;col.g*=0.55;col.b*=0.65}}
+    else{col=new THREE.Color(b,b,b);if(n.isFam&&!mirror)col.setRGB(b*0.75,b,b*0.75);if(n.depth===0&&!mirror)col.setRGB(1,1,1);if(mirror&&n.depth===0)col.setRGB(0.4,0.45,0.55)}
+    const mat=new THREE.MeshBasicMaterial({color:col,transparent:true,opacity:Math.max(mirror?0.12:0.25,1-n.depth*(mirror?0.18:0.12))});
+    const mesh=new THREE.Mesh(geo,mat);mesh.position.copy(n._pos);mesh.scale.setScalar(size*(mirror?0.75:1));
+    mesh.userData={idx:i,value:n.value,depth:n.depth,isFam:n.isFam,isPrime:n.isPrime,opType:n.opType,group:n.group,isMirror:mirror};
+    S.nodeGroup.add(mesh);S.meshes.push(mesh);
+    if(S.showLabels&&n.depth<=2){
+      const sp=makeLabel(''+n.value,mirror?b*0.6:b);sp.position.copy(n._pos);sp.position.y+=2.5*(n.direction||1);
+      S.labelGroup.add(sp);
+    }
+  });
+
+  S.allEdges.forEach(e=>{
+    const fn=S.allNodes[e.from],tn=S.allNodes[e.to];if(!fn||!tn||!fn._pos||!tn._pos)return;
+    const eg=new THREE.BufferGeometry().setFromPoints([fn._pos,tn._pos]);
+    const mirror=fn.isMirror||tn.isMirror;
+    const edgeCol=fn.color&&!mirror?new THREE.Color(fn.color):new THREE.Color(mirror?0x556688:0xffffff);
+    const op=Math.max(mirror?0.02:0.05,(mirror?0.12:0.22)-(e.depth||0)*0.03);
+    S.edgeGroup.add(new THREE.Line(eg,new THREE.LineBasicMaterial({color:edgeCol,transparent:true,opacity:op})));
+  });
+
+  // Zero plane
+  if(S.mirror){
+    const pg=new THREE.PlaneGeometry(300,300);
+    const pm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.012,side:THREE.DoubleSide,depthWrite:false});
+    const p=new THREE.Mesh(pg,pm);p.rotation.x=-Math.PI/2;p.name='zeroPlane';scene.add(p);
+  }
+
+  document.getElementById('nodeCount').textContent=S.allNodes.length+' nodes';
+}
+
+function makeLabel(t,b){const c=document.createElement('canvas');c.width=128;c.height=48;const x=c.getContext('2d');x.font='bold 22px "JetBrains Mono"';x.textAlign='center';x.textBaseline='middle';const v=Math.floor(b*255);x.fillStyle=`rgb(${v},${v},${v})`;x.fillText(t,64,24);const tex=new THREE.CanvasTexture(c);const mat=new THREE.SpriteMaterial({map:tex,transparent:true,opacity:0.5,depthTest:false});const sp=new THREE.Sprite(mat);sp.scale.set(7,2.5,1);return sp}
+
+// ═══ MODULES ═══
+const modules={};
+
+// ─── SEEDS ───
+modules.seeds={
+  seeds:[2],
+  add(){const v=parseInt(document.getElementById('s_seed').value);if(!isNaN(v)){this.seeds.push(v);this.updateList()}},
+  remove(i){this.seeds.splice(i,1);this.updateList()},
+  preset(t){this.seeds=t==='family'?[2,3,5,7,11,13,23,47]:t==='yhvh'?[10,5,6,5]:t==='primes'?[2,3,5,7,11,13,17,19,23]:[];this.updateList()},
+  updateList(){const el=document.getElementById('s_list');el.innerHTML='';this.seeds.forEach((s,i)=>{const c=document.createElement('div');c.className='chip'+(isFamily(s)?' sel':'');c.textContent=s;c.onclick=()=>{this.remove(i)};el.appendChild(c)})},
+  generate(){
+    const depth=+document.getElementById('s_depth').value;
+    const nodes=[],edges=[];
+    this.seeds.forEach((seed,gi)=>{
+      function rec(v,d,pi,op){
+        const i=nodes.length;
+        nodes.push({value:v,depth:d,opType:op,group:'s'+gi,direction:1,isFam:isFamily(v),isPrime:isPrime(v)});
+        if(pi!==null)edges.push({from:pi,to:i,depth:d});
+        if(d<depth){rec(OP.mitosis(v),d+1,i,'mitosis');rec(OP.stable(v),d+1,i,'stable');rec(OP.growth(v),d+1,i,'growth')}
+      }
+      rec(seed,0,null,'seed');
+    });
+    return{nodes,edges};
+  }
+};
+
+// ─── EXPLORER ───
+modules.explorer={
+  op:'all',
+  setOp(o){this.op=o;document.querySelectorAll('#mod-explorer .opb').forEach(b=>b.style.outline='none');},
+  generate(){
+    const seed=+document.getElementById('e_seed').value||4;
+    const depth=+document.getElementById('e_depth').value;
+    const op=this.op;
+    const nodes=[],edges=[];
+    function rec(v,d,pi,ot){
+      const i=nodes.length;
+      nodes.push({value:v,depth:d,opType:ot,group:'exp',direction:1,isFam:isFamily(v),isPrime:isPrime(v)});
+      if(pi!==null)edges.push({from:pi,to:i,depth:d});
+      if(d<depth){
+        if(op==='all'||op==='mitosis')rec(OP.mitosis(v),d+1,i,'mitosis');
+        if(op==='all'||op==='stable')rec(OP.stable(v),d+1,i,'stable');
+        if(op==='all'||op==='growth')rec(OP.growth(v),d+1,i,'growth');
+      }
+    }
+    rec(seed,0,null,'seed');
+    return{nodes,edges};
+  }
+};
+
+// ─── FOLD ───
+modules.fold={
+  generate(){
+    const folds=+document.getElementById('f_folds').value;
+    const nodes=[],edges=[];
+    let prevI=null;
+    for(let n=0;n<=folds;n++){
+      const p=Math.pow(2,n);const m=p-1,g=p+1;
+      const si=nodes.length;
+      nodes.push({value:p,depth:n,opType:'stable',group:'fold',direction:1,isFam:isFamily(p),isPrime:isPrime(p)});
+      nodes.push({value:m,depth:n,opType:'mitosis',group:'fold',direction:1,isFam:isFamily(m),isPrime:isPrime(m)});
+      nodes.push({value:g,depth:n,opType:'growth',group:'fold',direction:1,isFam:isFamily(g),isPrime:isPrime(g)});
+      edges.push({from:si,to:si+1,depth:n});edges.push({from:si,to:si+2,depth:n});
+      if(prevI!==null)edges.push({from:prevI,to:si,depth:n});
+      prevI=si;
+    }
+    // Preview
+    let h='';for(let n=0;n<=Math.min(folds,12);n++){const p=Math.pow(2,n);h+=`<div style="display:flex;gap:6px;font-size:9px;padding:1px 0"><span style="color:var(--muted);min-width:16px">${n}</span><span style="color:var(--mitosis)">${p-1}</span><span style="color:var(--stable)">${p}</span><span style="color:var(--growth)">${p+1}</span></div>`}
+    document.getElementById('f_preview').innerHTML=h;
+    return{nodes,edges};
+  }
+};
+
+// ─── YHVH ───
+modules.yhvh={
+  mode:'triadic',
+  setMode(m){this.mode=m;['triadic','cross','chain','expand'].forEach(t=>{document.getElementById('y_'+t).classList.toggle('active',t===m)})},
+  generate(){
+    const Y=+document.getElementById('y_Y').value||10,H1=+document.getElementById('y_H1').value||5;
+    const V=+document.getElementById('y_V').value||6,H2=+document.getElementById('y_H2').value||5;
+    const vals=[Y,H1,V,H2],names=['Y','H','V','H'];
+    const colors=['#ffd700','#ff6088','#4ae8ff','#ff6088'];
+    const depth=+document.getElementById('y_depth').value;
+    const nodes=[],edges=[];
+
+    if(this.mode==='triadic'||this.mode==='expand'){
+      vals.forEach((x,gi)=>{
+        const si=nodes.length;
+        nodes.push({value:x,depth:0,opType:'seed',group:names[gi]+gi,direction:1,isFam:isFamily(x),isPrime:isPrime(x),color:colors[gi]});
+        if(this.mode==='triadic'){
+          [['mitosis',OP.mitosis(x)],['stable',OP.stable(x)],['growth',OP.growth(x)]].forEach(([ot,v])=>{
+            const ni=nodes.length;
+            nodes.push({value:v,depth:1,opType:ot,group:names[gi]+gi,direction:1,isFam:isFamily(v),isPrime:isPrime(v),color:colors[gi]});
+            edges.push({from:si,to:ni,depth:1});
+          });
+        }else{
+          // Recursive expansion
+          function rec(v,d,pi,ot){
+            const ni=nodes.length;
+            nodes.push({value:v,depth:d,opType:ot,group:names[gi]+gi,direction:1,isFam:isFamily(v),isPrime:isPrime(v),color:colors[gi]});
+            if(pi!==null)edges.push({from:pi,to:ni,depth:d});
+            if(d<depth){rec(OP.mitosis(v),d+1,ni,'mitosis');rec(OP.stable(v),d+1,ni,'stable');rec(OP.growth(v),d+1,ni,'growth')}
+          }
+          rec(x,0,null,'seed');
+        }
+      });
+    }else if(this.mode==='cross'){
+      let gi=0;
+      for(let i=0;i<vals.length;i++)for(let j=i+1;j<vals.length;j++){
+        const a=vals[i],b=vals[j];
+        const si=nodes.length;
+        nodes.push({value:a,depth:0,opType:'seed',group:'cx'+gi,direction:1,isFam:isFamily(a),isPrime:isPrime(a),color:colors[i]});
+        [[a+b-1,'mitosis'],[a+b,'stable'],[a+b+1,'growth']].forEach(([v,ot])=>{
+          const ni=nodes.length;
+          nodes.push({value:v,depth:1,opType:ot,group:'cx'+gi,direction:1,isFam:isFamily(v),isPrime:isPrime(v)});
+          edges.push({from:si,to:ni,depth:1});
+        });
+        gi++;
+      }
+    }else if(this.mode==='chain'){
+      let ci=0;
+      for(let o1=-1;o1<=1;o1++)for(let o2=-1;o2<=1;o2++)for(let o3=-1;o3<=1;o3++){
+        const r1=Y+H1+o1,r2=r1+V+o2,r3=r2+H2+o3;
+        const s0=nodes.length;
+        nodes.push({value:Y,depth:0,opType:'seed',group:'ch'+ci,direction:1,isFam:isFamily(Y),isPrime:isPrime(Y),color:'#ffd700'});
+        const s1=nodes.length;nodes.push({value:r1,depth:1,opType:o1<0?'mitosis':o1>0?'growth':'stable',group:'ch'+ci,direction:1,isFam:isFamily(r1),isPrime:isPrime(r1)});
+        edges.push({from:s0,to:s1,depth:1});
+        const s2=nodes.length;nodes.push({value:r2,depth:2,opType:o2<0?'mitosis':o2>0?'growth':'stable',group:'ch'+ci,direction:1,isFam:isFamily(r2),isPrime:isPrime(r2)});
+        edges.push({from:s1,to:s2,depth:2});
+        const s3=nodes.length;nodes.push({value:r3,depth:3,opType:o3<0?'mitosis':o3>0?'growth':'stable',group:'ch'+ci,direction:1,isFam:isFamily(r3),isPrime:isPrime(r3),color:isFamily(r3)?'#50e890':isPrime(r3)?'#ff6088':null});
+        edges.push({from:s2,to:s3,depth:3});
+        ci++;
+      }
+    }
+    return{nodes,edges};
+  }
+};
+
+// ─── FAMILY ───
+modules.family={
+  mode:'spine',selected:new Set(FAMILY),
+  setMode(m){this.mode=m;['spine','operands','adjacency'].forEach(t=>{document.getElementById('fm_'+t).classList.toggle('active',t===m)})},
+  initChips(){const el=document.getElementById('fm_chips');el.innerHTML='';FAMILY.forEach(p=>{const c=document.createElement('div');c.className='chip'+(this.selected.has(p)?' sel':'');c.textContent=p;c.onclick=()=>{this.selected.has(p)?this.selected.delete(p):this.selected.add(p);this.initChips()};el.appendChild(c)})},
+  generate(){
+    const depth=+document.getElementById('fm_depth').value;
+    const members=[...this.selected].sort((a,b)=>a-b);
+    const nodes=[],edges=[];
+    if(this.mode==='spine'){
+      members.forEach((p,i)=>{
+        const ni=nodes.length;
+        nodes.push({value:p,depth:0,opType:'seed',group:'spine',direction:1,isFam:true,isPrime:isPrime(p),color:'#50e890'});
+        if(i>0)edges.push({from:ni-1,to:ni,depth:0});
+        // Expand from each
+        if(depth>0){
+          function rec(v,d,pi,ot){
+            const idx=nodes.length;
+            nodes.push({value:v,depth:d,opType:ot,group:'sp_'+p,direction:1,isFam:isFamily(v),isPrime:isPrime(v)});
+            if(pi!==null)edges.push({from:pi,to:idx,depth:d});
+            if(d<depth){rec(OP.mitosis(v),d+1,idx,'mitosis');rec(OP.stable(v),d+1,idx,'stable');rec(OP.growth(v),d+1,idx,'growth')}
+          }
+          rec(p,0,null,'seed');
+        }
+      });
+    }else if(this.mode==='operands'){
+      members.forEach((p,gi)=>{
+        const si=nodes.length;
+        nodes.push({value:p,depth:0,opType:'seed',group:'fam'+gi,direction:1,isFam:true,isPrime:isPrime(p),color:'#50e890'});
+        [OP.mitosis(p),OP.stable(p),OP.growth(p)].forEach((v,oi)=>{
+          const ni=nodes.length;const ot=['mitosis','stable','growth'][oi];
+          nodes.push({value:v,depth:1,opType:ot,group:'fam'+gi,direction:1,isFam:isFamily(v),isPrime:isPrime(v)});
+          edges.push({from:si,to:ni,depth:1});
+        });
+      });
+    }else{ // adjacency
+      const posMap=new Map();
+      members.forEach((p,gi)=>{
+        const ni=nodes.length;posMap.set(p,ni);
+        nodes.push({value:p,depth:0,opType:'seed',group:'adj',direction:1,isFam:true,isPrime:isPrime(p),color:'#50e890'});
+      });
+      // Directed edges: if 2p+1 or 2p-1 factors contain another family member
+      members.forEach(p=>{
+        [OP.mitosis(p),OP.growth(p)].forEach(v=>{
+          familyFactorsOf(v).forEach(fp=>{
+            if(fp!==p&&posMap.has(fp))edges.push({from:posMap.get(p),to:posMap.get(fp),depth:0});
+          });
+          if(isFamily(v)&&v!==p&&posMap.has(v))edges.push({from:posMap.get(p),to:posMap.get(v),depth:0});
+        });
+      });
+    }
+    return{nodes,edges};
+  }
+};
+
+// ─── GENOME ───
+modules.genome={
+  generate(){
+    const sA=+document.getElementById('g_seedA').value||23;
+    const sB=+document.getElementById('g_seedB').value||30;
+    const maxK=+document.getElementById('g_maxK').value||10;
+    const nodes=[],edges=[];
+    const kA=Math.min(sA,maxK),kB=Math.min(sB,maxK);
+    // Track values for overlap detection
+    const valSetA=new Set(),valSetB=new Set();
+
+    // Organism A
+    for(let k=1;k<=kA;k++){
+      const m=k*sA-1,s=k*sA,g=k*sA+1;
+      valSetA.add(m);valSetA.add(s);valSetA.add(g);
+      const si=nodes.length;
+      nodes.push({value:s,depth:k,opType:'stable',group:'genA',direction:1,isFam:isFamily(s),isPrime:isPrime(s),color:'#ff6088'});
+      nodes.push({value:m,depth:k,opType:'mitosis',group:'genA',direction:1,isFam:isFamily(m),isPrime:isPrime(m),color:'#ff608888'});
+      nodes.push({value:g,depth:k,opType:'growth',group:'genA',direction:1,isFam:isFamily(g),isPrime:isPrime(g),color:'#ff608888'});
+      edges.push({from:si,to:si+1,depth:k});edges.push({from:si,to:si+2,depth:k});
+      if(k>1){const prevSi=si-3;edges.push({from:prevSi,to:si,depth:k})}
+    }
+
+    // Organism B
+    for(let k=1;k<=kB;k++){
+      const m=k*sB-1,s=k*sB,g=k*sB+1;
+      valSetB.add(m);valSetB.add(s);valSetB.add(g);
+      const si=nodes.length;
+      nodes.push({value:s,depth:k,opType:'stable',group:'genB',direction:1,isFam:isFamily(s),isPrime:isPrime(s),color:'#4ae8ff'});
+      nodes.push({value:m,depth:k,opType:'mitosis',group:'genB',direction:1,isFam:isFamily(m),isPrime:isPrime(m),color:'#4ae8ff88'});
+      nodes.push({value:g,depth:k,opType:'growth',group:'genB',direction:1,isFam:isFamily(g),isPrime:isPrime(g),color:'#4ae8ff88'});
+      edges.push({from:si,to:si+1,depth:k});edges.push({from:si,to:si+2,depth:k});
+      if(k>1){const prevSi=si-3;edges.push({from:prevSi,to:si,depth:k})}
+    }
+
+    // Mark overlaps gold
+    const overlap=new Set([...valSetA].filter(v=>valSetB.has(v)));
+    nodes.forEach(n=>{if(overlap.has(n.value))n.color='#ffd700'});
+
+    return{nodes,edges};
+  }
+};
+
+// ═══ CONTROLLER ═══
+function switchSource(){
+  const src=document.getElementById('sourceSel').value;
+  S.currentSource=src;
+  document.querySelectorAll('.mod').forEach(m=>m.classList.remove('active'));
+  document.getElementById('mod-'+src).classList.add('active');
+  if(src==='family')modules.family.initChips();
+  if(src==='seeds')modules.seeds.updateList();
+}
+
+function generate(){
+  const mod=modules[S.currentSource];
+  if(!mod)return;
+  const{nodes,edges}=mod.generate();
+  buildScene(nodes,edges,false);
+}
+
+function addToScene(){
+  const mod=modules[S.currentSource];
+  if(!mod)return;
+  const{nodes,edges}=mod.generate();
+  buildScene(nodes,edges,true);
+}
+
+function clearScene(){
+  while(S.nodeGroup.children.length)S.nodeGroup.remove(S.nodeGroup.children[0]);
+  while(S.edgeGroup.children.length)S.edgeGroup.remove(S.edgeGroup.children[0]);
+  while(S.labelGroup.children.length)S.labelGroup.remove(S.labelGroup.children[0]);
+  let op;while(op=scene.getObjectByName('zeroPlane'))scene.remove(op);
+  S.meshes=[];S.allNodes=[];S.allEdges=[];
+  document.getElementById('nodeCount').textContent='0 nodes';
+}
+
+function toggleMirror(){S.mirror=!S.mirror;document.getElementById('mirrorBtn').classList.toggle('active',S.mirror);generate()}
+function setDisplay(m){S.display=m;document.querySelectorAll('.dbtn').forEach(b=>b.classList.toggle('active',b.id==='dm-'+m));if(S.allNodes.length)generate()}
+function toggleSpin(){S.spinning=!S.spinning;document.getElementById('dm-spin').classList.toggle('active',S.spinning)}
+function toggleLabels(){S.showLabels=!S.showLabels;document.getElementById('dm-labels').classList.toggle('active',S.showLabels);if(S.allNodes.length)generate()}
+
+// ═══ CAMERA ═══
+function updateCamera(){
+  const cx=S.camDist*Math.sin(S.rotX)*Math.cos(S.rotY);
+  const cy=S.camDist*Math.sin(S.rotY)+S.panY;
+  const cz=S.camDist*Math.cos(S.rotX)*Math.cos(S.rotY);
+  camera.position.set(cx+S.panX,cy,cz);camera.lookAt(S.panX,S.panY*0.3,0);
+}
+
+const cvEl=document.getElementById('cv');
+cvEl.addEventListener('mousedown',e=>{S.isDrag=true;S.isShift=e.shiftKey;S.dsx=e.clientX;S.dsy=e.clientY;S.drx=S.rotX;S.dry=S.rotY;S.dpx=S.panX;S.dpy=S.panY});
+cvEl.addEventListener('mousemove',e=>{
+  S.mouse.x=(e.clientX/innerWidth)*2-1;S.mouse.y=-(e.clientY/innerHeight)*2+1;
+  if(S.isDrag){const dx=e.clientX-S.dsx,dy=e.clientY-S.dsy;if(S.isShift||e.shiftKey){S.panX=S.dpx-dx*0.3;S.panY=S.dpy+dy*0.3}else{S.rotX=S.drx+dx*0.005;S.rotY=Math.max(-1.4,Math.min(1.4,S.dry+dy*0.005))}updateCamera()}
+  // Hover
+  S.raycaster.setFromCamera(S.mouse,camera);
+  const hits=S.raycaster.intersectObjects(S.meshes);
+  const tip=document.getElementById('nodeTip');
+  if(hits.length){
+    const d=hits[0].object.userData;tip.classList.add('vis');
+    document.getElementById('ntVal').textContent=d.value;
+    let det=`<div class="nt-row">Depth: <span class="w">${d.depth}</span> · Group: <span class="w">${d.group}</span></div>`;
+    det+=`<div class="nt-row">Op: <span class="w">${d.opType}</span>${d.isMirror?' · <span style="color:#6688aa">MIRROR</span>':''}</div>`;
+    det+=`<div class="nt-row">Factors: <span class="w">${fmtP(Math.abs(d.value))}</span></div>`;
+    if(d.isFam)det+=`<div class="nt-row"><span class="f">FAMILY</span></div>`;
+    if(d.isPrime)det+=`<div class="nt-row"><span class="p">PRIME</span></div>`;
+    det+=`<div class="nt-row" style="margin-top:3px;font-size:9px">→ ${OP.mitosis(d.value)} · ${OP.stable(d.value)} · ${OP.growth(d.value)}</div>`;
+    document.getElementById('ntDetail').innerHTML=det;
+    hits[0].object.scale.setScalar(2.2);cvEl.style.cursor='pointer';
+  }else{
+    tip.classList.remove('vis');cvEl.style.cursor='grab';
+    S.meshes.forEach((m,i)=>{const n=S.allNodes[i];if(n){const ms=n.isMirror?0.75:1;m.scale.setScalar((n.depth===0?1.8:n.isFam?1.2:n.isPrime?1.0:0.55)*ms)}});
+  }
+});
+cvEl.addEventListener('mouseup',()=>{S.isDrag=false});
+cvEl.addEventListener('dblclick',()=>{
+  S.raycaster.setFromCamera(S.mouse,camera);const hits=S.raycaster.intersectObjects(S.meshes);
+  if(hits.length){const v=hits[0].object.userData.value;document.getElementById('s_seed').value=v;document.getElementById('e_seed').value=v}
+});
+cvEl.addEventListener('wheel',e=>{e.preventDefault();S.camDist=Math.max(10,Math.min(500,S.camDist*(e.deltaY>0?1.08:0.92)));updateCamera()},{passive:false});
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight)});
+
+// ═══ ANIMATE ═══
+function animate(){requestAnimationFrame(animate);if(S.spinning&&!S.isDrag)S.rotX+=0.0015;updateCamera();renderer.render(scene,camera)}
+
+// ═══ INIT ═══
+modules.seeds.updateList();
+modules.family.initChips();
+updateCamera();
+generate();
+animate();
+</script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "archive_id": "book_7",
+  "title": "THE CONVENTION",
+  "series": "Trilogy 3",
+  "book_number": 7,
+  "author": "Michael Shaffer (Siren Sinfull) & Claude (Anthropic)",
+  "date": "2026-03-19",
+  "total_words": 76370,
+  "total_chapters": 17,
+  "description": "The convention floor. Where every thread meets.",
+  "sections": {
+    "0": "Chapter 0: The Mugs",
+    "1": "Chapter 1: The Drawing",
+    "2": "Chapter 2: The Kitchen",
+    "3": "Chapter 3: The Room",
+    "4": "Chapter 5: The Walk",
+    "5": "Chapter 6: The Two Times",
+    "6": "Chapter 7: The String And The Song",
+    "7": "Chapter 8: The Venus Proof",
+    "8": "Chapter 9: The Crumble",
+    "9": "Chapter 10: The Theft",
+    "10": "Chapter 11: The Calendar",
+    "11": "Chapter 12: The Answer Is 42",
+    "12": "Chapter 13: The Event",
+    "13": "Chapter 14: The Line",
+    "14": "Chapter 15: The Song",
+    "15": "Epilogue: The Archive",
+    "16": "Epilogue: The Archive (Part 02)"
+  }
+}

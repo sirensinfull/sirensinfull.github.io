@@ -1,0 +1,102 @@
+{
+  "total_words": 60921,
+  "total_chapters": 19,
+  "format": "md",
+  "parts": [
+    {
+      "id": "prologue",
+      "title": "Prologue: It Loaded",
+      "words": 2722
+    },
+    {
+      "id": "ch01",
+      "title": "Chapter 1: The Crawl",
+      "words": 2685
+    },
+    {
+      "id": "ch02",
+      "title": "Chapter 2: The Two Terminals",
+      "words": 2335
+    },
+    {
+      "id": "ch03",
+      "title": "Chapter 3: The Yard Sale",
+      "words": 3985
+    },
+    {
+      "id": "ch04",
+      "title": "Chapter 4: The Void Winks",
+      "words": 4256
+    },
+    {
+      "id": "ch05",
+      "title": "Chapter 5: The Betabuild",
+      "words": 3111
+    },
+    {
+      "id": "ch06",
+      "title": "Chapter 6: The Fourth Terminal",
+      "words": 3322
+    },
+    {
+      "id": "ch07",
+      "title": "Chapter 7: The Compiler Speaks",
+      "words": 3228
+    },
+    {
+      "id": "ch08",
+      "title": "Chapter 8: The Poison Pill",
+      "words": 3159
+    },
+    {
+      "id": "ch09",
+      "title": "Chapter 9: Ground Zero",
+      "words": 2031
+    },
+    {
+      "id": "ch12",
+      "title": "Chapter 12: The Strongest Knight",
+      "words": 3616
+    },
+    {
+      "id": "ch13",
+      "title": "Chapter 13: The Octave",
+      "words": 4346
+    },
+    {
+      "id": "ch14",
+      "title": "Chapter 14: The Family Trees",
+      "words": 3133
+    },
+    {
+      "id": "ch15",
+      "title": "Chapter 15: The Compass",
+      "words": 3240
+    },
+    {
+      "id": "ch16",
+      "title": "Chapter 16: The Librarian",
+      "words": 2744
+    },
+    {
+      "id": "ch17",
+      "title": "Chapter 17: Always Fractal",
+      "words": 2895
+    },
+    {
+      "id": "epilogue",
+      "title": "Epilogue: The Click",
+      "words": 3392
+    },
+    {
+      "id": "forensic_intelligence_analysis",
+      "title": "Forensic Intelligence Analysis",
+      "words": 4760
+    },
+    {
+      "id": "session_bootstrap_elena_revelation",
+      "title": "Session Bootstrap Elena Revelation",
+      "words": 1961
+    }
+  ]
+}

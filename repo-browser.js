@@ -6,7 +6,7 @@ class RepoBrowser {
   constructor(speedReader) {
     this.sr = speedReader;
     this.manifest = null;
-    this.repoBase = 'Song_Repository';
+    this.repoBase = 'Books';
     this.githubUser = 'sirensinfull';
     this.githubRepo = 'sirensinfull.github.io';
     this.container = document.getElementById('repoLibrary');
